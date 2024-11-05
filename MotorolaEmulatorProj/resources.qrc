@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>M6800.ico</file>
+    </qresource>
+</RCC>
