@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include <datatypes.h>
+#include "datatypes.h"
 int DataTypes::getInstructionLength(ProcessorVersion version, uint8_t opCode) {
   if (version == M6800) {
     return M6800InstructionPage[opCode].mode / 10;

@@ -18,11 +18,11 @@
 #define PROCESSOR_H
 
 #include <QObject>
-#include "qfuturewatcher.h"
-#include <ActionQueue.h>
+#include "ActionQueue.h"
 #include <cstdint>
-#include <datatypes.h>
+#include <qfuturewatcher.h>
 
+using DataTypes::bit;
 using DataTypes::Flag;
 using DataTypes::Flag::Carry;
 using DataTypes::Flag::HalfCarry;
@@ -40,10 +40,23 @@ class Processor : public QObject {
 private:
   typedef void (Processor::*funcPtr)();
   ActionQueue actionQueue;
+  InstructionList instructionList;
+  QFutureWatcher<void> futureWatcher;
+  funcPtr executeInstruction;
+  ProcessorVersion processorVersion = ProcessorVersion::M6800;
+
+  //internal settings
+  const uint16_t interruptLocations = 0xFFFF;
+  bool WAIStatus = false;
+  bool IRQOnKeyPressed = false;
+  bool incrementPCOnMissingInstruction = false;
+  int breakWhenIndex = 0;
+  int breakIsValue = 0;
+  int breakAtValue = 0;
 
 public:
   Processor();
-
+  //processor internals
   std::array<uint8_t, 0x10000> Memory = {};
   std::array<uint8_t, 0x10000> backupMemory = {};
   uint8_t aReg = 0;
@@ -57,47 +70,39 @@ public:
   int cycleCount = 0;
   Interrupt pendingInterrupt = Interrupt::NONE;
 
-  bool running = false;
-  bool WAIStatus = false;
-
-  ProcessorVersion processorVersion = ProcessorVersion::M6800;
-  funcPtr executeInstruction;
-  bool incrementPCOnMissingInstruction = false;
+  //runtime settings
+  volatile bool running = false;
   bool useCycles = false;
-  bool IRQOnKeyPressed = false;
-  const int interruptLocations = 0xFFFF;
 
+  //run stop step
   void reset();
   void executeStep();
   void startExecution(float OPS, InstructionList list);
   void stopExecution();
 
+  //change settings
   void switchVersion(ProcessorVersion version);
-
   void addAction(const Action &action);
 
-  int count = 0;
-
 private:
-  InstructionList instructionList;
-
-  int breakWhenIndex = 0;
-  int breakIsValue = 0;
-  int breakAtValue = 0;
-  QFutureWatcher<void> futureWatcher;
-
-  void interruptCheckCPS();
-  void interruptCheckIPS();
-  void updateFlags(Flag flag, bool value);
+  //helper funcs
   uint16_t getInterruptLocation(Interrupt interrupt);
+  void updateFlags(Flag flag, bool value);
   void pushStateToMemory();
   void checkBreak();
-  void setUIUpdateData();
+
+  //instructionExecution
+  void interruptCheckCPS();
+  void interruptCheckIPS();
   void executeM6803();
   void executeM6800();
 
-  void handleActions();
+  void setUIUpdateData();
+
+  //action handling
   void handleAction(const Action &action);
+  void handleActions();
+
 signals:
   void uiUpdateData(std::array<uint8_t, 0x10000>, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
   void executionStopped();

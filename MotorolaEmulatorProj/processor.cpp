@@ -15,11 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "processor.h"
-#include "QtConcurrent/qtconcurrentrun.h"
-#include <cstdint>
-#include <datatypes.h>
-#include <thread>
-
+#include <QtConcurrent/qtconcurrentrun.h>
 Processor::Processor() {
   switchVersion(ProcessorVersion::M6800);
 }
@@ -37,7 +33,7 @@ void Processor::handleActions() {
   }
 }
 
-void Processor::handleAction(const Action& action) {
+void Processor::handleAction(const Action &action) {
   switch (action.type) {
   case ActionType::SETBREAKWHEN:
     breakWhenIndex = action.parameter;
@@ -101,33 +97,8 @@ void Processor::switchVersion(ProcessorVersion version) {
   }
 }
 
-inline bool bit(int variable, int bitNum) {
-  return (variable & (1 << bitNum)) != 0;
-}
-
 void Processor::updateFlags(Flag flag, bool value) {
-  switch (flag) {
-  case Flag::HalfCarry:
-    flags = (flags & ~(1 << 5)) | (value << 5);
-    break;
-  case Flag::InterruptMask:
-    flags = (flags & ~(1 << 4)) | (value << 4);
-    break;
-  case Flag::Negative:
-    flags = (flags & ~(1 << 3)) | (value << 3);
-    break;
-  case Flag::Zero:
-    flags = (flags & ~(1 << 2)) | (value << 2);
-    break;
-  case Flag::Overflow:
-    flags = (flags & ~(1 << 1)) | (value << 1);
-    break;
-  case Flag::Carry:
-    flags = (flags & ~(1)) | (value);
-    break;
-  default:
-    throw;
-  }
+  flags = (flags & ~(1 << flag)) | (value << flag);
 }
 
 void Processor::reset() {
@@ -142,11 +113,10 @@ void Processor::reset() {
   WAIStatus = false;
   pendingInterrupt = Interrupt::NONE;
   std::copy(backupMemory.begin(), backupMemory.end(), Memory.begin());
-  PC = (Memory[interruptLocations - 1] << 8) + Memory[interruptLocations];
+  PC = static_cast<uint16_t>(Memory[interruptLocations - 1] << 8) + Memory[interruptLocations];
 }
 
 void Processor::executeM6800() {
-  count++;
   (this->*M6800Table[Memory[PC]])();
 }
 void Processor::executeM6803() {
@@ -191,27 +161,27 @@ void Processor::checkBreak() {
       running = false;
     break;
   case 7:
-    if (bit(flags, 5) == breakIsValue)
+    if (bit(flags, HalfCarry) == breakIsValue)
       running = false;
     break;
   case 8:
-    if (bit(flags, 4) == breakIsValue)
+    if (bit(flags, InterruptMask) == breakIsValue)
       running = false;
     break;
   case 9:
-    if (bit(flags, 3) == breakIsValue)
+    if (bit(flags, Negative) == breakIsValue)
       running = false;
     break;
   case 10:
-    if (bit(flags, 2) == breakIsValue)
+    if (bit(flags, Zero) == breakIsValue)
       running = false;
     break;
   case 11:
-    if (bit(flags, 1) == breakIsValue)
+    if (bit(flags, Overflow) == breakIsValue)
       running = false;
     break;
   case 12:
-    if (bit(flags, 0) == breakIsValue)
+    if (bit(flags, Carry) == breakIsValue)
       running = false;
     break;
   case 13:
@@ -229,7 +199,7 @@ void Processor::pushStateToMemory() {
   Memory[SP--] = bReg;
   Memory[SP--] = flags;
 }
-uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
+inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
   return (Memory[(interruptLocations - static_cast<int>(interrupt) * 2 - 1)] << 8) + Memory[(interruptLocations - static_cast<int>(interrupt) * 2)];
 }
 
@@ -259,7 +229,7 @@ void Processor::interruptCheckCPS() {
     break;
   case Interrupt::IRQ:
     (this->*executeInstruction)();
-    if (!bit(flags, 4)) {
+    if (!bit(flags, InterruptMask)) {
       if (WAIStatus) {
         cycleCount = 5;
       } else {
@@ -327,7 +297,7 @@ void Processor::interruptCheckIPS() {
     WAIStatus = false;
     break;
   case Interrupt::IRQ:
-    if (!bit(flags, 4)) {
+    if (!bit(flags, InterruptMask)) {
       if (!WAIStatus) {
         pushStateToMemory();
       }
@@ -393,6 +363,7 @@ void Processor::startExecution(float OPS, InstructionList list) {
         }
       }
     }
+    handleActions();
     emit executionStopped();
   }));
 }

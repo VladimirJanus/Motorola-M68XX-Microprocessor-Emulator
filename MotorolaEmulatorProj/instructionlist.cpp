@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "InstructionList.h"
+#include "instructionlist.h"
 
 void InstructionList::clear() {
-    instructions.clear();
+  instructions.clear();
 }
 
-void InstructionList::addInstruction(int address, int lineNumber, int byte1, int byte2, int byte3, QString IN, QString OP) {
+void InstructionList::addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, QString IN, QString OP) {
   Instruction instruction;
   instruction.address = address;
   instruction.lineNumber = lineNumber;
@@ -53,5 +53,5 @@ InstructionList::Instruction& InstructionList::getObjectByLine(int lineNumber) {
 }
 
 bool InstructionList::isEmpty() const {
-    return instructions.empty();
+  return instructions.empty();
 }

@@ -15,39 +15,37 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "instructioninfodialog.h"
-#include "qtreewidget.h"
 #include "ui_instructioninfodialog.h"
+#include <qtreewidget.h>
 
-InstructionInfoDialog::InstructionInfoDialog(QTreeWidgetItem item, int version, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::InstructionInfoDialog)
-{
-    ui->setupUi(this);
+InstructionInfoDialog::InstructionInfoDialog(QTreeWidgetItem item, QWidget *parent)
+  : QDialog(parent)
+  , ui(new Ui::InstructionInfoDialog) {
+  ui->setupUi(this);
 
-    ui->labelInstruction->setText(item.text(0));
-    ui->labelOperation->setText(item.text(1));
-    ui->labelDescription->setText(item.text(11) + "\nFlags: HINZVC:" + item.text(8));
-    QStringList g{"INH", "IMM", "DIR", "IND", "EXT", "REL"};
-    int count = 0;
-     for (int i = 2; i < 8; ++i) {
-        if(item.text(i) != ""){
-             ui->tableWidget->insertColumn(count);
-            ui->tableWidget->setHorizontalHeaderItem(ui->tableWidget->columnCount() - 1, new QTableWidgetItem(g[i - 2]));
-             QTableWidgetItem *newItem = new QTableWidgetItem(item.text(i));
-             ui->tableWidget->setItem(0, ui->tableWidget->columnCount() - 1, newItem);
-             newItem = new QTableWidgetItem(item.text(9).split(",")[count]);
-             ui->tableWidget->setItem(1, ui->tableWidget->columnCount() - 1, newItem);
-             newItem = new QTableWidgetItem(item.text(10).split(",")[count]);
-             ui->tableWidget->setItem(2, ui->tableWidget->columnCount() - 1, newItem);
-            count++;
-        }
+  ui->labelInstruction->setText(item.text(0));
+  ui->labelOperation->setText(item.text(1));
+  ui->labelDescription->setText(item.text(11) + "\nFlags: HINZVC:" + item.text(8));
+  QStringList g{"INH", "IMM", "DIR", "IND", "EXT", "REL"};
+  int count = 0;
+  for (int i = 2; i < 8; ++i) {
+    if (item.text(i) != "") {
+      ui->tableWidget->insertColumn(count);
+      ui->tableWidget->setHorizontalHeaderItem(ui->tableWidget->columnCount() - 1, new QTableWidgetItem(g[i - 2]));
+      QTableWidgetItem *newItem = new QTableWidgetItem(item.text(i));
+      ui->tableWidget->setItem(0, ui->tableWidget->columnCount() - 1, newItem);
+      newItem = new QTableWidgetItem(item.text(9).split(",")[count]);
+      ui->tableWidget->setItem(1, ui->tableWidget->columnCount() - 1, newItem);
+      newItem = new QTableWidgetItem(item.text(10).split(",")[count]);
+      ui->tableWidget->setItem(2, ui->tableWidget->columnCount() - 1, newItem);
+      count++;
     }
+  }
 
-     if(count == 0) ui->tableWidget->setVisible(false);
+  if (count == 0)
+    ui->tableWidget->setVisible(false);
 }
 
-
-InstructionInfoDialog::~InstructionInfoDialog()
-{
-    delete ui;
+InstructionInfoDialog::~InstructionInfoDialog() {
+  delete ui;
 }

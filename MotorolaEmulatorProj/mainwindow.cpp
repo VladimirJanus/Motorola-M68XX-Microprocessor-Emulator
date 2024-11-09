@@ -15,25 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "mainwindow.h"
-#include <QFile>
 #include <QFileDialog>
-#include <QFontMetrics>
 #include <QInputDialog>
-#include <QMouseEvent>
-#include <QPointer>
 #include <QScrollBar>
-#include <QString>
-#include <QStringBuilder>
-#include <QTableWidget>
-#include <QTextBlock>
-#include <QTextStream>
-#include <QThreadPool>
-#include <QTimer>
-#include <QtConcurrent/QtConcurrentRun>
+#include "assembler.h"
 #include "instructioninfodialog.h"
 #include "instructionlist.h"
 #include "ui_mainwindow.h"
-#include <assembler.h>
 #include <cmath>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -41,8 +29,8 @@ MainWindow::MainWindow(QWidget *parent)
   , ui(new Ui::MainWindow) {
   // UI Setup
   ui->setupUi(this);
-  QWidget::setWindowTitle("Motorola M68XX Microprocessor Emulator-" + softwareVersion);
-  ui->plainTextInfo->append("Current version: " + softwareVersion + ", designed for Windows 10.");
+  QWidget::setWindowTitle(DataTypes::programName);
+  ui->plainTextInfo->append("Current version: " + DataTypes::softwareVersion + ", designed for Windows 10.");
 
   // Initialization
   instructionList.clear();
@@ -50,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
   // External Display
   externalDisplay = new ExternalDisplay(this);
   plainTextDisplay = externalDisplay->findChild<QPlainTextEdit *>("plainTextDisplay");
-  connect(externalDisplay, &QDialog::finished, [=]() { ui->menuDisplayStatus->setCurrentIndex(0); });
+  connect(externalDisplay, &QDialog::finished, this, [=]() { ui->menuDisplayStatus->setCurrentIndex(0); });
 
   // Memory Table Configuration
   const int memWidth = 28;
@@ -109,14 +97,14 @@ MainWindow::MainWindow(QWidget *parent)
   ui->groupSimpleMemory->setVisible(false);
   ui->groupSimpleMemory->setEnabled(false);
 
-  for (int i = 0; i < 20; ++i) {
-    QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(currentSMScroll + i, 4, 16, QChar('0')).toUpper());
+  for (uint8_t i = 0; i < 20; ++i) {
+    QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(i, 4, 16, QChar('0')).toUpper());
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     item->setBackground(QBrush(SMMemoryCellColor));
     ui->tableWidgetSM->setItem(i, 0, item);
 
-    item = new QTableWidgetItem(QString("%1").arg(processor.Memory[currentSMScroll + i], 2, 16, QChar('0').toUpper()));
+    item = new QTableWidgetItem(QString("%1").arg(processor.Memory[i], 2, 16, QChar('0').toUpper()));
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     item->setBackground(QBrush(SMMemoryCellColor2));
@@ -282,7 +270,7 @@ void MainWindow::showContextMenu(const QPoint &pos) {
   menu->deleteLater();
 }
 void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item) {
-  InstructionInfoDialog dialog(*item, processorVersion, this);
+  InstructionInfoDialog dialog(*item, this);
   dialog.exec();
 }
 void MainWindow::showMnemonicInfo() {
@@ -305,11 +293,11 @@ void MainWindow::showMnemonicInfo() {
     QString selectedWord = (plainText.mid(leftIndex + 1, rightIndex - leftIndex - 1)).toUpper();
 
     if (mnemonics.contains(selectedWord)) {
-      showInstructionInfoWindow(selectedWord, processorVersion);
+      showInstructionInfoWindow(selectedWord);
     }
   }
 }
-void MainWindow::showInstructionInfoWindow(QString instruction, int version) {
+void MainWindow::showInstructionInfoWindow(QString instruction) {
   QTreeWidgetItem item_;
   for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
     QTreeWidgetItem *item = ui->treeWidget->topLevelItem(i);
@@ -319,26 +307,23 @@ void MainWindow::showInstructionInfoWindow(QString instruction, int version) {
     }
   }
 
-  InstructionInfoDialog dialog(item_, version, this);
+  InstructionInfoDialog dialog(item_, this);
   dialog.exec();
 }
 
 inline QString getDisplayText(std::array<uint8_t, 0x10000> memory) {
   QString text;
-  for (int i = 0; i < 20 * 54; ++i) {
-    int val = memory[i + 0xFB00];
+  for (uint16_t i = 0; i < 20 * 54; ++i) {
+    uint8_t val = memory[i + 0xFB00];
     if (val <= 32 || val >= 127) {
       text.append(" ");
     } else {
-      text.append(QChar::fromLatin1(val));
+      text.append(QChar(val));
     }
     if ((i + 1) % 54 == 0)
       text.append("\n");
   }
   return text;
-}
-inline bool bit(int variable, int bitNum) {
-  return (variable & (1 << bitNum)) != 0;
 }
 
 void MainWindow::setCompileStatus(bool isCompiled) {
@@ -415,7 +400,7 @@ void MainWindow::updateMemoryTab() {
       ui->tableWidgetSM->item(i, 2)->setText("");
     }
     for (int i = 0; i < 20; ++i) {
-      int adr = currentSMScroll + i;
+      uint16_t adr = static_cast<uint16_t>(std::clamp(currentSMScroll + i, 0, 0xFFFF));
 
       ui->tableWidgetSM->item(i, 0)->setText(QString("%1").arg(adr, 4, 16, QChar('0')).toUpper());
       ui->tableWidgetSM->item(i, 1)->setText(QString("%1").arg(processor.Memory[adr], 2, 16, QChar('0')).toUpper());
@@ -447,8 +432,8 @@ void MainWindow::updateMemoryTab() {
     disableCellChangedHandler();
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
-        int address = row * 16 + col;
-        int value = processor.Memory[address];
+        uint16_t adr = static_cast<uint16_t>(row * 16 + col);
+        int value = processor.Memory[adr];
 
         if (hexReg) {
           ui->tableWidgetMemory->item(row, col)->setText(QString("%1").arg(value, 2, 16, QChar('0')).toUpper());
@@ -570,7 +555,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
           auto selectedItems = ui->tableWidgetMemory->selectedItems();
           if (!selectedItems.isEmpty()) {
             for (QTableWidgetItem *item : selectedItems) {
-              int adr = item->row() * 16 + item->column();
+              uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
               processor.Memory[adr] = 0x00;
               if (adr >= 0xFB00 && adr <= 0xFF37) {
                 if (displayStatusIndex == 1) {
@@ -604,15 +589,23 @@ void MainWindow::resetEmulator() {
   processor.reset();
   drawProcessor();
   ui->plainTextDisplay->setPlainText(
-    "                                                      \n                                                      \n                                                      \n                                                      \n                                                      \n              "
-    "                                        \n                                                      \n                                                      \n                                                      \n                                                      \n                            "
-    "                          \n                                                      \n                                                      \n                                                      \n                                                      \n                                          "
-    "            \n                                                      \n                                                      \n                                                      \n                                                       ,");
+    "                                                      \n                                                      \n                                                      \n      "
+    "                                                \n                                                      \n              "
+    "                                        \n                                                      \n                                                      \n                    "
+    "                                  \n                                                      \n                            "
+    "                          \n                                                      \n                                                      \n                                  "
+    "                    \n                                                      \n                                          "
+    "            \n                                                      \n                                                      \n                                                "
+    "      \n                                                       ,");
   plainTextDisplay->setPlainText(
-    "                                                      \n                                                      \n                                                      \n                                                      \n                                                      \n              "
-    "                                        \n                                                      \n                                                      \n                                                      \n                                                      \n                            "
-    "                          \n                                                      \n                                                      \n                                                      \n                                                      \n                                          "
-    "            \n                                                      \n                                                      \n                                                      \n                                                       ,");
+    "                                                      \n                                                      \n                                                      \n      "
+    "                                                \n                                                      \n              "
+    "                                        \n                                                      \n                                                      \n                    "
+    "                                  \n                                                      \n                            "
+    "                          \n                                                      \n                                                      \n                                  "
+    "                    \n                                                      \n                                          "
+    "            \n                                                      \n                                                      \n                                                "
+    "      \n                                                       ,");
 }
 
 void MainWindow::drawProcessor() {
@@ -658,7 +651,8 @@ void MainWindow::drawProcessor() {
   updateMemoryTab();
   setSelectionRuntime(processor.PC);
 }
-void MainWindow::drawProcessorRunning(std::array<uint8_t, 0x10000> memory, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles) {
+void MainWindow::drawProcessorRunning(
+  std::array<uint8_t, 0x10000> memory, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles) {
   ui->lineEditHValue->setText(QString::number(bit(flags, 5)));
   ui->lineEditIValue->setText(QString::number(bit(flags, 4)));
   ui->lineEditNValue->setText(QString::number(bit(flags, 3)));
@@ -700,9 +694,9 @@ void MainWindow::drawProcessorRunning(std::array<uint8_t, 0x10000> memory, int c
     for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
         if (hexReg) {
-          ui->tableWidgetMemory->item(row, col)->setText(QString("%1").arg(memory[row * 16 + col], 2, 16, QChar('0')).toUpper());
+          ui->tableWidgetMemory->item(row, col)->setText(QString("%1").arg(memory[static_cast<uint16_t>(row * 16 + col)], 2, 16, QChar('0')).toUpper());
         } else {
-          ui->tableWidgetMemory->item(row, col)->setText(QString("%1").arg(memory[row * 16 + col]));
+          ui->tableWidgetMemory->item(row, col)->setText(QString("%1").arg(memory[static_cast<uint16_t>(row * 16 + col)]));
         }
       }
     }
@@ -710,7 +704,8 @@ void MainWindow::drawProcessorRunning(std::array<uint8_t, 0x10000> memory, int c
   } else {
     for (int i = 0; i < 20; ++i) {
       ui->tableWidgetSM->item(i, 0)->setText(QString("%1").arg(currentSMScroll + i, 4, 16, QChar('0')).toUpper());
-      ui->tableWidgetSM->item(i, 1)->setText(QString("%1").arg(memory[currentSMScroll + i], 2, 16, QChar('0').toUpper()));
+
+      ui->tableWidgetSM->item(i, 1)->setText(QString("%1").arg(memory[static_cast<uint16_t>(std::clamp(currentSMScroll + i, 0, 0xFFFF))], 2, 16, QChar('0').toUpper()));
     }
   }
   if (displayStatusIndex == 1) {
@@ -725,15 +720,10 @@ void MainWindow::drawProcessorRunning(std::array<uint8_t, 0x10000> memory, int c
       int charHeight = fontMetrics.height();
       int x = localMousePos.x() / charWidth;
       int y = localMousePos.y() / charHeight;
-      if (x >= 0 && x <= 53 && y >= 0 && y <= 19) {
-        oldCursorX = x;
-        oldCursorY = y;
-      } else {
-        x = oldCursorX;
-        y = oldCursorY;
-      }
-      processor.Memory[0xFFF2] = x;
-      processor.Memory[0xFFF3] = y;
+      x = std::clamp(x, 0, 53);
+      y = std::clamp(y, 0, 19);
+      processor.Memory[0xFFF2] = static_cast<uint8_t>(x);
+      processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
     }
   } else if (displayStatusIndex == 2) {
     plainTextDisplay->setPlainText(getDisplayText(memory));
@@ -747,26 +737,21 @@ void MainWindow::drawProcessorRunning(std::array<uint8_t, 0x10000> memory, int c
       int charHeight = fontMetrics.height();
       int x = localMousePos.x() / charWidth;
       int y = localMousePos.y() / charHeight;
-      if (x >= 0 && x <= 53 && y >= 0 && y <= 19) {
-        oldCursorX = x;
-        oldCursorY = y;
-      } else {
-        x = oldCursorX;
-        y = oldCursorY;
-      }
-      processor.Memory[0xFFF2] = x;
-      processor.Memory[0xFFF3] = y;
+      x = std::clamp(x, 0, 53);
+      y = std::clamp(y, 0, 19);
+      processor.Memory[0xFFF2] = static_cast<uint8_t>(x);
+      processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
     }
   }
   setSelectionRuntime(PC);
 }
 
 void MainWindow::onExecutionStopped() {
-  endTime = std::chrono::high_resolution_clock::now();
+  //endTime = std::chrono::high_resolution_clock::now();
   //qDebug() << static_cast<qint64>(std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count());
   //qDebug() << static_cast<qint64>(processor.count);
   //qDebug() << static_cast<qint64>(std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count()) - processor.count;
-  processor.count = 0;
+  //processor.count = 0;
   drawProcessor();
   ui->labelRunningIndicatior->setVisible(false);
   ui->labelRunningCycleNum->setVisible(false);
@@ -817,7 +802,12 @@ bool MainWindow::startAssembly() {
 bool MainWindow::startDisassembly() {
   processor.stopExecution();
   bool ORGOK;
-  QString text = QInputDialog::getText(this, "Input Dialog", "Enter the decimal address where the program beggins. Data before that will be written with .BYTE.", QLineEdit::Normal, QString(), &ORGOK);
+  QString text = QInputDialog::getText(this,
+                                       "Input Dialog",
+                                       "Enter the decimal address where the program beggins. Data before that will be written with .BYTE.",
+                                       QLineEdit::Normal,
+                                       QString(),
+                                       &ORGOK);
   if (ORGOK) {
     bool ORGNUMOK;
     int number = text.toInt(&ORGNUMOK);
@@ -958,7 +948,6 @@ void MainWindow::on_buttonRunStop_clicked() {
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      startTime = std::chrono::high_resolution_clock::now();
       processor.startExecution(OPS, instructionList);
     }
   }
@@ -1297,7 +1286,7 @@ void MainWindow::on_buttonTidyUp_clicked() {
     }
   }
 
-  int tabCount = ceil((maxLabelLength + 1.0F) / ui->spinBoxTabWidth->value());
+  int tabCount = static_cast<int>(ceil((maxLabelLength + 1.0F) / ui->spinBoxTabWidth->value()));
 
   for (QString &line : lines) {
     if (line.isEmpty())
@@ -1364,8 +1353,8 @@ void MainWindow::tableMemory_cellChanged(int row, int column) {
     } else {
       value = newText.toInt(&ok, 10);
     }
-    int adr = row * 16 + column;
-    if (!ok || value < 0 || value > 255) {
+    uint16_t adr = static_cast<uint16_t>(row * 16 + column);
+    if (!ok) {
       if (hexReg) {
         item->setText(QString("%1").arg(processor.Memory[adr], 2, 16, QChar('0')).toUpper());
       } else {

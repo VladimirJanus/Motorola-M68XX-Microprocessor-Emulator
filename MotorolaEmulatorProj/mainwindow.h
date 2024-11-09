@@ -22,11 +22,11 @@
 #include "externaldisplay.h"
 #include "instructionlist.h"
 #include "processor.h"
-#include "qfuturewatcher.h"
-#include "qtreewidget.h"
-#include <datatypes.h>
+#include <qfuturewatcher.h>
+#include <qtreewidget.h>
 
 using DataTypes::AddressingMode;
+using DataTypes::bit;
 using DataTypes::ColorType;
 using DataTypes::MnemonicInfo;
 using DataTypes::Msg;
@@ -57,10 +57,6 @@ public:
   const QColor SMMemoryCellColor2 = QColor(204, 204, 204);
 
 private:
-  std::chrono::high_resolution_clock::time_point startTime;
-  std::chrono::high_resolution_clock::time_point endTime;
-
-  QString softwareVersion = "1.9";
   Ui::MainWindow *ui;
 
   ExternalDisplay *externalDisplay;
@@ -81,7 +77,6 @@ private:
 
   void colorMemory(int address, ColorType colorType);
   void toggleHighlight(int line);
-  void reconstructLineSelections();
   void drawTextSelections();
   void drawMemorySelections();
   void clearSelections();
@@ -96,28 +91,22 @@ private:
 
   int displayStatusIndex;
 
-  int oldCursorX = 0;
-  int oldCursorY = 0;
-
-  //uint16_t yRegister = 0; //not implemented
-  //bool indexRegister = true; //true x false y not implemented
-
   float OPS = 1;
 
   void resetEmulator();
 
   bool assembled = false;
   void setCompileStatus(bool isCompile);
-  QString uncompiledButton = "QPushButton{\n	color: rgb(0,0,0);\n	background-color: rgb(225,225,225);\n	border: 2px solid rgb(255,30,30);\n}\nQPushButton:hover{\n    background-color: rgb(229, 241, 251);\n    border: 2px solid rgb(255, 0, 50);\n}\nQPushButton:pressed{\n background-color: "
+  QString uncompiledButton = "QPushButton{\n	color: rgb(0,0,0);\n	background-color: rgb(225,225,225);\n	border: 2px solid rgb(255,30,30);\n}\nQPushButton:hover{\n    "
+                             "background-color: rgb(229, 241, 251);\n    border: 2px solid rgb(255, 0, 50);\n}\nQPushButton:pressed{\n background-color: "
                              "rgb(204, 228, 247);\n border: 2px solid rgb(255, 0, 50);\n}";
-  QString compiledButton = "QPushButton{\n	color: rgb(0,0,0);\n	background-color: rgb(225,225,225);\n	border: 2px solid rgb(0,180,0);\n}\nQPushButton:hover{\n    background-color: rgb(229, 241, 251);\n    border: 2px solid rgb(0, 180, 20);\n}\nQPushButton:pressed{\n background-color: rgb(204, "
+  QString compiledButton = "QPushButton{\n	color: rgb(0,0,0);\n	background-color: rgb(225,225,225);\n	border: 2px solid rgb(0,180,0);\n}\nQPushButton:hover{\n    "
+                           "background-color: rgb(229, 241, 251);\n    border: 2px solid rgb(0, 180, 20);\n}\nQPushButton:pressed{\n background-color: rgb(204, "
                            "228, 247);\n border: 2px solid rgb(0, 180, 20);\n}";
   int inputNextAddress(int curAdr, QString err);
-  //bool reverseCompile(int ver, int begLoc);
 
-  bool incrementPCOnMissingInstruction = false;
   bool simpleMemory = false;
-  int currentSMScroll = 0;
+  uint16_t currentSMScroll = 0;
   bool writeToMemory = false;
 
   bool hexReg = true;
@@ -136,7 +125,7 @@ protected:
 public slots:
   void showContextMenu(const QPoint &);
   void showMnemonicInfo();
-  void showInstructionInfoWindow(QString instruction, int version);
+  void showInstructionInfoWindow(QString instruction);
   void drawProcessorRunning(std::array<uint8_t, 0x10000>, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
   void onExecutionStopped();
 private slots:

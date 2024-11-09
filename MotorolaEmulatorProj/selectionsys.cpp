@@ -15,9 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "mainwindow.h"
-#include "qscrollbar.h"
-#include "qtextobject.h"
 #include "ui_mainwindow.h"
+#include <qscrollbar.h>
+#include <qtextobject.h>
 
 struct Selection {
   QTextEdit::ExtraSelection lineSelection;
@@ -122,7 +122,7 @@ void MainWindow::drawMemorySelections() {
   } else {
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
-        int address = row * 16 + col;
+        uint16_t address = static_cast<uint16_t>(row * 16 + col);
 
         if (highlightAddressList.contains(address)) {
           colorMemory(address, ColorType::HIGHLIGHT);

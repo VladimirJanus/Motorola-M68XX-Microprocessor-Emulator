@@ -17,30 +17,28 @@
 #ifndef EXTERNALDISPLAY_H
 #define EXTERNALDISPLAY_H
 
-#include "ui_externaldisplay.h"
 #include <QDialog>
 #include <QPlainTextEdit>
+#include "ui_externaldisplay.h"
 
 namespace Ui {
-class ExternalDisplay;
+  class ExternalDisplay;
 }
-class ExternalDisplay : public QDialog
-{
-    Q_OBJECT
+class ExternalDisplay : public QDialog {
+  Q_OBJECT
 
 public:
-    explicit ExternalDisplay(QWidget *parent = nullptr);
-    ~ExternalDisplay();
-    //bool eventFilter(QObject* obj, QEvent* event);
-    QPlainTextEdit* getPlainTextEdit() {
-        return ui->plainTextDisplay;
-    }
-    void checkMousePos();
+  explicit ExternalDisplay(QWidget *parent = nullptr);
+  ~ExternalDisplay();
+  //bool eventFilter(QObject* obj, QEvent* event);
+  QPlainTextEdit *getPlainTextEdit() { return ui->plainTextDisplay; }
+  void checkMousePos();
+
 private:
-    Ui::ExternalDisplay *ui;
+  Ui::ExternalDisplay *ui;
 private slots:
-    void handleDisplayScrollVertical();
-    void handleDisplayScrollHorizontal();
+  void handleDisplayScrollVertical();
+  void handleDisplayScrollHorizontal();
 };
 
 #endif // EXTERNALDISPLAY_H

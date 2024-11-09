@@ -14,24 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include <QFile>
-#include <QFileDialog>
 #include <QInputDialog>
-#include <QMouseEvent>
-#include <QScrollBar>
-#include <QString>
-#include <QStringBuilder>
-#include <QTableWidget>
-#include <QTextBlock>
-#include <QTextStream>
-#include <QTimer>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <mainwindow.h>
 
 int MainWindow::inputNextAddress(int curAdr, QString err) {
   bool ok;
-  QString text = QInputDialog::getText(this, "Input Dialog", err + ". Missing data will be written with .BYTE. Enter decimal address of next instruction. Current address: " + QString::number(curAdr, 10) + ".", QLineEdit::Normal, QString(), &ok);
+  QString text = QInputDialog::getText(this,
+                                       "Input Dialog",
+                                       err + ". Missing data will be written with .BYTE. Enter decimal address of next instruction. Current address: " +
+                                         QString::number(curAdr, 10) + ".",
+                                       QLineEdit::Normal,
+                                       QString(),
+                                       &ok);
 
   if (ok) {
     bool iok;

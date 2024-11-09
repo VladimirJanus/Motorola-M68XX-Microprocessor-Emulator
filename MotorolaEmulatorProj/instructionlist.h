@@ -21,24 +21,25 @@
 #include <vector>
 class InstructionList {
 public:
-    struct Instruction {
-        int address;
-        int lineNumber;
-        int byte1;
-        int byte2;
-        int byte3;
-        QString IN;
-        QString OP;
-    };
+  struct Instruction {
+    int address;
+    int lineNumber;
+    uint8_t byte1;
+    uint8_t byte2;
+    uint8_t byte3;
+    QString IN;
+    QString OP;
+  };
 
-    void clear();
-    void addInstruction(int address, int lineNumber, int byte1, int byte2, int byte3, QString IN, QString OP);
+  void clear();
+  void addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, QString IN, QString OP);
 
-    Instruction& getObjectByAddress(int address);
-    Instruction& getObjectByLine(int lineNumber);
-    bool isEmpty() const;
+  Instruction& getObjectByAddress(int address);
+  Instruction& getObjectByLine(int lineNumber);
+  bool isEmpty() const;
+
 private:
-    std::vector<Instruction> instructions;
+  std::vector<Instruction> instructions;
 };
 
 #endif // INSTRUCTIONLIST_H

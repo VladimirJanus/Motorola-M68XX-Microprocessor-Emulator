@@ -16,23 +16,20 @@
  */
 #include "externaldisplay.h"
 #include <QScrollBar>
-#include "ui_externaldisplay.h"
 
-ExternalDisplay::ExternalDisplay(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ExternalDisplay)
-{
-    ui->setupUi(this);
-    connect(ui->plainTextDisplay->horizontalScrollBar(), &QScrollBar::valueChanged, this, &ExternalDisplay::handleDisplayScrollHorizontal);
-    connect(ui->plainTextDisplay->verticalScrollBar(), &QScrollBar::valueChanged, this, &ExternalDisplay::handleDisplayScrollVertical);
+ExternalDisplay::ExternalDisplay(QWidget *parent)
+  : QDialog(parent)
+  , ui(new Ui::ExternalDisplay) {
+  ui->setupUi(this);
+  connect(ui->plainTextDisplay->horizontalScrollBar(), &QScrollBar::valueChanged, this, &ExternalDisplay::handleDisplayScrollHorizontal);
+  connect(ui->plainTextDisplay->verticalScrollBar(), &QScrollBar::valueChanged, this, &ExternalDisplay::handleDisplayScrollVertical);
 
-    QWidget::setWindowTitle("Display");
-    //this->installEventFilter(this);
+  QWidget::setWindowTitle("Display");
+  //this->installEventFilter(this);
 }
 
-ExternalDisplay::~ExternalDisplay()
-{
-    delete ui;
+ExternalDisplay::~ExternalDisplay() {
+  delete ui;
 }
 
 /*/bool ExternalDisplay::eventFilter(QObject* obj, QEvent* event) {
@@ -47,15 +44,9 @@ ExternalDisplay::~ExternalDisplay()
     }
     return true;
 }/*/
-void ExternalDisplay::handleDisplayScrollHorizontal(){
-    ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
+void ExternalDisplay::handleDisplayScrollHorizontal() {
+  ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
 }
-void ExternalDisplay::handleDisplayScrollVertical(){
-    ui->plainTextDisplay->verticalScrollBar()->setValue(0);
+void ExternalDisplay::handleDisplayScrollVertical() {
+  ui->plainTextDisplay->verticalScrollBar()->setValue(0);
 }
-
-
-
-
-
-

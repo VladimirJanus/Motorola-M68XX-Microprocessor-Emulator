@@ -17,8 +17,9 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
+#include <QRegularExpression>
 #include <QString>
-#include <datatypes.h>
+#include "datatypes.h"
 using DataTypes::AddressingMode;
 using DataTypes::alliasMap;
 using DataTypes::AssemblyStatus;

@@ -15,63 +15,58 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "assembler.h"
-#include <QString>
-#include <QStringList>
-#include "instructionlist.h"
-#include "qregularexpression.h"
-#include <datatypes.h>
 
 struct Err {
-  static const QString invalidHexOrRange(const QString &num) { return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF]."; }
-  static const QString invalidBinOrRange(const QString &num) { return "Invalid Binary number: '" + num + "' or value out of range[0, $FFFF]."; }
-  static const QString invalidRelDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[-128, 127]"; }
-  static const QString invalidDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[0, $FFFF]"; }
-  static const QString invalidAsciiConversionSyntax() { return "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"; }
-  static const QString invalidAsciiCharacter(const QString &input) { return "Invalid ASCII character: '" + input + "'"; }
+  inline static const QString invalidHexOrRange(const QString &num) { return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF]."; }
+  inline static const QString invalidBinOrRange(const QString &num) { return "Invalid Binary number: '" + num + "' or value out of range[0, $FFFF]."; }
+  inline static const QString invalidRelDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[-128, 127]"; }
+  inline static const QString invalidDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[0, $FFFF]"; }
+  inline static const QString invalidAsciiConversionSyntax() { return "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"; }
+  inline static const QString invalidAsciiCharacter(const QString &input) { return "Invalid ASCII character: '" + input + "'"; }
 
-  static const QString numOutOfRangeByte(int32_t value) { return "Value out of range for instruction[0, $FF]: " + QString::number(value); }
-  static const QString numOutOfRangeWord(int32_t value) { return "Value out of range[0, $FFFF]: " + QString::number(value); }
-  static const QString numOutOfRelRange(int32_t value) { return "Relative address out of range[-128, 127]: " + QString::number(value); }
+  inline static const QString numOutOfRangeByte(int32_t value) { return "Value out of range for instruction[0, $FF]: " + QString::number(value); }
+  inline static const QString numOutOfRangeWord(int32_t value) { return "Value out of range[0, $FFFF]: " + QString::number(value); }
+  inline static const QString numOutOfRelRange(int32_t value) { return "Relative address out of range[-128, 127]: " + QString::number(value); }
 
-  static const QString exprOverFlow() { return "Expression result out of range[0, $FFFF]"; }
-  static const QString exprMissingOperation() { return "Missing operation(+/-) in expression"; }
-  static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: " + QString::number(value); }
-  static const QString exprUnexpectedCharacter(const QChar &character) { return "Unexpected character in expression: " + QString(character); }
+  inline static const QString exprOverFlow() { return "Expression result out of range[0, $FFFF]"; }
+  inline static const QString exprMissingOperation() { return "Missing operation(+/-) in expression"; }
+  inline static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: " + QString::number(value); }
+  inline static const QString exprUnexpectedCharacter(const QChar &character) { return "Unexpected character in expression: " + QString(character); }
 
-  static const QString labelUndefined(const QString &label) { return "Label '" + label + "' is not defined"; }
-  static const QString labelDefinedTwice(const QString &label) { return "Label already declared: '" + label + "'"; }
-  static const QString labelReserved(const QString &label) {
+  inline static const QString labelUndefined(const QString &label) { return "Label '" + label + "' is not defined"; }
+  inline static const QString labelDefinedTwice(const QString &label) { return "Label already declared: '" + label + "'"; }
+  inline static const QString labelReserved(const QString &label) {
     return "'" + label +
            "' is a reserved instruction name and cannot be used as a label. "
            "If you meant to use the instruction, it must be indented with a space or tab:\n"
            "'\tNOP'";
   }
-  static const QString labelStartsWithDigit(const QChar &character) { return "Label may not start with a digit: '" + QString(character) + "'"; }
-  static const QString labelStartsWithOther(const QChar &character) { return "Label may not start with character: '" + QString(character) + "'"; }
-  static const QString labelContainsOther(const QChar &character) { return "Label may not contain character: '" % QString(character) % "'"; }
+  inline static const QString labelStartsWithDigit(const QChar &character) { return "Label may not start with a digit: '" + QString(character) + "'"; }
+  inline static const QString labelStartsWithOther(const QChar &character) { return "Label may not start with character: '" + QString(character) + "'"; }
+  inline static const QString labelContainsOther(const QChar &character) { return "Label may not contain character: '" % QString(character) % "'"; }
 
-  static const QString parsingEmptyNumber() { return "Missing number."; }
-  static const QString missingInstruction() { return "Missing instruction."; }
-  static const QString missingValue() { return "Missing value"; }
+  inline static const QString parsingEmptyNumber() { return "Missing number."; }
+  inline static const QString missingInstruction() { return "Missing instruction."; }
+  inline static const QString missingValue() { return "Missing value"; }
 
-  static const QString unexpectedChar(const QChar &character) { return "Unexpected character: '" % QString(character) % "'"; }
-  static const QString unexpectedOperand() { return "Unexpected operand."; }
+  inline static const QString unexpectedChar(const QChar &character) { return "Unexpected character: '" % QString(character) % "'"; }
+  inline static const QString unexpectedOperand() { return "Unexpected operand."; }
 
-  static const QString instructionUnknown(const QString &s_in) { return "Unknown instruction: '" + s_in + "'"; }
-  static const QString instructionNotSupported(const QString &s_in) { return "Instruction '" + s_in + "' is not supported on this processor."; }
+  inline static const QString instructionUnknown(const QString &s_in) { return "Unknown instruction: '" + s_in + "'"; }
+  inline static const QString instructionNotSupported(const QString &s_in) { return "Instruction '" + s_in + "' is not supported on this processor."; }
 
-  static const QString invalidSETSyntaxMissingComma(const QString &instruction) {
+  inline static const QString invalidSETSyntaxMissingComma(const QString &instruction) {
     return "Invalid " + instruction + " format. Missing comma for address,value separation. Format: ." + instruction + " $FFFF,$FF";
   }
-  static const QString invalidSETSyntaxExtraComma(const QString &instruction) {
+  inline static const QString invalidSETSyntaxExtraComma(const QString &instruction) {
     return "Invalid " + instruction + " format. Too many commas for address,value separation. Format: ." + instruction + " $FFFF,$FF";
   }
-  static const QString invalidSTRSyntax() { return "Invalid string syntax. Format: .STR \"string\""; }
-  static const QString invalidINDSyntax() { return "Invalid indexed addressing syntax. Format: LDAA $FF,X"; }
-  static const QString invalidINDReg(const QString &reg) { return "Invalid index register: '" + reg + "'"; }
-  static const QString instructionDoesNotSupportDIREXT(const QString &s_in) { return "Instruction '" + s_in + "' does not support direct or extended addressing modes."; }
-  static const QString instructionDoesNotSupportIND(const QString &s_in) { return "Instruction '" + s_in + "' does not support indexed data"; };
-  static const QString instructionDoesNotSupportIMM(const QString &s_in) { return "Instruction '" + s_in + "' does not support immediate data"; };
+  inline static const QString invalidSTRSyntax() { return "Invalid string syntax. Format: .STR \"string\""; }
+  inline static const QString invalidINDSyntax() { return "Invalid indexed addressing syntax. Format: LDAA $FF,X"; }
+  inline static const QString invalidINDReg(const QString &reg) { return "Invalid index register: '" + reg + "'"; }
+  inline static const QString instructionDoesNotSupportDIREXT(const QString &s_in) { return "Instruction '" + s_in + "' does not support direct or extended addressing modes."; }
+  inline static const QString instructionDoesNotSupportIND(const QString &s_in) { return "Instruction '" + s_in + "' does not support indexed data"; };
+  inline static const QString instructionDoesNotSupportIMM(const QString &s_in) { return "Instruction '" + s_in + "' does not support immediate data"; };
 };
 
 Assembler::NumParseResult Assembler::parseHex(const QString &input) {
@@ -80,13 +75,13 @@ Assembler::NumParseResult Assembler::parseHex(const QString &input) {
   }
   QString trimmedInput = input.sliced(1);
   bool ok;
-  uint32_t number = trimmedInput.toUInt(&ok, 16);
+  int32_t number = trimmedInput.toInt(&ok, 16);
   if (!ok) {
     return NumParseResult::error(Err::invalidHexOrRange(input));
   } else if (number > 0xFFFF || number < 0) {
     return NumParseResult::error(Err::numOutOfRangeWord(number));
   }
-  return NumParseResult{true, static_cast<int32_t>(number), ""};
+  return NumParseResult{true, number, ""};
 }
 Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   if (input.length() <= 1) {
@@ -94,13 +89,13 @@ Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   }
   QString trimmedInput = input.sliced(1);
   bool ok;
-  uint32_t number = trimmedInput.toUInt(&ok, 2);
+  int32_t number = trimmedInput.toInt(&ok, 2);
   if (!ok) {
     return NumParseResult::error(Err::invalidBinOrRange(input));
   } else if (number > 0xFFFF || number < 0) {
     return NumParseResult::error(Err::numOutOfRangeWord(number));
   }
-  return {true, static_cast<int32_t>(number), ""};
+  return {true, number, ""};
 }
 Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNeg) {
   bool ok;
@@ -184,7 +179,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
   static QRegularExpression exp = QRegularExpression("(?=[+\\-])|(?<=[+\\-])");
   symbols = expr.split(exp, Qt::SplitBehaviorFlags::SkipEmptyParts);
 
-  int64_t value = 0;
+  int32_t value = 0;
   ExprOperation op = PLUS;
 
   for (QString symbol : symbols) {
@@ -195,7 +190,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
     } else if (symbol == "-") {
       op = MINUS;
     } else {
-      int64_t operand;
+      int32_t operand;
       if (symbol[0].isLetter()) {
         if (labelValMap.count(symbol) == 0) {
           return ExpressionEvaluationResult::setUndefined(Err::labelUndefined(symbol), !errOnUndefined);
@@ -212,12 +207,12 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
       }
 
       if (op == PLUS) {
-        if ((operand > 0 && value > INT64_MAX - operand) || (operand < 0 && value < INT64_MIN - operand)) {
+        if ((operand > 0 && value > INT32_MAX - operand) || (operand < 0 && value < INT32_MIN - operand)) {
           return ExpressionEvaluationResult::error(Err::exprOverFlow());
         }
         value += operand;
       } else if (op == MINUS) {
-        if ((operand > 0 && value < INT64_MIN + operand) || (operand < 0 && value > INT64_MAX + operand)) {
+        if ((operand > 0 && value < INT32_MIN + operand) || (operand < 0 && value > INT32_MAX + operand)) {
           return ExpressionEvaluationResult::error(Err::exprOverFlow());
         }
         value -= operand;
@@ -232,7 +227,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
     return ExpressionEvaluationResult::error(Err::exprOutOfRange(value));
   }
 
-  return {true, false, static_cast<int32_t>(value), ""};
+  return {true, false, value, ""};
 }
 
 Msg Assembler::setLabel(const QString &label, int value, std::unordered_map<QString, int> &labelValMap) {
@@ -300,11 +295,11 @@ inline bool checkIsLabelOrExpr(QString s_op) {
     messages.append(DataTypes::Msg{MsgType::ERROR, Err::numOutOfRangeByte(value)}); \
     goto end; \
   }
-#define CHECK_VALUE_ABOVE_FFFF(value) \
+/*#define CHECK_VALUE_ABOVE_FFFF(value) \
   if (value > 0xFFFF) { \
     messages.append(DataTypes::Msg{MsgType::ERROR, Err::numOutOfRangeWord(value)}); \
     goto end; \
-  }
+  }*/
 
 #define SET_LABEL(label, value) \
   if (!label.isEmpty()) { \
@@ -346,7 +341,6 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
     uint8_t opCode = 0;
     uint8_t operand1 = 0;
     uint8_t operand2 = 0;
-    bool immAdr = false;
     if (line.isEmpty()) {
       goto skipLine;
     }
@@ -703,7 +697,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           value = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(value);
+        //CHECK_VALUE_ABOVE_FFFF(value);
 
         SET_LABEL(label, value);
 
@@ -728,7 +722,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           value = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(value);
+        //CHECK_VALUE_ABOVE_FFFF(value);
 
         Memory[interruptLocations - 1] = (value & 0xFF00) >> 8;
         Memory[interruptLocations] = value & 0xFF;
@@ -765,7 +759,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
             value = result.value;
           }
 
-          CHECK_VALUE_ABOVE_FFFF(value);
+          //CHECK_VALUE_ABOVE_FFFF(value);
 
           operand1 = (value >> 8) & 0xFF;
           operand2 = value & 0xFF;
@@ -795,7 +789,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           value = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(value);
+        //CHECK_VALUE_ABOVE_FFFF(value);
 
         assemblerAddress += value;
 
@@ -832,7 +826,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           adr = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(adr);
+        //CHECK_VALUE_ABOVE_FFFF(adr);
 
         QString valOp = s_op.split(",")[1];
         if (valOp.isEmpty()) {
@@ -856,7 +850,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           val = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(val);
+        //CHECK_VALUE_ABOVE_FFFF(val);
 
         operand1 = (val >> 8) & 0xFF;
         operand2 = val & 0xFF;
@@ -899,7 +893,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           adr = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(adr);
+        //CHECK_VALUE_ABOVE_FFFF(adr);
 
         QString valOp = s_op.split(",")[1];
         if (valOp.isEmpty()) {
@@ -923,7 +917,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           val = result.value;
         }
 
-        CHECK_VALUE_ABOVE_FFFF(val);
+        //CHECK_VALUE_ABOVE_FFFF(val);
 
         operand1 = (val >> 8) & 0xFF;
         operand2 = val & 0xFF;
@@ -1054,7 +1048,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int value = resultVal.value;
 
-          CHECK_VALUE_ABOVE_FFFF(value);
+          //CHECK_VALUE_ABOVE_FFFF(value);
           operand1 = (value >> 8) & 0xFF;
           operand2 = value & 0xFF;
         }
@@ -1103,7 +1097,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
         }
         value = resultVal.value;
       }
-      CHECK_VALUE_ABOVE_FFFF(value);
+      //CHECK_VALUE_ABOVE_FFFF(value);
       if (value > 0xFF) {
         skipDir = true;
       }
@@ -1178,7 +1172,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
       messages.append(DataTypes::Msg{MsgType::ERROR, result.message});
       goto end;
     }
-    CHECK_VALUE_ABOVE_FFFF(result.value)
+    //CHECK_VALUE_ABOVE_FFFF(result.value)
 
     Memory[location] = (result.value >> 8) & 0xFF;
     Memory[location + 1] = result.value & 0xFF;
