@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "mainwindow.h"
+#include "src/ui/MainWindow.h"
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QScrollBar>
-#include "assembler.h"
 #include "instructioninfodialog.h"
-#include "instructionlist.h"
+#include "src/assembler/Assembler.h"
 #include "ui_mainwindow.h"
 #include <cmath>
 
@@ -33,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->plainTextInfo->append("Current version: " + DataTypes::softwareVersion + ", designed for Windows 10.");
 
   // Initialization
-  instructionList.clear();
+  assemblyMap.clear();
 
   // External Display
   externalDisplay = new ExternalDisplay(this);
@@ -334,7 +333,7 @@ void MainWindow::setCompileStatus(bool isCompiled) {
     assembled = false;
     ui->buttonCompile->setStyleSheet(uncompiledButton);
     PrintConsole("");
-    instructionList.clear();
+    assemblyMap.clear();
     clearSelections();
     ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
   }
@@ -352,7 +351,7 @@ void MainWindow::updateLinesBox(bool redraw) {
   if (redraw) {
     if (ui->checkAdvancedInfo->isChecked()) {
       for (int i = 0; i < rowCount; i++) {
-        const InstructionList::Instruction &instr = instructionList.getObjectByLine(i);
+        const DataTypes::AssemblyMap::MappedInstr &instr = assemblyMap.getObjectByLine(i);
         if (instr.address == -1) {
           text += QString("%1:----\n").arg(i, 5, 10, QChar('0'));
         } else {
@@ -369,10 +368,10 @@ void MainWindow::updateLinesBox(bool redraw) {
       }
     } else {
       for (int i = 0; i < rowCount; i++) {
-        if (instructionList.getObjectByLine(i).address == -1) {
+        if (assemblyMap.getObjectByLine(i).address == -1) {
           text += QString("%1:----\n").arg(i, 5, 10, QChar('0'));
         } else {
-          text += QString("%1:%2\n").arg(i, 5, 10, QChar('0')).arg(instructionList.getObjectByLine(i).address, 4, 16, QChar('0'));
+          text += QString("%1:%2\n").arg(i, 5, 10, QChar('0')).arg(assemblyMap.getObjectByLine(i).address, 4, 16, QChar('0'));
         }
       }
     }
@@ -406,7 +405,7 @@ void MainWindow::updateMemoryTab() {
       ui->tableWidgetSM->item(i, 1)->setText(QString("%1").arg(processor.Memory[adr], 2, 16, QChar('0')).toUpper());
 
       if (assembled) {
-        auto instruction = instructionList.getObjectByAddress(adr);
+        auto instruction = assemblyMap.getObjectByAddress(adr);
 
         if (instruction.lineNumber == -1) {
           continue;
@@ -631,7 +630,7 @@ void MainWindow::drawProcessor() {
   if (processor.useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(processor.curCycle));
   }
-  int lineNum = instructionList.getObjectByAddress(processor.PC).lineNumber;
+  int lineNum = assemblyMap.getObjectByAddress(processor.PC).lineNumber;
   if (lineNum >= 0) {
     if (lineNum > previousScrollCode + autoScrollUpLimit) {
       previousScrollCode = lineNum - autoScrollUpLimit;
@@ -675,7 +674,7 @@ void MainWindow::drawProcessorRunning(
   if (useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(curCycle));
   }
-  int lineNum = instructionList.getObjectByAddress(PC).lineNumber;
+  int lineNum = assemblyMap.getObjectByAddress(PC).lineNumber;
   if (lineNum >= 0) {
     if (lineNum > previousScrollCode + autoScrollUpLimit) {
       previousScrollCode = lineNum - autoScrollUpLimit;
@@ -760,7 +759,7 @@ bool MainWindow::startAssembly() {
   processor.stopExecution();
   std::fill(std::begin(processor.Memory), std::end(processor.Memory), static_cast<uint8_t>(0));
   std::fill(std::begin(processor.backupMemory), std::end(processor.backupMemory), static_cast<uint8_t>(0));
-  instructionList.clear();
+  assemblyMap.clear();
   AssemblyStatus status;
   try {
     QString code = ui->plainTextCode->toPlainText();
@@ -790,7 +789,7 @@ bool MainWindow::startAssembly() {
 
     return false;
   } else {
-    instructionList = status.instructionList;
+    assemblyMap = status.assemblyMap;
 
     std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
     setCompileStatus(true);
@@ -948,7 +947,7 @@ void MainWindow::on_buttonRunStop_clicked() {
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(OPS, instructionList);
+      processor.startExecution(OPS, assemblyMap);
     }
   }
 }

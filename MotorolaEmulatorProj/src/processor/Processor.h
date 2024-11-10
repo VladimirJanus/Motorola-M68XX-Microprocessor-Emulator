@@ -18,7 +18,8 @@
 #define PROCESSOR_H
 
 #include <QObject>
-#include "ActionQueue.h"
+#include "src/utils/ActionQueue.h"
+#include "src/utils/datatypes.h"
 #include <cstdint>
 #include <qfuturewatcher.h>
 
@@ -40,7 +41,7 @@ class Processor : public QObject {
 private:
   typedef void (Processor::*funcPtr)();
   ActionQueue actionQueue;
-  InstructionList instructionList;
+  DataTypes::AssemblyMap assemblyMap;
   QFutureWatcher<void> futureWatcher;
   funcPtr executeInstruction;
   ProcessorVersion processorVersion = ProcessorVersion::M6800;
@@ -77,7 +78,7 @@ public:
   //run stop step
   void reset();
   void executeStep();
-  void startExecution(float OPS, InstructionList list);
+  void startExecution(float OPS, DataTypes::AssemblyMap list);
   void stopExecution();
 
   //change settings

@@ -19,7 +19,7 @@
 
 #include <QRegularExpression>
 #include <QString>
-#include "datatypes.h"
+#include "src/utils/DataTypes.h"
 using DataTypes::AddressingMode;
 using DataTypes::alliasMap;
 using DataTypes::AssemblyStatus;

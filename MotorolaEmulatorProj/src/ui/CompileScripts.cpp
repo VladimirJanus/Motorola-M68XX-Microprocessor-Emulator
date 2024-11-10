@@ -49,14 +49,14 @@ int MainWindow::inputNextAddress(int curAdr, QString err) {
 
 bool MainWindow::disassemble(ProcessorVersion ver, int begLoc) {
   QString code;
-  instructionList.clear();
+  assemblyMap.clear();
   int line = 0;
 
   for (int i = 0xFFF0; i < 0xFFFE; i += 2) {
     uint16_t value = (processor.Memory[i] << 8) | processor.Memory[i + 1];
     if (value != 0) {
       code.append("\t.SETW $" + QString::number(i, 16).toUpper() + ",$" + QString::number(value, 16).toUpper() + "\n");
-      instructionList.addInstruction(i, line++, 0, 0, 0, "SETW", "");
+      assemblyMap.addInstruction(i, line++, 0, 0, 0, "SETW", "");
     }
   }
 
@@ -75,20 +75,20 @@ bool MainWindow::disassemble(ProcessorVersion ver, int begLoc) {
     } else {
       if (consecutiveZeros > 0) {
         code.append("\t.RMB " + QString::number(consecutiveZeros) + "\n");
-        instructionList.addInstruction(address - consecutiveZeros, line++, 0, 0, 0, "RMB", "");
+        assemblyMap.addInstruction(address - consecutiveZeros, line++, 0, 0, 0, "RMB", "");
         consecutiveZeros = 0;
       }
       code.append("\t.BYTE $" + QString::number(processor.Memory[address], 16).toUpper() + "\n");
-      instructionList.addInstruction(address, line++, 0, 0, 0, "BYTE", "");
+      assemblyMap.addInstruction(address, line++, 0, 0, 0, "BYTE", "");
     }
   }
   if (consecutiveZeros > 0) {
     code.append("\t.RMB " + QString::number(consecutiveZeros) + "\n");
-    instructionList.addInstruction(begLoc - consecutiveZeros, line++, 0, 0, 0, "RMB", "");
+    assemblyMap.addInstruction(begLoc - consecutiveZeros, line++, 0, 0, 0, "RMB", "");
   }
 
   code.append("\t.ORG $" + QString::number(begLoc, 16).toUpper() + "\n");
-  instructionList.addInstruction(begLoc, line++, 0, 0, 0, "ORG", "");
+  assemblyMap.addInstruction(begLoc, line++, 0, 0, 0, "ORG", "");
 
   for (int address = begLoc; address <= lastNonZero;) {
     int opCode = processor.Memory[address];
@@ -113,16 +113,16 @@ bool MainWindow::disassemble(ProcessorVersion ver, int begLoc) {
         } else {
           if (zeroCount > 0) {
             code.append("\t.RMB " + QString::number(zeroCount) + "\n");
-            instructionList.addInstruction(i - zeroCount, line++, 0, 0, 0, "RMB", "");
+            assemblyMap.addInstruction(i - zeroCount, line++, 0, 0, 0, "RMB", "");
             zeroCount = 0;
           }
           code.append("\t.BYTE $" + QString::number(processor.Memory[i], 16).toUpper() + "\n");
-          instructionList.addInstruction(i, line++, 0, 0, 0, "BYTE", "");
+          assemblyMap.addInstruction(i, line++, 0, 0, 0, "BYTE", "");
         }
       }
       if (zeroCount > 0) {
         code.append("\t.RMB " + QString::number(zeroCount) + "\n");
-        instructionList.addInstruction(nextI - zeroCount, line++, 0, 0, 0, "RMB", "");
+        assemblyMap.addInstruction(nextI - zeroCount, line++, 0, 0, 0, "RMB", "");
       }
       address = nextI;
       continue;
@@ -166,7 +166,7 @@ bool MainWindow::disassemble(ProcessorVersion ver, int begLoc) {
       break;
     }
 
-    instructionList.addInstruction(address, line++, opCode, operand1, operand2, in, "");
+    assemblyMap.addInstruction(address, line++, opCode, operand1, operand2, in, "");
     address += inSize;
   }
 

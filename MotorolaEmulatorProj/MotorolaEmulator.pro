@@ -7,35 +7,7 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-SOURCES += \
-    CompileScripts.cpp \
-    assembler.cpp \
-    datatypes.cpp \
-    externaldisplay.cpp \
-    instructionfunctions.cpp \
-    instructioninfodialog.cpp \
-    instructionlist.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    processor.cpp \
-    selectionsys.cpp
 
-HEADERS += \
-    ActionQueue.h \
-    assembler.h \
-    datatypes.h \
-    datatypes.h \
-    datatypes.h \
-    externaldisplay.h \
-    instructioninfodialog.h \
-    instructionlist.h \
-    mainwindow.h \
-    processor.h
-
-FORMS += \
-    externaldisplay.ui \
-    instructioninfodialog.ui \
-    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -46,3 +18,29 @@ RESOURCES += \
     resources.qrc
 
 RC_ICONS = M6800.ico
+
+FORMS += \
+    src/ui/ExternalDisplay.ui \
+    src/ui/InstructionInfoDialog.ui \
+    src/ui/MainWindow.ui
+
+HEADERS += \
+    src/assembler/Assembler.h \
+    src/processor/Processor.h \
+    src/ui/ExternalDisplay.h \
+    src/ui/InstructionInfoDialog.h \
+    src/ui/MainWindow.h \
+    src/utils/ActionQueue.h \
+    src/utils/DataTypes.h
+
+SOURCES += \
+    src/assembler/Assembler.cpp \
+    src/core/main.cpp \
+    src/processor/InstructionFunctions.cpp \
+    src/processor/Processor.cpp \
+    src/ui/CompileScripts.cpp \
+    src/ui/ExternalDisplay.cpp \
+    src/ui/InstructionInfoDialog.cpp \
+    src/ui/MainWindow.cpp \
+    src/ui/SelectionSys.cpp \
+    src/utils/DataTypes.cpp

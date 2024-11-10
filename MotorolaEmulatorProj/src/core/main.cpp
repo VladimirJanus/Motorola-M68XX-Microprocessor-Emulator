@@ -15,9 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include <QApplication>
-#include "assembler.h"
-#include "datatypes.h"
-#include "mainwindow.h"
+#include "src/assembler/Assembler.h"
+#include "src/ui/MainWindow.h"
+#include "src/utils/DataTypes.h"
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -29,7 +29,7 @@ void printHelp() {
             << "Options:\n"
             << "  --help, -h                      Show this help message\n"
             << "  --version, --ver                Show version information\n"
-            << "  --ass, --assemble               Run in assembly mode\n"
+            << "  --ass, --assemble               Assemble a file\n"
             << "    --input, --in <file>          Input assembly file (required for --ass)\n"
             << "    --output, --out <file>        Output binary file (default: assembled_M6800.bin)\n"
             << "    --processor, --proc <ver>     Processor version (M6800 or M6803, default: M6800)\n"

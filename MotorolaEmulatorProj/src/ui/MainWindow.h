@@ -20,8 +20,7 @@
 #include <QLineEdit>
 #include <QMainWindow>
 #include "externaldisplay.h"
-#include "instructionlist.h"
-#include "processor.h"
+#include "src/processor/Processor.h"
 #include <qfuturewatcher.h>
 #include <qtreewidget.h>
 
@@ -60,7 +59,7 @@ private:
   Ui::MainWindow *ui;
 
   ExternalDisplay *externalDisplay;
-  InstructionList instructionList;
+  DataTypes::AssemblyMap assemblyMap;
   QPlainTextEdit *plainTextDisplay;
 
   Processor processor;

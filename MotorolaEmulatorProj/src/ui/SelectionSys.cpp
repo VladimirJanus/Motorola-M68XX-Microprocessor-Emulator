@@ -88,7 +88,7 @@ void MainWindow::drawTextSelections() {
   QList<QTextEdit::ExtraSelection> lineSelections;
   QList<QTextEdit::ExtraSelection> codeSelections;
 
-  int runtimeLine = instructionList.getObjectByAddress(runTimeSelectionAddress).lineNumber;
+  int runtimeLine = assemblyMap.getObjectByAddress(runTimeSelectionAddress).lineNumber;
 
   for (int line : highlightLineList) {
     ColorType type = line == runtimeLine ? ColorType::HIGHLIGHT_RUNTIME : ColorType::HIGHLIGHT;
@@ -143,7 +143,7 @@ void MainWindow::drawMemorySelections() {
 void MainWindow::toggleHighlight(int line) {
   if (line == -1)
     return;
-  int address = instructionList.getObjectByLine(line).address;
+  int address = assemblyMap.getObjectByLine(line).address;
   if (highlightLineList.contains(line)) {
     highlightLineList.removeOne(line);
     if (address >= 0) {

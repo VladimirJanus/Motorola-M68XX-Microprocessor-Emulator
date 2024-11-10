@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "assembler.h"
+#include "src/assembler/Assembler.h"
 
 struct Err {
   inline static const QString invalidHexOrRange(const QString &num) { return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF]."; }
@@ -317,7 +317,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
   std::unordered_map<int, QString> callLabelMap;
   std::unordered_map<int, QString> callLabelRelMap;
   std::unordered_map<int, QString> callLabelExtMap;
-  InstructionList instructionList;
+  DataTypes::AssemblyMap instructionList;
 
   const QStringList lines = code.split('\n');
   const int totalLines = lines.count();

@@ -137,7 +137,7 @@ void Processor::checkBreak() {
   case 0:
     return;
   case 1:
-    if (instructionList.getObjectByAddress(PC).lineNumber == breakIsValue)
+    if (assemblyMap.getObjectByAddress(PC).lineNumber == breakIsValue)
       running = false;
     break;
   case 2:
@@ -313,8 +313,8 @@ void Processor::interruptCheckIPS() {
     break;
   }
 }
-void Processor::startExecution(float OPS, InstructionList list) {
-  instructionList = list;
+void Processor::startExecution(float OPS, DataTypes::AssemblyMap list) {
+  assemblyMap = list;
   running = true;
   curCycle = 1;
   cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);

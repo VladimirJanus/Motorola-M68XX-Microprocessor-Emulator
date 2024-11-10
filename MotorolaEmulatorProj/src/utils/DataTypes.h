@@ -20,8 +20,57 @@
 #include <QList>
 #include <QMap>
 #include <QString>
-#include "instructionlist.h"
 namespace DataTypes {
+  class AssemblyMap {
+  public:
+    struct MappedInstr {
+      int address;
+      int lineNumber;
+      uint8_t byte1;
+      uint8_t byte2;
+      uint8_t byte3;
+      QString IN; //instruction
+      QString OP; //operand
+    };
+
+    void clear() { instructions.clear(); }
+    bool isEmpty() const { return instructions.empty(); }
+
+    void addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, QString IN, QString OP) {
+      MappedInstr instruction;
+      instruction.address = address;
+      instruction.lineNumber = lineNumber;
+      instruction.byte1 = byte1;
+      instruction.byte2 = byte2;
+      instruction.byte3 = byte3;
+      instruction.IN = IN;
+      instruction.OP = OP;
+      instructions.push_back(instruction);
+    }
+
+    MappedInstr& getObjectByAddress(int address) {
+      for (MappedInstr& instruction : instructions) {
+        if (instruction.address == address) {
+          return instruction;
+        }
+      }
+      static MappedInstr defaultInstruction = {address, -1, 0, 0, 0, "", ""};
+      return defaultInstruction;
+    }
+
+    MappedInstr& getObjectByLine(int lineNumber) {
+      for (MappedInstr& instruction : instructions) {
+        if (instruction.lineNumber == lineNumber) {
+          return instruction;
+        }
+      }
+      static MappedInstr defaultInstruction = {-1, lineNumber, 0, 0, 0, "", ""};
+      return defaultInstruction;
+    }
+
+  private:
+    std::vector<MappedInstr> instructions;
+  };
 
   const QString softwareVersion = "1.9";
   const QString programName = "Motorola M68XX Microprocessor Emulator-" + DataTypes::softwareVersion;
@@ -87,7 +136,7 @@ namespace DataTypes {
     QList<Msg> messages;
     int errorCharNum;
     int errorLineNum;
-    InstructionList instructionList;
+    AssemblyMap assemblyMap;
   };
 
   enum ProcessorVersion { M6800 = 0x1, M6803 = 0x2 };
@@ -111,6 +160,7 @@ namespace DataTypes {
   inline bool bit(uint32_t variable, uint8_t bitNum) {
     return (variable & (1 << bitNum)) != 0;
   }
+
   int getInstructionLength(ProcessorVersion version, uint8_t opCode);
   AddressingMode getInstructionMode(ProcessorVersion version, uint8_t opCode);
   int getInstructionCycleCount(ProcessorVersion version, uint8_t opCode);
