@@ -21,4 +21,4 @@ Makefile*
 */build*
 *.user
 *.TMP
-/builds/*
+/build/*

@@ -15,9 +15,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    resources.qrc
+    res/resources.qrc
 
-RC_ICONS = M6800.ico
+RC_ICONS = res/M6800.ico
 
 FORMS += \
     src/ui/ExternalDisplay.ui \
@@ -26,6 +26,7 @@ FORMS += \
 
 HEADERS += \
     src/assembler/Assembler.h \
+    src/assembler/disassembler.h \
     src/processor/Processor.h \
     src/ui/ExternalDisplay.h \
     src/ui/InstructionInfoDialog.h \
@@ -35,10 +36,10 @@ HEADERS += \
 
 SOURCES += \
     src/assembler/Assembler.cpp \
+    src/assembler/disassembler.cpp \
     src/core/main.cpp \
     src/processor/InstructionFunctions.cpp \
     src/processor/Processor.cpp \
-    src/ui/CompileScripts.cpp \
     src/ui/ExternalDisplay.cpp \
     src/ui/InstructionInfoDialog.cpp \
     src/ui/MainWindow.cpp \
