@@ -22,7 +22,7 @@
 #include "src/utils/DataTypes.h"
 using DataTypes::AddressingMode;
 using DataTypes::alliasMap;
-using DataTypes::AssemblyStatus;
+using DataTypes::AssemblyResult;
 using DataTypes::mnemonics;
 using DataTypes::Msg;
 using DataTypes::MsgType;
@@ -30,7 +30,7 @@ using DataTypes::ProcessorVersion;
 
 class Assembler {
 public:
-  static AssemblyStatus assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
+  static AssemblyResult assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
   struct NumParseResult {
     bool ok;
     int32_t value;

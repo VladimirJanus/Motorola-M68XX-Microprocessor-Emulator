@@ -115,7 +115,7 @@ int handleAssembly(int argc, char* argv[]) {
   QString qFileContent = QString::fromStdString(fileContent);
 
   std::array<uint8_t, 0x10000> memory = {0};
-  AssemblyStatus status = Assembler::assemble(processorVersion, qFileContent, memory);
+  AssemblyResult status = Assembler::assemble(processorVersion, qFileContent, memory);
 
   for (const Msg& message : status.messages) {
     if (message.type == MsgType::ERROR) {

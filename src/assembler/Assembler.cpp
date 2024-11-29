@@ -307,7 +307,7 @@ inline bool checkIsLabelOrExpr(QString s_op) {
     if (messages.last().type == MsgType::ERROR) \
       goto end; \
   }
-AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &Memory) {
+AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &Memory) {
   int assemblerLine = 0;
   uint16_t assemblerAddress = 0;
 
@@ -317,7 +317,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
   std::unordered_map<int, QString> callLabelMap;
   std::unordered_map<int, QString> callLabelRelMap;
   std::unordered_map<int, QString> callLabelExtMap;
-  DataTypes::AssemblyMap instructionList;
+  DataTypes::AssemblyMap assemblyMap;
 
   const QStringList lines = code.split('\n');
   const int totalLines = lines.count();
@@ -1134,16 +1134,16 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
       messages.append({MsgType::WARN, QString("Instruction on line: %1 overwrites input buffers or interrupt vectors.").arg(assemblerLine)});
     }
     if (assemblerAddress == instructionAddress) {
-      instructionList.addInstruction(-1, assemblerLine, opCode, operand1, operand2, s_in, s_op);
+      assemblyMap.addInstruction(-1, assemblerLine, opCode, operand1, operand2, s_in, s_op);
     } else {
-      instructionList.addInstruction(instructionAddress, assemblerLine, opCode, operand1, operand2, s_in, s_op);
+      assemblyMap.addInstruction(instructionAddress, assemblerLine, opCode, operand1, operand2, s_in, s_op);
     }
   }
   // naj compiler pokaze na katere lineje je nedifenrane onej
   for (const auto &entry : callLabelMap) {
     int location = entry.first;
     QString expr = entry.second;
-    auto &instruction = instructionList.getObjectByAddress(location - 1);
+    auto &instruction = assemblyMap.getObjectByAddress(location - 1);
     assemblerLine = instruction.lineNumber;
     auto result = expressionEvaluator(expr, labelValMap, true);
     if (!result.ok) {
@@ -1165,7 +1165,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
   for (const auto &entry : callLabelExtMap) {
     int location = entry.first;
     QString expr = entry.second;
-    auto &instruction = instructionList.getObjectByAddress(location - 1);
+    auto &instruction = assemblyMap.getObjectByAddress(location - 1);
     assemblerLine = instruction.lineNumber;
     auto result = expressionEvaluator(expr, labelValMap, true);
     if (!result.ok) {
@@ -1182,7 +1182,7 @@ AssemblyStatus Assembler::assemble(ProcessorVersion processorVersion, QString &c
   for (const auto &entry : callLabelRelMap) {
     int location = entry.first;
     QString label = entry.second;
-    auto &instruction = instructionList.getObjectByAddress(location - 1);
+    auto &instruction = assemblyMap.getObjectByAddress(location - 1);
     assemblerLine = instruction.lineNumber;
     if (labelValMap.count(label) == 0) {
       assemblerLine = instruction.lineNumber;
@@ -1219,5 +1219,5 @@ end:
       messages.removeAt(i);
     }
   }
-  return {messages, errorCharNum, assemblerLine, instructionList};
+  return {messages, errorCharNum, assemblerLine, assemblyMap};
 }

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1264</width>
-    <height>801</height>
+    <width>1280</width>
+    <height>780</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
@@ -195,7 +201,7 @@
          <widget class="QGroupBox" name="groupMemory">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-            <horstretch>5</horstretch>
+            <horstretch>7</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
@@ -398,9 +404,12 @@
         </item>
         <item>
          <widget class="QGroupBox" name="groupSimpleMemory">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>5</horstretch>
+            <horstretch>7</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
@@ -4119,7 +4128,7 @@ QPushButton:pressed{
              <enum>QTabWidget::TabShape::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>3</number>
+             <number>2</number>
             </property>
             <property name="elideMode">
              <enum>Qt::TextElideMode::ElideNone</enum>
@@ -4219,8 +4228,8 @@ Created by Vladimir Januš</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>644</width>
-                   <height>340</height>
+                   <width>826</width>
+                   <height>312</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -4991,7 +5000,7 @@ Created by Vladimir Januš</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>630</width>
+                   <width>646</width>
                    <height>382</height>
                   </rect>
                  </property>
@@ -11631,7 +11640,7 @@ QPushButton:pressed{
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1264</width>
+     <width>1280</width>
      <height>19</height>
     </rect>
    </property>

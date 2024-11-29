@@ -68,7 +68,6 @@ private:
   void drawOPC();
   bool startAssembly();
   bool startDisassembly();
-  bool disassemble(ProcessorVersion ver, int begLoc);
   void handleResize(QSize size);
 
   void updateMemoryTab();

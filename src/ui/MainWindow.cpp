@@ -20,6 +20,7 @@
 #include <QScrollBar>
 #include "instructioninfodialog.h"
 #include "src/assembler/Assembler.h"
+#include "src/assembler/Disassembler.h"
 #include "ui_mainwindow.h"
 #include <cmath>
 
@@ -760,10 +761,10 @@ bool MainWindow::startAssembly() {
   std::fill(std::begin(processor.Memory), std::end(processor.Memory), static_cast<uint8_t>(0));
   std::fill(std::begin(processor.backupMemory), std::end(processor.backupMemory), static_cast<uint8_t>(0));
   assemblyMap.clear();
-  AssemblyStatus status;
+  AssemblyResult assResult;
   try {
     QString code = ui->plainTextCode->toPlainText();
-    status = Assembler::assemble(processorVersion, code, processor.Memory);
+    assResult = Assembler::assemble(processorVersion, code, processor.Memory);
 
   } catch (const std::exception &e) {
     PrintConsole("Critical error in assembler, reason unknown. C++ exception:\n" + QString(e.what()), MsgType::ERROR);
@@ -774,22 +775,22 @@ bool MainWindow::startAssembly() {
     return false;
   }
 
-  foreach (Msg message, status.messages) {
+  foreach (Msg message, assResult.messages) {
     if (message.type == MsgType::ERROR) {
-      PrintConsole("(line:" + QString::number(status.errorLineNum) + ") " + message.message, message.type);
+      PrintConsole("(line:" + QString::number(assResult.errorLineNum) + ") " + message.message, message.type);
     } else {
       PrintConsole(message.message, message.type);
     }
   }
-  if (status.messages.length() > 0 && status.messages.last().type == MsgType::ERROR) {
+  if (assResult.messages.length() > 0 && assResult.messages.last().type == MsgType::ERROR) {
     setCompileStatus(false);
     resetEmulator();
-    setSelectionCompileError(status.errorCharNum, status.errorLineNum);
+    setSelectionCompileError(assResult.errorCharNum, assResult.errorLineNum);
     ui->tabWidget->setCurrentIndex(0);
 
     return false;
   } else {
-    assemblyMap = status.assemblyMap;
+    assemblyMap = assResult.assemblyMap;
 
     std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
     setCompileStatus(true);
@@ -807,21 +808,28 @@ bool MainWindow::startDisassembly() {
                                        QLineEdit::Normal,
                                        QString(),
                                        &ORGOK);
-  if (ORGOK) {
-    bool ORGNUMOK;
-    int number = text.toInt(&ORGNUMOK);
-    if (ORGNUMOK && number >= 0 && number <= 0xFFFF) {
-      bool disassemblyOK = disassemble(processorVersion, number);
-      resetEmulator();
-      return disassemblyOK;
-    } else {
-      PrintConsole("Invalid address", MsgType::ERROR);
-      return false;
-    }
-  } else {
-    PrintConsole("Disassembly canceled");
+  if (!ORGOK) {
+    PrintConsole("Invalid address", MsgType::ERROR);
     return false;
   }
+  bool ORGNUMOK;
+  int number = text.toInt(&ORGNUMOK);
+  if (!ORGNUMOK || number < 0 || number > 0xFFFF) {
+    PrintConsole("Invalid address", MsgType::ERROR);
+    return false;
+  }
+
+  DisassemblyResult disassResult = Disassembler::disassemble(processorVersion, number, 0xFFFF, processor.Memory);
+
+  ui->plainTextCode->setPlainText(disassResult.code);
+  assemblyMap = disassResult.assemblyMap;
+
+  setCompileStatus(true);
+  resetEmulator();
+  foreach (Msg message, disassResult.messages) {
+    PrintConsole(message.message, message.type);
+  }
+  return true;
 }
 bool MainWindow::on_buttonCompile_clicked() {
   ui->plainTextConsole->clear();

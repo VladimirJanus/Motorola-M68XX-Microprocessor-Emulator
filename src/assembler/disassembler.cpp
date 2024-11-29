@@ -17,40 +17,39 @@
  */
 #include "disassembler.h"
 #include <QInputDialog>
-#include "src/utils/DataTypes.h"
-using DataTypes::ProcessorVersion;
 
-int Disassembler::inputNextAddress(int curAdr, QString err) {
+/*Disassembler::InputNextAddressResult Disassembler::inputNextAddress(int curAdr, QString err) {
   bool ok;
-  QString text = QInputDialog::getText(this, "Input Dialog", err + ". Missing data will be written with .BYTE. Enter decimal address of next instruction. Current address: " + QString::number(curAdr, 10) + ".", QLineEdit::Normal, QString(), &ok);
+  QString text = QInputDialog::getText(nullptr,
+                                       "Input Dialog",
+                                       err + ". Missing data will be written with .BYTE. Enter decimal address of next instruction. Current address: " +
+                                         QString::number(curAdr, 10) + ".",
+                                       QLineEdit::Normal,
+                                       QString(),
+                                       &ok);
+  if (!ok)
+    return {false, 0, Msg{MsgType::DEBUG, "Disassembly canceled."}};
 
-  if (ok) {
-    bool iok;
-    int number = text.toInt(&iok);
-    if (iok) {
-      if (number < curAdr) {
-        PrintConsole("Next instruction cannot be located before the previous one", MsgType::ERROR);
-        return -1;
-      }
-      return number;
-    } else {
-      PrintConsole("Invalid address", MsgType::ERROR);
-      return -1;
-    }
-  } else {
-    PrintConsole("Disassembly canceled.");
-    return -1;
-  }
-}
+  bool iok;
+  int number = text.toInt(&iok);
+  if (!iok)
+    return {false, 0, Msg{MsgType::DEBUG, "Invalid address"}};
 
-bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint8_t, 0x10000> &Memory) {
+  if (number < curAdr)
+    return {false, 0, Msg{MsgType::DEBUG, "Next instruction cannot be located before the previous one"}};
+
+  return {true, 0, Msg::none()};
+}*/
+
+DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory) {
   QString code;
   DataTypes::AssemblyMap assemblyMap;
+  QList<Msg> messages;
 
   int line = 0;
 
   for (int i = 0xFFF0; i < 0xFFFE; i += 2) {
-    uint16_t value = (processor.Memory[i] << 8) | processor.Memory[i + 1];
+    uint16_t value = (Memory[i] << 8) | Memory[i + 1];
     if (value != 0) {
       code.append("\t.SETW $" + QString::number(i, 16).toUpper() + ",$" + QString::number(value, 16).toUpper() + "\n");
       assemblyMap.addInstruction(i, line++, 0, 0, 0, "SETW", "");
@@ -58,8 +57,8 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
   }
 
   int lastNonZero = 0xFFEF;
-  for (int i = 0xFFEF; i >= 0; --i) {
-    if (processor.Memory[i] != 0) {
+  for (int i = endLoc; i >= 0; --i) {
+    if (Memory[i] != 0) {
       lastNonZero = i;
       break;
     }
@@ -67,7 +66,7 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
 
   int consecutiveZeros = 0;
   for (int address = 0; address < begLoc; ++address) {
-    if (processor.Memory[address] == 0) {
+    if (Memory[address] == 0) {
       consecutiveZeros++;
     } else {
       if (consecutiveZeros > 0) {
@@ -75,7 +74,7 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
         assemblyMap.addInstruction(address - consecutiveZeros, line++, 0, 0, 0, "RMB", "");
         consecutiveZeros = 0;
       }
-      code.append("\t.BYTE $" + QString::number(processor.Memory[address], 16).toUpper() + "\n");
+      code.append("\t.BYTE $" + QString::number(Memory[address], 16).toUpper() + "\n");
       assemblyMap.addInstruction(address, line++, 0, 0, 0, "BYTE", "");
     }
   }
@@ -88,24 +87,31 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
   assemblyMap.addInstruction(begLoc, line++, 0, 0, 0, "ORG", "");
 
   for (int address = begLoc; address <= lastNonZero;) {
-    int opCode = processor.Memory[address];
+    int opCode = Memory[address];
     int inSize = getInstructionLength(ver, opCode);
     AddressingMode inType = getInstructionMode(ver, opCode);
     QString in = getInstructionMnemonic(ver, opCode);
 
     if (inType == AddressingMode::INVALID) {
-      PrintConsole("Unknown/unsupported instruction at address: $" + QString::number(address, 16).toUpper(), MsgType::ERROR);
-      int nextI = inputNextAddress(address, "Unknown instruction");
-      if (nextI == -1)
-        break;
-      if (nextI <= address) {
-        PrintConsole("Invalid next address. Must be greater than current address.", MsgType::ERROR);
-        continue;
-      }
+      messages.append(Msg{MsgType::WARN, "Unknown/unsupported instruction at address: $" + QString::number(address, 16).toUpper()});
+      if (Memory[address] == 0) {
+        int zeroCount = 0;
+        while (Memory[address + zeroCount] == 0) {
+          zeroCount++;
+        }
+        code.append("\t.RMB " + QString::number(zeroCount) + "\n");
+        assemblyMap.addInstruction(address, line++, 0, 0, 0, "RMB", "");
+        address += zeroCount + 1;
 
-      int zeroCount = 0;
+      } else {
+        code.append("\t.BYTE $" + QString::number(Memory[address], 16).toUpper() + " ;UNKOWN INSTRUCTION\n");
+        assemblyMap.addInstruction(address, line++, 0, 0, 0, "BYTE", "");
+        address++;
+      }
+      continue;
+      /*int zeroCount = 0;
       for (int i = address; i < nextI; ++i) {
-        if (processor.Memory[i] == 0) {
+        if (Memory[i] == 0) {
           zeroCount++;
         } else {
           if (zeroCount > 0) {
@@ -113,7 +119,7 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
             assemblyMap.addInstruction(i - zeroCount, line++, 0, 0, 0, "RMB", "");
             zeroCount = 0;
           }
-          code.append("\t.BYTE $" + QString::number(processor.Memory[i], 16).toUpper() + "\n");
+          code.append("\t.BYTE $" + QString::number(Memory[i], 16).toUpper() + "\n");
           assemblyMap.addInstruction(i, line++, 0, 0, 0, "BYTE", "");
         }
       }
@@ -122,7 +128,7 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
         assemblyMap.addInstruction(nextI - zeroCount, line++, 0, 0, 0, "RMB", "");
       }
       address = nextI;
-      continue;
+      continue;*/
     }
 
     uint8_t operand1 = 0, operand2 = 0;
@@ -131,32 +137,32 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
       code.append("\t" + in + "\n");
       break;
     case AddressingMode::IMM:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
       code.append("\t" + in + " #$" + QString::number(operand1, 16).toUpper() + "\n");
       break;
     case AddressingMode::IMMEXT:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
-      operand2 = processor.Memory[(address + 2) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
+      operand2 = Memory[(address + 2) & 0xFFFF];
       code.append("\t" + in + " #$" + QString::number((operand1 << 8) | operand2, 16).toUpper() + "\n");
       break;
     case AddressingMode::DIR:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
       code.append("\t" + in + " $" + QString::number(operand1, 16).toUpper() + "\n");
       break;
     case AddressingMode::IND:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
       code.append("\t" + in + " $" + QString::number(operand1, 16).toUpper() + ",X\n");
       break;
     case AddressingMode::EXT:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
-      operand2 = processor.Memory[(address + 2) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
+      operand2 = Memory[(address + 2) & 0xFFFF];
       code.append("\t" + in + " $" + QString::number((operand1 << 8) | operand2, 16).toUpper() + "\n");
       break;
     case AddressingMode::REL:
-      operand1 = processor.Memory[(address + 1) & 0xFFFF];
+      operand1 = Memory[(address + 1) & 0xFFFF];
       if (operand1 == 0xFF || operand1 == 0xFE) {
-        code.append("\t" + in + " $00 ;Relative address FF is out of bounds\n");
-        PrintConsole("Relative address FF is out of bounds", MsgType::ERROR);
+        code.append("\t" + in + " $00 ;Machine code addresses relative address " + QString::number(operand1, 16).toUpper() + "which is out of bounds\n");
+        messages.append(Msg{MsgType::WARN, "Machine code addresses relative address " + QString::number(operand1, 16).toUpper() + "which is out of bounds"});
       } else {
         code.append("\t" + in + " $" + QString::number(operand1, 16).toUpper() + "\n");
       }
@@ -166,9 +172,5 @@ bool Disassembler::disassemble(ProcessorVersion ver, int begLoc, std::array<uint
     assemblyMap.addInstruction(address, line++, opCode, operand1, operand2, in, "");
     address += inSize;
   }
-
-  ui->plainTextCode->setPlainText(code);
-  std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
-  setCompileStatus(true);
-  return true;
+  return DisassemblyResult{messages, code, assemblyMap};
 }

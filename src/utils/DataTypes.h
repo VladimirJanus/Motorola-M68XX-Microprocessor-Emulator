@@ -130,26 +130,33 @@ namespace DataTypes {
   struct Msg {
     MsgType type;
     QString message;
+
+    static const Msg none() { return Msg{MsgType::NONE, ""}; }
   };
 
-  struct AssemblyStatus {
+  struct AssemblyResult {
     QList<Msg> messages;
     int errorCharNum;
     int errorLineNum;
     AssemblyMap assemblyMap;
   };
+  struct DisassemblyResult {
+    QList<Msg> messages;
+    QString code;
+    DataTypes::AssemblyMap assemblyMap;
+  };
 
   enum ProcessorVersion { M6800 = 0x1, M6803 = 0x2 };
 
   enum AddressingMode {
-    INH = 10,    //1 byte id 0
+    INH = 10,    //1 byte  id 0
     IMM = 20,    //2 bytes id 0
     IMMEXT = 30, //3 bytes id 0
     DIR = 21,    //2 bytes id 1
     EXT = 31,    //3 bytes id 1
     IND = 22,    //2 bytes id 2
     REL = 23,    //2 bytes id 3
-    INVALID = 0, //invalid so 0
+    INVALID = 0, //invalid    0
   };
 
   struct Instruction {
