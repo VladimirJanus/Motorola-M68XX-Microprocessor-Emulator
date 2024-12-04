@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
       printHelp();
       return 0;
     }
-    if (arg == "--ass" || arg == "--assemble") {
+    if (arg == "--asm" || arg == "--assemble") {
       return handleAssembly(argc, argv);
     }
     if (arg == "--version" || arg == "--ver") {
