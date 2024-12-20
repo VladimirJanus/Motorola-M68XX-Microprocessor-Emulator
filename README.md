@@ -1,6 +1,4 @@
-The ready to run program is in the builds folder. Runs on Win10+ no additional programs required.
-
-The MotorolaEmulatorProj directory is the QT project.
+Runs on Win10+ no additional programs required.
 
 The source code history is missing because the project was moved many times and i lost the changes made to it.
 
