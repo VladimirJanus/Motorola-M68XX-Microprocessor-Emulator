@@ -57,6 +57,7 @@ public:
 
 private:
   Ui::MainWindow *ui;
+  QString sessionId;
 
   ExternalDisplay *externalDisplay;
   DataTypes::AssemblyMap assemblyMap;

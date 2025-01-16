@@ -815,8 +815,8 @@ void Processor::IMMSBCA() {
 }
 void Processor::IMMSUBD() {
   uint16_t val = (Memory[(PC + 1) & 0xFFFF] << 8) + Memory[(PC + 2) & 0xFFFF];
-  uint8_t uInt16 = (aReg << 8) + bReg;
-  uint8_t uInt162 = uInt16 - val;
+  uint16_t uInt16 = (aReg << 8) + bReg;
+  uint16_t uInt162 = uInt16 - val;
   updateFlags(Negative, bit(uInt162, 15));
   updateFlags(Zero, uInt162 == 0);
   updateFlags(Overflow, (bit(aReg, 7) && !bit(val, 15) && !bit(uInt162, 15)) || (!bit(aReg, 7) && bit(val, 15) && bit(uInt162, 15)));

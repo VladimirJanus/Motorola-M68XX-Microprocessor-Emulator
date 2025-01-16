@@ -18,6 +18,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QScrollBar>
+#include <QTimer>
 #include "instructioninfodialog.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
@@ -31,6 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
   ui->setupUi(this);
   QWidget::setWindowTitle(DataTypes::programName);
   ui->plainTextInfo->append("Current version: " + DataTypes::softwareVersion + ", designed for Windows 10.");
+
+  sessionId = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
 
   // Initialization
   assemblyMap.clear();
@@ -489,13 +492,37 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
   handleResize(this->size());
 }
 void MainWindow::on_plainTextCode_textChanged() {
-  if (ui->plainTextCode->toPlainText().count('\n') > 65535) {
-    QString text = ui->plainTextCode->toPlainText();
+  static QTimer backupTimer;
+
+  // Limit line count
+  QString text = ui->plainTextCode->toPlainText();
+  if (text.count('\n') > 65535) {
     QStringList lines = text.split('\n', Qt::SkipEmptyParts);
-    lines = lines.mid(0, 0x10000);
-    text = lines.join('\n');
+    text = lines.mid(0, 65536).join('\n');
     ui->plainTextCode->setPlainText(text);
   }
+
+  // Backup handling with debounce
+  if (!backupTimer.isActive()) {
+    backupTimer.setInterval(3000);
+    backupTimer.setSingleShot(true);
+    QPlainTextEdit *textEdit = ui->plainTextCode;
+    connect(&backupTimer, &QTimer::timeout, this, [textEdit, this]() {
+      QDir tempDir(QCoreApplication::applicationDirPath() + "/autosave");
+      if (!tempDir.exists()) {
+        tempDir.mkpath(".");
+      }
+      QString backupPath = tempDir.filePath("backup_session_" + sessionId + ".txt");
+      QFile backupFile(backupPath);
+      if (backupFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&backupFile);
+        out << textEdit->toPlainText();
+        backupFile.close();
+      }
+    });
+  }
+  backupTimer.start();
+
   updateLinesBox(false);
   if (!writeToMemory) {
     if (assembled)
