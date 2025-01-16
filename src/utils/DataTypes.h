@@ -72,7 +72,7 @@ namespace DataTypes {
     std::vector<MappedInstr> instructions;
   };
 
-  const QString softwareVersion = "1.9";
+  const QString softwareVersion = "1.9.1";
   const QString programName = "Motorola M68XX Microprocessor Emulator-" + DataTypes::softwareVersion;
 
   enum class ColorType {

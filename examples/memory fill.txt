@@ -1,0 +1,7 @@
+	ldab 0,x
+	stab 12,x
+	inx
+	inca
+	cmpa #12
+	bne -8
+	ldaa #0

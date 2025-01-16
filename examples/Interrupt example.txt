@@ -1,0 +1,38 @@
+
+	.org $40 ;main program
+	cli ;clear interrupt mask so IRQ works
+loop	inca
+	nop
+	nop ;can replace with SWI
+	nop
+	jmp loop
+
+irqProg	.org $80 ;IRQ interrupt program
+	ldaa #7
+	ldab #6
+	aba
+	staa 0
+	rti
+
+swiProg	.org $120 ;SWI interrupt program
+	ldaa #5
+	ldab #4
+	aba
+	staa 0
+	rti
+
+nmiProg	.org $160 ;NMI interrupt program
+	ldaa #3
+	ldab #2
+	aba
+	staa 0
+	rti
+
+	.SETW IRQ_PTR,irqProg
+	.SETW SWI_PTR,$120
+	.SETW NMI_PTR,nmiProg
+
+	.SETW RST_PTR,$40 ;the reset pointer
+;was overwritten with another ".ORG" directive.
+;Without this the program would start at the
+;last ".ORG" directive which is at $160.

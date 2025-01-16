@@ -1,0 +1,273 @@
+LIVE		.equ '#'
+DEAD		.equ 0
+DISPLAYWIDTH	.equ 54
+DISPLAYHEIGHT	.equ 20
+DISPLAYLASTX	.equ 53
+DISPLAYLASTY	.equ 19
+
+
+		.org $100
+mainLoop	jsr update
+		jmp mainLoop
+
+
+clrDis		ldx #$fb00
+		clra
+clrLoop		staa ,x
+		inx
+		cpx #$ff38
+		bne clrLoop
+		rts
+
+update		ldx #$fb00
+updateLoop	jsr checkCell
+		inx
+		cpx #$ff38
+		bne updateLoop
+		jsr cpy
+		rts
+
+
+cpyXBUF		.word 0
+cpyVALBUF	.byte 0
+cpy		ldx #$f000
+cpyLoop		ldaa ,x
+		staa cpyVALBUF
+		stx cpyXBUF
+		ldd cpyXBUF
+		addd #$b00
+		std cpyXBUF
+		ldx cpyXBUF
+		ldaa cpyVALBUF
+		staa ,x
+		stx cpyXBUF
+		ldd cpyXBUF
+		subd #$b00
+		std cpyXBUF
+		ldx cpyXBUF
+		inx
+		cpx #$f438
+		bne cpyLoop
+		rts
+		
+
+;checkCellSubroutine
+checkCellXBUF	.word 0
+checkCellXBUF2	.word 0
+checkCellNew	.byte 0
+checkCellOld	.byte 0
+checkCell	stx checkCellXBUF
+		ldaa ,x
+		staa checkCellOld
+		jsr coordGet
+		staa countNCELLY
+		stab countNCELLX
+		jsr countN
+		ldaa checkCellOld
+
+		cmpa #LIVE
+		beq checkLive
+		cmpb #3
+		bne checkMakeDead
+		bra checkMakeLive
+checkLive	cmpb #2
+		BEQ checkMakeLive
+		cmpb #3
+		BNE checkMakeDead
+checkMakeLive	ldaa #LIVE
+		bra writeToNew
+checkMakeDead	ldaa #DEAD
+writeToNew	staa checkCellNew
+		ldd checkCellXBUF
+		subd #$b00
+		std checkCellXBUF2
+		ldx checkCellXBUF2
+		ldaa checkCellNew
+		staa ,x
+		ldx checkCellXBUF
+		rts
+		
+
+;countN subroutine B: neighbour count
+countNCELLX	.BYTE 0
+countNCELLY	.BYTE 0
+countNXBUF	.WORD 0
+countN		stx countNXBUF
+		clrb
+		
+		ldaa countNCELLY
+		cmpa #0
+		BEQ countNcheckCL
+		deca
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #0
+		BEQ countNcheckTC
+		deca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckTC
+		INCB
+countNcheckTC	ldaa countNCELLY
+		deca
+		staa coordToXY
+
+		ldaa countNCELLX
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckTR
+		INCB
+countNcheckTR	ldaa countNCELLY
+		deca
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #DISPLAYLASTX
+		BEQ countNcheckCL
+		inca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckCL
+		INCB
+countNcheckCL	ldaa countNCELLY
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #0
+		BEQ countNcheckCR
+		deca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckCR
+		INCB
+countNcheckCR	ldaa countNCELLY
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #DISPLAYLASTX
+		BEQ countNcheckBL
+		inca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckBL
+		INCB
+countNcheckBL	ldaa countNCELLY
+		cmpa #DISPLAYLASTY
+		BEQ countNfinish
+		inca
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #0
+		BEQ countNcheckBC
+		deca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckBC
+		INCB
+countNcheckBC	ldaa countNCELLY
+		inca
+		staa coordToXY
+
+		ldaa countNCELLX
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNcheckBR
+		INCB
+countNcheckBR	ldaa countNCELLY
+		inca
+		staa coordToXY
+
+		ldaa countNCELLX
+		cmpa #DISPLAYLASTX
+		BEQ countNfinish
+		inca
+		staa coordToXX
+
+		jsr coordToX
+
+		ldaa ,x
+		CMPA #LIVE
+		BNE countNfinish
+		INCB
+countNfinish	ldx countNXBUF
+		rts
+
+		
+
+;coordToX subroutine X: loc
+coordToXXWord	.byte 0
+coordToXX	.byte 0
+coordToXY	.byte 0
+coordToXXBUF	.word 0
+coordToXABUF	.byte 0
+coordToXBBUF	.byte 0
+coordToX	staa coordToXABUF
+		stab coordToXBBUF
+		ldab #DISPLAYWIDTH
+		ldaa coordToXY
+		MUL
+		ADDD coordToXXWord
+		ADDD #$fb00
+		std coordToXXBUF
+		ldx coordToXXBUF
+		ldaa coordToXABUF
+		ldab coordToXBBUF
+		rts
+		
+		
+		
+		
+
+
+;coordGet subroutine A: Y coord B: X coord
+coordGetXBUF	.WORD 0
+coordGetXBUF2	.WORD 0
+coordGet	stx coordGetXBUF
+		ldx #0
+		ldd coordGetXBUF
+		SUBD #$FB00
+coordDecremD	TSTA
+		BEQ coordDecremB
+		SUBD #DISPLAYWIDTH
+		INX
+		bra coordDecremD
+coordDecremB	CMPB #DISPLAYWIDTH
+		BLO finishCoords
+		SUBB #DISPLAYWIDTH
+		INX
+		bra coordDecremB
+finishCoords	stx coordGetXBUF2
+		ldaa coordGetXBUF2 + 1
+		ldx coordGetXBUF
+		rts
+		
