@@ -32,6 +32,7 @@ using DataTypes::Flag::Negative;
 using DataTypes::Flag::Overflow;
 using DataTypes::Flag::Zero;
 using DataTypes::Interrupt;
+using DataTypes::interruptLocations;
 using DataTypes::M6800InstructionPage;
 using DataTypes::M6803InstructionPage;
 using DataTypes::ProcessorVersion;
@@ -47,7 +48,6 @@ private:
   ProcessorVersion processorVersion = ProcessorVersion::M6800;
 
   //internal settings
-  const uint16_t interruptLocations = 0xFFFF;
   bool WAIStatus = false;
   bool IRQOnKeyPressed = false;
   bool incrementPCOnMissingInstruction = false;

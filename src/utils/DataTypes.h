@@ -75,6 +75,8 @@ namespace DataTypes {
   const QString softwareVersion = "1.9.1";
   const QString programName = "Motorola M68XX Microprocessor Emulator-" + DataTypes::softwareVersion;
 
+  const uint16_t interruptLocations = 0xFFFF;
+
   enum class ColorType {
     HIGHLIGHT,
     RUNTIME,
@@ -100,10 +102,6 @@ namespace DataTypes {
     SETIRQONKEYPRESS,
     SETINCONUNKNOWN,
   };
-  struct Action {
-    ActionType type;
-    uint32_t parameter;
-  };
 
   enum class Interrupt : int {
     NONE = -1,
@@ -127,28 +125,12 @@ namespace DataTypes {
 
   enum class MsgType { NONE, DEBUG, WARN, ERROR };
 
-  struct Msg {
-    MsgType type;
-    QString message;
-
-    static const Msg none() { return Msg{MsgType::NONE, ""}; }
+  enum ProcessorVersion : uint8_t {
+    M6800 = 0x1,
+    M6803 = 0x2,
   };
 
-  struct AssemblyResult {
-    QList<Msg> messages;
-    int errorCharNum;
-    int errorLineNum;
-    AssemblyMap assemblyMap;
-  };
-  struct DisassemblyResult {
-    QList<Msg> messages;
-    QString code;
-    DataTypes::AssemblyMap assemblyMap;
-  };
-
-  enum ProcessorVersion { M6800 = 0x1, M6803 = 0x2 };
-
-  enum AddressingMode {
+  enum AddressingMode : uint8_t {
     INH = 10,    //1 byte  id 0
     IMM = 20,    //2 bytes id 0
     IMMEXT = 30, //3 bytes id 0
@@ -159,9 +141,53 @@ namespace DataTypes {
     INVALID = 0, //invalid    0
   };
 
+  struct Action {
+    ActionType type;
+    uint32_t parameter;
+  };
+
+  struct Msg {
+    MsgType type;
+    QString message;
+
+    static const Msg none() { return Msg{MsgType::NONE, ""}; }
+  };
+
+  struct AssemblyError {
+    bool ok;
+    QString message;
+    int errorLineNum;
+    int errorCharNum;
+    static const AssemblyError failure(QString message, int errorLineNum, int errorCharNum) { return {false, message, errorLineNum, errorCharNum}; }
+    static const AssemblyError none() { return AssemblyError{true, "", -1, -1}; }
+  };
+  struct AssemblyResult {
+    QList<Msg> messages;
+    AssemblyError error;
+    AssemblyMap assemblyMap;
+  };
+  struct DisassemblyResult {
+    QList<Msg> messages;
+    QString code;
+    DataTypes::AssemblyMap assemblyMap;
+  };
+
   struct Instruction {
     AddressingMode mode;
     int cycleCount;
+  };
+
+  struct MnemonicInfo {
+    QList<uint8_t> opCodes;
+    QString flags;
+    QString shortDescription;
+    QString longDescription;
+    uint8_t supportedVersions;
+  };
+  struct Allias {
+    QString mnemonic;
+    QString shortDescription;
+    int supportedVersions;
   };
 
   inline bool bit(uint32_t variable, uint8_t bitNum) {
@@ -717,13 +743,7 @@ namespace DataTypes {
                                                           {EXT, 5},
                                                           {EXT, 5}};
 
-  struct MnemonicInfo {
-    QList<uint8_t> opCodes;
-    QString flags;
-    QString shortDescription;
-    QString longDescription;
-    uint8_t supportedVersions;
-  };
+  static const QList<QString> directivesWithLocation = {".BYTE", ".WORD", ".STR"};
   static const QMap<QString, MnemonicInfo> mnemonics = {
     {".BYTE", {{}, "", "Set Byte", "Sets a 1-byte value or an array of such values to the current address. Values can also be written in an array separated by commas.", M6800 | M6803}},
     {".EQU", {{}, "", "Set Constant", "Associates a specified value with a symbol/label.", M6800 | M6803}},
@@ -1051,11 +1071,7 @@ namespace DataTypes {
     {"TXS", {{0x35, 0, 0, 0, 0, 0}, "------", "SP <- X - 1", "Loads the stack pointer with the contents of the index register, minus one. The contents of the index register remain unchanged.", M6800 | M6803}},
     {"WAI", {{0x3E, 0, 0, 0, 0, 0}, "------", "Wait for interrupt", "Halt program execution and waits for an interrupt.", M6800 | M6803}},
   };
-  struct Allias {
-    QString mnemonic;
-    QString shortDescription;
-    int supportedVersions;
-  };
+
   static const QMap<QString, Allias> alliasMap = {{"BYTE", {".BYTE", "Allias for .BYTE", M6800 | M6803}},
                                                   {"EQU", {".EQU", "Allias for .EQU", M6800 | M6803}},
                                                   {"ORG", {".ORG", "Allias for .ORG", M6800 | M6803}},

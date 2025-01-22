@@ -118,12 +118,13 @@ int handleAssembly(int argc, char* argv[]) {
   AssemblyResult status = Assembler::assemble(processorVersion, qFileContent, memory);
 
   for (const Msg& message : status.messages) {
-    if (message.type == MsgType::ERROR) {
-      std::cout << "Error: (line:" << status.errorLineNum << ") ";
-    }
     std::cout << message.message.toStdString() << std::endl;
   }
-  if (!status.messages.empty() && status.messages.last().type == MsgType::ERROR) {
+  if (!status.error.ok) {
+    if (status.error.errorLineNum != -1) {
+      std::cerr << "Error: (line:" << status.error.errorLineNum << ") ";
+    }
+    std::cerr << "Error:" << status.error.message.toStdString();
     std::cerr << "Assembly failed.\n";
     return 1;
   }

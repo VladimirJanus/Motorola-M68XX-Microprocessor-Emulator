@@ -22,7 +22,9 @@
 #include "src/utils/DataTypes.h"
 using DataTypes::AddressingMode;
 using DataTypes::alliasMap;
+using DataTypes::AssemblyError;
 using DataTypes::AssemblyResult;
+using DataTypes::interruptLocations;
 using DataTypes::mnemonics;
 using DataTypes::Msg;
 using DataTypes::MsgType;
@@ -31,19 +33,22 @@ using DataTypes::ProcessorVersion;
 class Assembler {
 public:
   static AssemblyResult assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
+
+private:
   struct NumParseResult {
     bool ok;
     int32_t value;
     QString message;
 
-    static NumParseResult error(const QString &msg) { return {false, 0, msg}; }
+    static NumParseResult success(const int value) { return {true, value, ""}; }
+    static NumParseResult failure(const QString &msg) { return {false, 0, msg}; }
   };
   struct NumParseRelativeResult {
     bool ok;
     uint8_t value;
     QString message;
     static NumParseRelativeResult fromParseResult(const NumParseResult &result) { return {result.ok, static_cast<uint8_t>(result.value), result.message}; }
-    static NumParseRelativeResult error(const QString &msg) { return {false, 0, msg}; }
+    static NumParseRelativeResult failure(const QString &msg) { return {false, 0, msg}; }
   };
   enum ExprOperation {
     PLUS,
@@ -56,20 +61,50 @@ public:
     int32_t value;
     QString message;
 
-    static ExpressionEvaluationResult setUndefined(const QString &msg, bool ok) { return {ok, true, 0, msg}; }
-    static ExpressionEvaluationResult error(const QString &msg) { return {false, false, 0, msg}; }
+    static ExpressionEvaluationResult success(const int value) { return {true, false, value, ""}; }
+    static ExpressionEvaluationResult setUndefined(const QString msg, bool ok) { return {ok, true, 0, msg}; }
+    static ExpressionEvaluationResult failure(const QString msg) { return {false, false, 0, msg}; }
   };
 
-private:
+  typedef struct voidOperationResult {
+    bool ok;
+    QString message;
+    static voidOperationResult success() { return {true, ""}; }
+    static voidOperationResult failure(QString msg) { return {false, msg}; }
+  } ValidationResult, AssignmentResult, VoidOpRes;
+
+  struct LineParts {
+    QString label;
+    QString s_in;
+    QString s_op;
+  };
+
   static NumParseResult getNum(const QString &input);
   static NumParseRelativeResult getNumRelative(const QString &input);
-  static Msg setLabel(const QString &label, int value, std::unordered_map<QString, int> &labelValMap);
   static ExpressionEvaluationResult expressionEvaluator(const QString &expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined);
   static NumParseResult parseNumber(const QString &input);
   static NumParseResult parseASCII(const QString &input);
   static NumParseResult parseDec(const QString &input, bool allowNeg);
   static NumParseResult parseBin(const QString &input);
   static NumParseResult parseHex(const QString &input);
+
+  static bool lineEmpty(QString line);
+  static LineParts disectLine(QString line, int assemblerLine);
+  static void checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion);
+
+  static inline bool isLabelOrExpression(QString s_op);
+
+  static AssignmentResult assignLabelValue(const QString &label, int value, std::unordered_map<QString, int> &labelValMap);
+  static ValidationResult validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion);
+  static ValidationResult validateMnemonicSupportForIMM(QString s_in);
+  static ValidationResult validateMnemonicSupportForIND(QString s_in);
+  static ValidationResult errorCheckUnexpectedOperand(QString s_op);
+  static ValidationResult errorCheckMissingOperand(QString s_op);
+  static ValidationResult errorCheckMissingLabel(QString label);
+  static ValidationResult errorCheckOperandContainsIND(QString s_in, QString s_op);
+  static ValidationResult errorCheckOperandContainsIMM(QString s_in, QString s_op);
+  static ValidationResult errorCheckOperandIMMINDMixed(QString s_op);
+  static ValidationResult errorCheckValueAboveFF(int value);
 };
 
 #endif // ASSEMBLER_H

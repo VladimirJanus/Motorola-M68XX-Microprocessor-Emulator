@@ -792,27 +792,30 @@ bool MainWindow::startAssembly() {
   try {
     QString code = ui->plainTextCode->toPlainText();
     assResult = Assembler::assemble(processorVersion, code, processor.Memory);
-
   } catch (const std::exception &e) {
-    PrintConsole("Critical error in assembler, reason unknown. C++ exception:\n" + QString(e.what()), MsgType::ERROR);
+    PrintConsole("Critical error in assembler: " + QString(e.what()), MsgType::ERROR);
     ui->tabWidget->setCurrentIndex(0);
     setCompileStatus(false);
     resetEmulator();
-
+    return false;
+  } catch (...) {
+    PrintConsole("Unknown critical error in assembler", MsgType::ERROR);
+    ui->tabWidget->setCurrentIndex(0);
+    setCompileStatus(false);
+    resetEmulator();
     return false;
   }
 
   foreach (Msg message, assResult.messages) {
-    if (message.type == MsgType::ERROR) {
-      PrintConsole("(line:" + QString::number(assResult.errorLineNum) + ") " + message.message, message.type);
-    } else {
-      PrintConsole(message.message, message.type);
-    }
+    PrintConsole(message.message, message.type);
   }
-  if (assResult.messages.length() > 0 && assResult.messages.last().type == MsgType::ERROR) {
+
+  if (!assResult.error.ok) {
+    PrintConsole(assResult.error.message, MsgType::ERROR);
+
     setCompileStatus(false);
     resetEmulator();
-    setSelectionCompileError(assResult.errorCharNum, assResult.errorLineNum);
+    setSelectionCompileError(assResult.error.errorCharNum, assResult.error.errorLineNum);
     ui->tabWidget->setCurrentIndex(0);
 
     return false;
