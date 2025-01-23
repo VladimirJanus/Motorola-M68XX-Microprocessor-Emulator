@@ -31,6 +31,7 @@ struct Err {
 
   inline static const QString exprOverFlow() { return "Expression result out of range[0, $FFFF]"; }
   inline static const QString exprMissingOperation() { return "Missing operation(+/-) in expression"; }
+  inline static const QString exprMissingValue() { return "Missing value after operation (+/-) in expression"; }
   inline static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: " + QString::number(value); }
   inline static const QString exprUnexpectedCharacter(const QChar &character) { return "Unexpected character in expression: " + QString(character); }
 
@@ -179,10 +180,23 @@ Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input
 }
 //evaluates an expression and returns its value ExpressionEvaluationResult(int32_t)
 //If errOnUndefined it will return unsuccessfully(ok = false,  undefined = true) if the expression contains an undefined label, otherwise it will return (ok = true, undefined = true)
-Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QString &expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined) {
+Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined) {
   QList<QString> symbols;
-  static QRegularExpression exp = QRegularExpression("(?=[+\\-])|(?<=[+\\-])");
-  symbols = expr.split(exp, Qt::SplitBehaviorFlags::SkipEmptyParts);
+
+  for (int i = expr.length() - 1; i >= 0; --i) {
+    if (expr[i] == '+' || expr[i] == '-') {
+      QString part = expr.mid(i).trimmed();
+      if (!part.mid(1).isEmpty()) {
+        symbols.prepend(part.mid(1));
+      }
+      symbols.prepend(part.mid(0, 1));
+      expr = expr.left(i);
+    }
+  }
+
+  if (!expr.isEmpty()) {
+    symbols.prepend(expr.trimmed());
+  }
 
   int32_t value = 0;
   ExprOperation op = PLUS;
@@ -191,8 +205,14 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
     symbol = symbol.trimmed();
 
     if (symbol == "+") {
+      if (op != NONE) {
+        return ExpressionEvaluationResult::failure(Err::exprMissingValue());
+      }
       op = PLUS;
     } else if (symbol == "-") {
+      if (op != NONE) {
+        return ExpressionEvaluationResult::failure(Err::exprMissingValue());
+      }
       op = MINUS;
     } else {
       int32_t operand;
@@ -227,7 +247,9 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(const QStri
       op = NONE;
     }
   }
-
+  if (op != NONE) {
+    return ExpressionEvaluationResult::failure(Err::exprMissingValue());
+  }
   if (value > 0xFFFF || value < 0) {
     return ExpressionEvaluationResult::failure(Err::exprOutOfRange(value));
   }
@@ -375,11 +397,11 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           QStringList opList = s_op.split(",");
           foreach (QString curOp, opList) {
             if (curOp.isEmpty()) {
-              throw AssemblyError::failure(Err::missingValue(), -1, -1);
+              throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }
             auto result = expressionEvaluator(curOp, labelValMap, true);
             if (!result.ok) {
-              throw AssemblyError::failure(result.message, -1, -1);
+              throw AssemblyError::failure(result.message, assemblerLine, -1);
             }
             int value = result.value;
 
@@ -399,7 +421,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
           auto result = expressionEvaluator(s_op, labelValMap, true);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int value = result.value;
 
@@ -414,7 +436,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
           auto result = expressionEvaluator(s_op, labelValMap, true);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int value = result.value;
 
@@ -440,12 +462,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           QStringList opList = s_op.split(",");
           foreach (QString curOp, opList) {
             if (curOp.isEmpty()) {
-              throw AssemblyError::failure(Err::missingValue(), -1, -1);
+              throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }
 
             NumParseResult result = parseNumber(curOp);
             if (!result.ok) {
-              throw AssemblyError::failure(result.message, -1, -1);
+              throw AssemblyError::failure(result.message, assemblerLine, -1);
             }
             int value = result.value;
 
@@ -469,7 +491,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
           NumParseResult result = parseNumber(s_op);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int value = result.value;
 
@@ -479,17 +501,17 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
         } else if (s_in == ".SETW") {
           if (s_op.count(",") != 1) {
-            throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETW"), -1, -1);
+            throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETW"), assemblerLine, -1);
           }
 
           QString adrOp = s_op.split(",")[0];
           if (adrOp.isEmpty()) {
-            throw AssemblyError::failure(Err::missingValue(), -1, -1);
+            throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
           }
 
           NumParseResult result = parseNumber(adrOp);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int adr = result.value;
 
@@ -497,12 +519,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
-            throw AssemblyError::failure(Err::missingValue(), -1, -1);
+            throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
           }
 
           result = parseNumber(valOp);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int val = result.value;
 
@@ -519,17 +541,17 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
         } else if (s_in == ".SETB") {
           if (s_op.count(",") != 1) {
-            throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETB"), -1, -1);
+            throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETB"), assemblerLine, -1);
           }
 
           QString adrOp = s_op.split(",")[0];
           if (adrOp.isEmpty()) {
-            throw AssemblyError::failure(Err::missingValue(), -1, -1);
+            throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
           }
 
           NumParseResult result = parseNumber(adrOp);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int adr = result.value;
 
@@ -537,12 +559,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
-            throw AssemblyError::failure(Err::missingValue(), -1, -1);
+            throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
           }
 
           result = parseNumber(valOp);
           if (!result.ok) {
-            throw AssemblyError::failure(result.message, -1, -1);
+            throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int val = result.value;
 
@@ -567,16 +589,16 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
 
           if (s_op[0] != '"' || s_op.length() < 3) {
-            throw AssemblyError::failure(Err::invalidSTRSyntax(), -1, -1);
+            throw AssemblyError::failure(Err::invalidSTRSyntax(), assemblerLine, -1);
           }
           if (s_op.at(s_op.length() - 1) != '"') {
-            throw AssemblyError::failure(Err::invalidSTRSyntax(), -1, -1);
+            throw AssemblyError::failure(Err::invalidSTRSyntax(), assemblerLine, -1);
           }
           s_op = s_op.mid(1, s_op.length() - 2);
           for (int i = 0; i < s_op.length(); i++) {
             char16_t number = s_op.at(i).unicode();
             if (number >= 128) {
-              throw AssemblyError::failure(Err::invalidAsciiCharacter(QString(s_op.at(i))), -1, -1);
+              throw AssemblyError::failure(Err::invalidAsciiCharacter(QString(s_op.at(i))), assemblerLine, -1);
             }
             Memory[assemblerAddress++] = static_cast<uint8_t>(number);
           }
@@ -626,7 +648,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             } else {
               NumParseRelativeResult resultVal = getNumRelative(s_op);
               if (!resultVal.ok) {
-                throw AssemblyError::failure(resultVal.message, -1, -1);
+                throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
               }
               operand1 = resultVal.value;
             }
@@ -647,14 +669,14 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
 
             if (s_op.length() < 2 || s_op.count(',') != 1 || s_op[s_op.length() - 2] != ',') {
-              throw AssemblyError::failure(Err::invalidINDSyntax(), -1, -1);
+              throw AssemblyError::failure(Err::invalidINDSyntax(), assemblerLine, -1);
             }
             if (!s_op[s_op.length() - 1].isLetter() || s_op[s_op.length() - 1] != 'X') {
-              throw AssemblyError::failure(Err::invalidINDReg(QString(s_op[s_op.length() - 1])), -1, -1);
+              throw AssemblyError::failure(Err::invalidINDReg(QString(s_op[s_op.length() - 1])), assemblerLine, -1);
             }
             if (s_op[0] == ',') {
               if (s_op.length() != 2) {
-                throw AssemblyError::failure(Err::invalidINDSyntax(), -1, -1);
+                throw AssemblyError::failure(Err::invalidINDSyntax(), assemblerLine, -1);
               }
               operand1 = 0;
             } else if (isLabelOrExpression(s_op)) {
@@ -665,7 +687,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
               NumParseResult resultVal = parseNumber(s_op);
               if (!resultVal.ok) {
-                throw AssemblyError::failure(resultVal.message, -1, -1);
+                throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
               }
               int value = resultVal.value;
 
@@ -696,7 +718,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               } else {
                 NumParseResult resultVal = parseNumber(s_op);
                 if (!resultVal.ok) {
-                  throw AssemblyError::failure(resultVal.message, -1, -1);
+                  throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
                 }
                 int value = resultVal.value;
 
@@ -713,7 +735,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               } else {
                 NumParseResult resultVal = parseNumber(s_op);
                 if (!resultVal.ok) {
-                  throw AssemblyError::failure(resultVal.message, -1, -1);
+                  throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
                 }
                 int value = resultVal.value;
 
@@ -732,7 +754,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             if (isLabelOrExpression(s_op)) {
               auto result = expressionEvaluator(s_op, labelValMap, false);
               if (!result.ok) {
-                throw AssemblyError::failure(result.message, -1, -1);
+                throw AssemblyError::failure(result.message, assemblerLine, -1);
               }
               if (result.undefined) {
                 skipDir = true;
@@ -743,7 +765,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             } else {
               NumParseResult resultVal = parseNumber(s_op);
               if (!resultVal.ok) {
-                throw AssemblyError::failure(resultVal.message, -1, -1);
+                throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
               }
               value = resultVal.value;
             }
@@ -771,7 +793,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               Memory[assemblerAddress++] = operand1;
               Memory[assemblerAddress++] = operand2;
             } else {
-              throw AssemblyError::failure(Err::instructionDoesNotSupportDIREXT(s_in), -1, -1);
+              throw AssemblyError::failure(Err::instructionDoesNotSupportDIREXT(s_in), assemblerLine, -1);
             }
           }
         }
@@ -789,7 +811,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       assemblerLine = instruction.lineNumber;
       auto result = expressionEvaluator(expr, labelValMap, true);
       if (!result.ok) {
-        throw AssemblyError::failure(result.message, -1, -1);
+        throw AssemblyError::failure(result.message, assemblerLine, -1);
       }
 
       VoidOpRes voidOpRes = errorCheckValueAboveFF(result.value);
@@ -807,7 +829,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       assemblerLine = instruction.lineNumber;
       auto result = expressionEvaluator(expr, labelValMap, true);
       if (!result.ok) {
-        throw AssemblyError::failure(result.message, -1, -1);
+        throw AssemblyError::failure(result.message, assemblerLine, -1);
       }
       //CHECK_VALUE_ABOVE_FFFF(result.value)
 
@@ -822,11 +844,10 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
       if (labelValMap.count(label) == 0) {
-        assemblerLine = instruction.lineNumber;
         if (label.contains('+') || label.contains('-')) {
-          throw AssemblyError::failure("Cannot use expressions with relative addressing.", -1, -1);
+          throw AssemblyError::failure("Cannot use expressions with relative addressing.", assemblerLine, -1);
         } else {
-          throw AssemblyError::failure(Err::labelUndefined(label), -1, -1);
+          throw AssemblyError::failure(Err::labelUndefined(label), assemblerLine, -1);
         }
 
       } else {
@@ -834,7 +855,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
         int value;
         value = location2 - location - 1;
         if (value > 127 || value < -128) {
-          throw AssemblyError::failure(Err::numOutOfRelRange(value), -1, -1);
+          throw AssemblyError::failure(Err::numOutOfRelRange(value), assemblerLine, -1);
         }
         qint8 signedValue = static_cast<qint8>(value);
         value = signedValue & 0xFF;

@@ -524,6 +524,9 @@ void MainWindow::on_plainTextCode_textChanged() {
   backupTimer.start();
 
   updateLinesBox(false);
+  if (errorDisplayed) {
+    clearSelections();
+  }
   if (!writeToMemory) {
     if (assembled)
       setCompileStatus(false);

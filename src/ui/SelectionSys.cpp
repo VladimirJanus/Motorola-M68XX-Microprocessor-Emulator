@@ -85,6 +85,7 @@ QTextEdit::ExtraSelection getSelectionByLine(QPlainTextEdit *textEdit, int line,
 }
 
 void MainWindow::drawTextSelections() {
+  errorDisplayed = false;
   QList<QTextEdit::ExtraSelection> lineSelections;
   QList<QTextEdit::ExtraSelection> codeSelections;
 
@@ -180,6 +181,10 @@ void MainWindow::setSelectionRuntime(int address) {
   drawTextSelections();
 }
 void MainWindow::setSelectionCompileError(int charNum, int lineNum) {
+  if (lineNum == -1) {
+    return;
+  }
+  errorDisplayed = true;
   QList<QTextEdit::ExtraSelection> selections;
   selections.append(getSelectionByLine(ui->plainTextCode, lineNum, ColorType::ERROR));
   if (charNum != -1) {
@@ -201,6 +206,7 @@ void MainWindow::setSelectionCompileError(int charNum, int lineNum) {
 }
 
 void MainWindow::clearSelections() {
+  errorDisplayed = false;
   colorMemory(runTimeSelectionAddress, ColorType::NONE);
   if (!simpleMemory) {
     colorMemory(runTimeSelectionAddress, ColorType::NONE);

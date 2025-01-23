@@ -81,7 +81,7 @@ private:
 
   static NumParseResult getNum(const QString &input);
   static NumParseRelativeResult getNumRelative(const QString &input);
-  static ExpressionEvaluationResult expressionEvaluator(const QString &expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined);
+  static ExpressionEvaluationResult expressionEvaluator(QString expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined);
   static NumParseResult parseNumber(const QString &input);
   static NumParseResult parseASCII(const QString &input);
   static NumParseResult parseDec(const QString &input, bool allowNeg);

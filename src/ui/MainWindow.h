@@ -74,6 +74,7 @@ private:
   void updateMemoryTab();
   void updateLinesBox(bool redraw);
 
+  bool errorDisplayed = false;
   void colorMemory(int address, ColorType colorType);
   void toggleHighlight(int line);
   void drawTextSelections();
