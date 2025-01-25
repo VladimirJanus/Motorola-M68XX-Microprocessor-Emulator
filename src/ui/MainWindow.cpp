@@ -662,17 +662,20 @@ void MainWindow::drawProcessor() {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(processor.curCycle));
   }
   int lineNum = assemblyMap.getObjectByAddress(processor.PC).lineNumber;
-  if (lineNum >= 0) {
-    if (lineNum > previousScrollCode + autoScrollUpLimit) {
-      previousScrollCode = lineNum - autoScrollUpLimit;
-      ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
-      ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
-    } else if (lineNum < previousScrollCode + autoScrollDownLimit) {
-      previousScrollCode = lineNum - autoScrollDownLimit;
-      ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
-      ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+  if (ui->checkAutoScroll->isChecked()) {
+    if (lineNum >= 0) {
+      if (lineNum > previousScrollCode + autoScrollUpLimit) {
+        previousScrollCode = lineNum - autoScrollUpLimit;
+        ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
+        ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+      } else if (lineNum < previousScrollCode + autoScrollDownLimit) {
+        previousScrollCode = lineNum - autoScrollDownLimit;
+        ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
+        ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+      }
     }
   }
+
   if (displayStatusIndex == 1) {
     ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
   } else if (displayStatusIndex == 2) {
@@ -705,16 +708,18 @@ void MainWindow::drawProcessorRunning(
   if (useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(curCycle));
   }
-  int lineNum = assemblyMap.getObjectByAddress(PC).lineNumber;
-  if (lineNum >= 0) {
-    if (lineNum > previousScrollCode + autoScrollUpLimit) {
-      previousScrollCode = lineNum - autoScrollUpLimit;
-      ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
-      ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
-    } else if (lineNum < previousScrollCode + autoScrollDownLimit) {
-      previousScrollCode = lineNum - autoScrollDownLimit;
-      ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
-      ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+  if (ui->checkAutoScroll->isChecked()) {
+    int lineNum = assemblyMap.getObjectByAddress(PC).lineNumber;
+    if (lineNum >= 0) {
+      if (lineNum > previousScrollCode + autoScrollUpLimit) {
+        previousScrollCode = lineNum - autoScrollUpLimit;
+        ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
+        ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+      } else if (lineNum < previousScrollCode + autoScrollDownLimit) {
+        previousScrollCode = lineNum - autoScrollDownLimit;
+        ui->plainTextLines->verticalScrollBar()->setValue(previousScrollCode);
+        ui->plainTextCode->verticalScrollBar()->setValue(previousScrollCode);
+      }
     }
   }
   if (!simpleMemory) {
@@ -1251,14 +1256,18 @@ void MainWindow::on_menuDisplayStatus_currentIndexChanged(int index) {
   }
 }
 void MainWindow::on_lineEditBin_textChanged(const QString &arg1) {
-  if (arg1 != "X") {
+  QString arg = arg1;
+  if (arg.startsWith('%')) {
+    arg = arg.mid(1);
+  }
+  if (arg != "X") {
     bool ok;
-    int number = arg1.toInt(&ok, 2);
+    int number = arg.toInt(&ok, 2);
     if (ok) {
       ui->lineEditDec->blockSignals(true);
       ui->lineEditHex->blockSignals(true);
       ui->lineEditDec->setText(QString::number(number));
-      ui->lineEditHex->setText(QString::number(number, 16));
+      ui->lineEditHex->setText('$' + QString::number(number, 16));
       ui->lineEditDec->blockSignals(false);
       ui->lineEditHex->blockSignals(false);
     } else {
@@ -1269,14 +1278,18 @@ void MainWindow::on_lineEditBin_textChanged(const QString &arg1) {
 }
 
 void MainWindow::on_lineEditHex_textChanged(const QString &arg1) {
-  if (arg1 != "X") {
+  QString arg = arg1;
+  if (arg.startsWith('$')) {
+    arg = arg.mid(1);
+  }
+  if (arg != "X") {
     bool ok;
-    int number = arg1.toInt(&ok, 16);
+    int number = arg.toInt(&ok, 16);
     if (ok) {
       ui->lineEditDec->blockSignals(true);
       ui->lineEditBin->blockSignals(true);
       ui->lineEditDec->setText(QString::number(number));
-      ui->lineEditBin->setText(QString::number(number, 2));
+      ui->lineEditBin->setText('%' + QString::number(number, 2));
       ui->lineEditDec->blockSignals(false);
       ui->lineEditBin->blockSignals(false);
     } else {
@@ -1293,8 +1306,8 @@ void MainWindow::on_lineEditDec_textChanged(const QString &arg1) {
     if (ok) {
       ui->lineEditBin->blockSignals(true);
       ui->lineEditHex->blockSignals(true);
-      ui->lineEditBin->setText(QString::number(number, 2));
-      ui->lineEditHex->setText(QString::number(number, 16));
+      ui->lineEditBin->setText('%' + QString::number(number, 2));
+      ui->lineEditHex->setText('$' + QString::number(number, 16));
       ui->lineEditBin->blockSignals(false);
       ui->lineEditHex->blockSignals(false);
     } else {

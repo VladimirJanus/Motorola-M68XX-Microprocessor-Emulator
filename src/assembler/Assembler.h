@@ -81,20 +81,20 @@ private:
 
   static NumParseResult getNum(const QString &input);
   static NumParseRelativeResult getNumRelative(const QString &input);
-  static ExpressionEvaluationResult expressionEvaluator(QString expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined);
+  static ExpressionEvaluationResult expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined);
   static NumParseResult parseNumber(const QString &input);
   static NumParseResult parseASCII(const QString &input);
   static NumParseResult parseDec(const QString &input, bool allowNeg);
   static NumParseResult parseBin(const QString &input);
   static NumParseResult parseHex(const QString &input);
 
-  static bool lineEmpty(QString line);
+  static bool lineEmpty(QString &line);
   static LineParts disectLine(QString line, int assemblerLine);
   static void checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion);
 
   static inline bool isLabelOrExpression(QString s_op);
 
-  static AssignmentResult assignLabelValue(const QString &label, int value, std::unordered_map<QString, int> &labelValMap);
+  static AssignmentResult assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap);
   static ValidationResult validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion);
   static ValidationResult validateMnemonicSupportForIMM(QString s_in);
   static ValidationResult validateMnemonicSupportForIND(QString s_in);

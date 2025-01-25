@@ -18,23 +18,29 @@
 
 //struct for defining possible assembly errors
 struct Err {
+  // Number Conversion Errors
   inline static const QString invalidHexOrRange(const QString &num) { return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF]."; }
   inline static const QString invalidBinOrRange(const QString &num) { return "Invalid Binary number: '" + num + "' or value out of range[0, $FFFF]."; }
   inline static const QString invalidRelDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[-128, 127]"; }
   inline static const QString invalidDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[0, $FFFF]"; }
+
+  // ASCII Conversion Errors
   inline static const QString invalidAsciiConversionSyntax() { return "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"; }
   inline static const QString invalidAsciiCharacter(const QString &input) { return "Invalid ASCII character: '" + input + "'"; }
 
-  inline static const QString numOutOfRangeByte(int32_t value) { return "Value out of range for instruction[0, $FF]: " + QString::number(value); }
-  inline static const QString numOutOfRangeWord(int32_t value) { return "Value out of range[0, $FFFF]: " + QString::number(value); }
+  // Range Check Errors
+  inline static const QString numOutOfRangeByte(int32_t value) { return "Value out of range for instruction[0, $FF]: $" + QString::number(value, 16); }
+  inline static const QString numOutOfRangeWord(int32_t value) { return "Value out of range[0, $FFFF]: $" + QString::number(value, 16); }
   inline static const QString numOutOfRelRange(int32_t value) { return "Relative address out of range[-128, 127]: " + QString::number(value); }
 
+  // Expression Parsing Errors
   inline static const QString exprOverFlow() { return "Expression result out of range[0, $FFFF]"; }
   inline static const QString exprMissingOperation() { return "Missing operation(+/-) in expression"; }
   inline static const QString exprMissingValue() { return "Missing value after operation (+/-) in expression"; }
-  inline static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: " + QString::number(value); }
+  inline static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: $" + QString::number(value, 16); }
   inline static const QString exprUnexpectedCharacter(const QChar &character) { return "Unexpected character in expression: " + QString(character); }
 
+  // Label Errors
   inline static const QString labelUndefined(const QString &label) { return "Label '" + label + "' is not defined"; }
   inline static const QString labelDefinedTwice(const QString &label) { return "Label already declared: '" + label + "'"; }
   inline static const QString labelReserved(const QString &label) {
@@ -47,19 +53,20 @@ struct Err {
   inline static const QString labelStartsWithIllegalCharacter(const QChar &character) { return "Label may not start with character: '" + QString(character) + "'"; }
   inline static const QString labelContainsIllegalCharacter(const QChar &character) { return "Label may not contain character: '" + QString(character) + "'"; }
 
+  // Parsing Errors
   inline static const QString parsingEmptyNumber() { return "Missing number."; }
   inline static const QString missingInstruction() { return "Missing instruction."; }
   inline static const QString missingValue() { return "Missing value"; }
 
+  // Operand and Instruction Errors
   inline static const QString missingOperand() { return "Missing operand. (Instruction requires operand)"; }
   inline static const QString missingLabel() { return "Missing label. (Instruction requires label)"; }
-
   inline static const QString unexpectedChar(const QChar &character) { return "Unexpected character: '" + QString(character) + "'"; }
   inline static const QString unexpectedOperand() { return "Unexpected operand."; }
-
   inline static const QString instructionUnknown(const QString &s_in) { return "Unknown instruction: '" + s_in + "'"; }
   inline static const QString instructionNotSupported(const QString &s_in) { return "Instruction '" + s_in + "' is not supported on this processor."; }
 
+  // Syntax-Specific Errors
   inline static const QString invalidSETSyntaxMissingComma(const QString &instruction) {
     return "Invalid " + instruction + " format. Missing comma for address,value separation. Format: ." + instruction + " $FFFF,$FF";
   }
@@ -69,10 +76,11 @@ struct Err {
   inline static const QString invalidSTRSyntax() { return "Invalid string syntax. Format: .STR \"string\""; }
   inline static const QString invalidINDSyntax() { return "Invalid indexed addressing syntax. Format: LDAA $FF,X"; }
   inline static const QString invalidINDReg(const QString &reg) { return "Invalid index register: '" + reg + "'"; }
+
+  // Addressing Mode Errors
   inline static const QString instructionDoesNotSupportDIREXT(const QString &s_in) { return "Instruction '" + s_in + "' does not support direct or extended addressing modes."; }
   inline static const QString instructionDoesNotSupportIND(const QString &s_in) { return "Instruction '" + s_in + "' does not support indexed data"; }
   inline static const QString instructionDoesNotSupportIMM(const QString &s_in) { return "Instruction '" + s_in + "' does not support immediate data"; }
-
   inline static const QString mixedIMMandIND() { return "Immediate and indexed data may not be mixed"; }
 };
 //convert string which represents a hex number prefixed with $ to NumParseResult(int32_t)
@@ -147,7 +155,6 @@ Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
     return parseDec(input, false);
   }
 }
-
 //converts an operand(string) used in relative addressing to a number(NumParseRelativeResult(uint8_t))
 Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input) {
   if (input.startsWith("'") || input.startsWith("$") || input.startsWith("%")) {
@@ -180,7 +187,7 @@ Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input
 }
 //evaluates an expression and returns its value ExpressionEvaluationResult(int32_t)
 //If errOnUndefined it will return unsuccessfully(ok = false,  undefined = true) if the expression contains an undefined label, otherwise it will return (ok = true, undefined = true)
-Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::unordered_map<QString, int> &labelValMap, bool errOnUndefined) {
+Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined) {
   QList<QString> symbols;
 
   for (int i = expr.length() - 1; i >= 0; --i) {
@@ -263,7 +270,7 @@ inline bool Assembler::isLabelOrExpression(QString s_op) {
 }
 
 //adds a label and its value to the label-to-value map.
-Assembler::AssignmentResult Assembler::assignLabelValue(const QString &label, int value, std::unordered_map<QString, int> &labelValMap) {
+Assembler::AssignmentResult Assembler::assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap) {
   if (label.isEmpty()) {
     return AssignmentResult::success();
   }
@@ -273,6 +280,7 @@ Assembler::AssignmentResult Assembler::assignLabelValue(const QString &label, in
   labelValMap[label] = value;
   return AssignmentResult::success();
 }
+//validations and error checks.
 Assembler::ValidationResult Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion) {
   if (!DataTypes::getInstructionSupported(processorVersion, opCode)) {
     return ValidationResult::failure(Err::instructionNotSupported(s_in));
@@ -339,21 +347,19 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   int assemblerLine = 0;
   uint16_t assemblerAddress = 0;
 
-  std::unordered_map<QString, int> labelValMap;
-  std::unordered_map<int, QString> callLabelMap;
-  std::unordered_map<int, QString> callLabelRelMap;
-  std::unordered_map<int, QString> callLabelExtMap;
+  std::map<QString, int> labelValMap;
+  std::map<int, QString> callLabelMap;
+  std::map<int, QString> callLabelRelMap;
+  std::map<int, QString> callLabelExtMap;
 
   QList<Msg> messages;
   AssemblyError assemblyError = AssemblyError::none();
-  bool HCFwarn = false;
-
   DataTypes::AssemblyMap assemblyMap;
+
+  bool HCFwarn = false; //should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
 
   const QStringList lines = code.split('\n');
   const int totalLines = lines.count();
-
-  //should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
 
   //sets predifned labels for interrupt pointers
   assignLabelValue(QString("IRQ_PTR"), 0xFFF8, labelValMap);
@@ -780,6 +786,19 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
                 operand1 = value;
                 Memory[assemblerAddress++] = opCode;
                 Memory[assemblerAddress++] = operand1;
+              } else if (mnemonics[s_in].opCodes[4] != 0) {
+                opCode = mnemonics[s_in].opCodes[4];
+                VoidOpRes voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
+                if (!voidOpRes.ok)
+                  throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+
+                operand1 = (value >> 8) & 0xFF;
+                operand2 = value & 0xFF;
+                Memory[assemblerAddress++] = opCode;
+                Memory[assemblerAddress++] = operand1;
+                Memory[assemblerAddress++] = operand2;
+              } else {
+                throw AssemblyError::failure(Err::instructionDoesNotSupportDIREXT(s_in), assemblerLine, -1);
               }
             } else if (mnemonics[s_in].opCodes[4] != 0) {
               opCode = mnemonics[s_in].opCodes[4];
@@ -876,9 +895,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       messages.removeAt(i);
     }
   }
+  for (auto it = labelValMap.rbegin(); it != labelValMap.rend(); ++it) {
+    messages.prepend(DataTypes::Msg{MsgType::DEBUG, "Value: $" + QString::number(it->second, 16) + " assigned to label '" + it->first + "'"});
+  }
   return AssemblyResult{messages, assemblyError, assemblyMap};
 }
-bool Assembler::lineEmpty(QString line) {
+bool Assembler::lineEmpty(QString &line) {
   if (line.isEmpty()) {
     return true;
   }
