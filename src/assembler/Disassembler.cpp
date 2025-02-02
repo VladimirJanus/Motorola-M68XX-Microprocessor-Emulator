@@ -18,29 +18,6 @@
 #include "disassembler.h"
 #include <QInputDialog>
 
-/*Disassembler::InputNextAddressResult Disassembler::inputNextAddress(int curAdr, QString err) {
-  bool ok;
-  QString text = QInputDialog::getText(nullptr,
-                                       "Input Dialog",
-                                       err + ". Missing data will be written with .BYTE. Enter decimal address of next instruction. Current address: " +
-                                         QString::number(curAdr, 10) + ".",
-                                       QLineEdit::Normal,
-                                       QString(),
-                                       &ok);
-  if (!ok)
-    return {false, 0, Msg{MsgType::DEBUG, "Disassembly canceled."}};
-
-  bool iok;
-  int number = text.toInt(&iok);
-  if (!iok)
-    return {false, 0, Msg{MsgType::DEBUG, "Invalid address"}};
-
-  if (number < curAdr)
-    return {false, 0, Msg{MsgType::DEBUG, "Next instruction cannot be located before the previous one"}};
-
-  return {true, 0, Msg::none()};
-}*/
-
 DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory) {
   QString code;
   DataTypes::AssemblyMap assemblyMap;
