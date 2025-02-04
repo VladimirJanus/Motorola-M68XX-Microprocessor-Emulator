@@ -14,16 +14,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "datatypes.h"
-int DataTypes::getInstructionLength(ProcessorVersion version, uint8_t opCode) {
+#include "Core.h"
+uint8_t Core::getInstructionLength(ProcessorVersion version, uint8_t opCode) {
   if (version == M6800) {
-    return M6800InstructionPage[opCode].mode / 10;
+    return addressingModes[M6800InstructionPage[opCode].mode].size;
   } else if (version == M6803) {
-    return M6803InstructionPage[opCode].mode / 10;
+    return addressingModes[M6803InstructionPage[opCode].mode].size;
   }
   return 0;
 }
-DataTypes::AddressingMode DataTypes::getInstructionMode(ProcessorVersion version, uint8_t opCode) {
+Core::AddressingMode Core::getInstructionMode(ProcessorVersion version, uint8_t opCode) {
   if (version == M6800) {
     return M6800InstructionPage[opCode].mode;
   } else if (version == M6803) {
@@ -31,7 +31,7 @@ DataTypes::AddressingMode DataTypes::getInstructionMode(ProcessorVersion version
   }
   return AddressingMode::INVALID;
 }
-int DataTypes::getInstructionCycleCount(ProcessorVersion version, uint8_t opCode) {
+uint8_t Core::getInstructionCycleCount(ProcessorVersion version, uint8_t opCode) {
   if (version == M6800) {
     return M6800InstructionPage[opCode].cycleCount;
   } else if (version == M6803) {
@@ -39,22 +39,22 @@ int DataTypes::getInstructionCycleCount(ProcessorVersion version, uint8_t opCode
   }
   return 0;
 }
-bool DataTypes::getInstructionSupported(ProcessorVersion processorVersion, uint8_t opCode) {
-  if (processorVersion == M6800) {
+bool Core::getInstructionSupported(ProcessorVersion version, uint8_t opCode) {
+  if (version == M6800) {
     if (M6800InstructionPage[opCode].mode == AddressingMode::INVALID) {
       return false;
     }
-  } else if (processorVersion == M6803) {
+  } else if (version == M6803) {
     if (M6803InstructionPage[opCode].mode == AddressingMode::INVALID) {
       return false;
     }
   }
   return true;
 }
-QString DataTypes::getInstructionMnemonic(ProcessorVersion processorVersion, uint8_t opCode) {
-  if (processorVersion == M6800) {
+QString Core::getInstructionMnemonic(ProcessorVersion version, uint8_t opCode) {
+  if (version == M6800) {
     return M6800Mnemonics[opCode];
-  } else if (processorVersion == M6803) {
+  } else if (version == M6803) {
     return M6803Mnemonics[opCode];
   }
   return "INVALID";

@@ -24,15 +24,15 @@
 #include <qfuturewatcher.h>
 #include <qtreewidget.h>
 
-using DataTypes::AddressingMode;
-using DataTypes::bit;
-using DataTypes::ColorType;
-using DataTypes::MnemonicInfo;
-using DataTypes::Msg;
-using DataTypes::MsgType;
-using DataTypes::ProcessorVersion;
-using DataTypes::ProcessorVersion::M6800;
-using DataTypes::ProcessorVersion::M6803;
+using Core::AddressingMode;
+using Core::bit;
+using Core::ColorType;
+using Core::MnemonicInfo;
+using Core::Msg;
+using Core::MsgType;
+using Core::ProcessorVersion;
+using Core::ProcessorVersion::M6800;
+using Core::ProcessorVersion::M6803;
 /*#define FUNCTION_CALL_COUNT() \
   static std::unordered_map<std::string, size_t> function_call_counts; \
   std::string current_function = __FUNCTION__; \
@@ -51,16 +51,12 @@ public:
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
-  const QColor memoryCellDefaultColor = QColor(230, 230, 255);
-  const QColor SMMemoryCellColor = QColor(150, 150, 150);
-  const QColor SMMemoryCellColor2 = QColor(204, 204, 204);
-
 private:
   Ui::MainWindow *ui;
   QString sessionId;
 
   ExternalDisplay *externalDisplay;
-  DataTypes::AssemblyMap assemblyMap;
+  AssemblyMap assemblyMap;
   QPlainTextEdit *plainTextDisplay;
 
   Processor processor;

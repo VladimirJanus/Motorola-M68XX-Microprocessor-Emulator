@@ -16,74 +16,12 @@
  */
 #include "src/assembler/Assembler.h"
 
-//struct for defining possible assembly errors
-struct Err {
-  // Number Conversion Errors
-  inline static const QString invalidHexOrRange(const QString &num) { return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF]."; }
-  inline static const QString invalidBinOrRange(const QString &num) { return "Invalid Binary number: '" + num + "' or value out of range[0, $FFFF]."; }
-  inline static const QString invalidRelDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[-128, 127]"; }
-  inline static const QString invalidDecOrRange(const QString &num) { return "Invalid decimal number: '" + num + "' or value out of range[0, $FFFF]"; }
-
-  // ASCII Conversion Errors
-  inline static const QString invalidAsciiConversionSyntax() { return "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"; }
-  inline static const QString invalidAsciiCharacter(const QString &input) { return "Invalid ASCII character: '" + input + "'"; }
-
-  // Range Check Errors
-  inline static const QString numOutOfRangeByte(int32_t value) { return "Value out of range for instruction[0, $FF]: $" + QString::number(value, 16); }
-  inline static const QString numOutOfRangeWord(int32_t value) { return "Value out of range[0, $FFFF]: $" + QString::number(value, 16); }
-  inline static const QString numOutOfRelRange(int32_t value) { return "Relative address out of range[-128, 127]: " + QString::number(value); }
-
-  // Expression Parsing Errors
-  inline static const QString exprOverFlow() { return "Expression result out of range[0, $FFFF]"; }
-  inline static const QString exprMissingOperation() { return "Missing operation(+/-) in expression"; }
-  inline static const QString exprMissingValue() { return "Missing value after operation (+/-) in expression"; }
-  inline static const QString exprOutOfRange(int32_t value) { return "Expression result out of range[0, $FFFF]: $" + QString::number(value, 16); }
-  inline static const QString exprUnexpectedCharacter(const QChar &character) { return "Unexpected character in expression: " + QString(character); }
-
-  // Label Errors
-  inline static const QString labelUndefined(const QString &label) { return "Label '" + label + "' is not defined"; }
-  inline static const QString labelDefinedTwice(const QString &label) { return "Label already declared: '" + label + "'"; }
-  inline static const QString labelReserved(const QString &label) {
-    return "'" + label +
-           "' is a reserved instruction name and cannot be used as a label. "
-           "If you meant to use the instruction, it must be indented with a space or tab:\n"
-           "'\tNOP'";
-  }
-  inline static const QString labelStartsWithIllegalDigit(const QChar &character) { return "Label may not start with a digit: '" + QString(character) + "'"; }
-  inline static const QString labelStartsWithIllegalCharacter(const QChar &character) { return "Label may not start with character: '" + QString(character) + "'"; }
-  inline static const QString labelContainsIllegalCharacter(const QChar &character) { return "Label may not contain character: '" + QString(character) + "'"; }
-
-  // Parsing Errors
-  inline static const QString parsingEmptyNumber() { return "Missing number."; }
-  inline static const QString missingInstruction() { return "Missing instruction."; }
-  inline static const QString missingValue() { return "Missing value"; }
-
-  // Operand and Instruction Errors
-  inline static const QString missingOperand() { return "Missing operand. (Instruction requires operand)"; }
-  inline static const QString missingLabel() { return "Missing label. (Instruction requires label)"; }
-  inline static const QString unexpectedChar(const QChar &character) { return "Unexpected character: '" + QString(character) + "'"; }
-  inline static const QString unexpectedOperand() { return "Unexpected operand."; }
-  inline static const QString instructionUnknown(const QString &s_in) { return "Unknown instruction: '" + s_in + "'"; }
-  inline static const QString instructionNotSupported(const QString &s_in) { return "Instruction '" + s_in + "' is not supported on this processor."; }
-
-  // Syntax-Specific Errors
-  inline static const QString invalidSETSyntaxMissingComma(const QString &instruction) {
-    return "Invalid " + instruction + " format. Missing comma for address,value separation. Format: ." + instruction + " $FFFF,$FF";
-  }
-  inline static const QString invalidSETSyntaxExtraComma(const QString &instruction) {
-    return "Invalid " + instruction + " format. Too many commas for address,value separation. Format: ." + instruction + " $FFFF,$FF";
-  }
-  inline static const QString invalidSTRSyntax() { return "Invalid string syntax. Format: .STR \"string\""; }
-  inline static const QString invalidINDSyntax() { return "Invalid indexed addressing syntax. Format: LDAA $FF,X"; }
-  inline static const QString invalidINDReg(const QString &reg) { return "Invalid index register: '" + reg + "'"; }
-
-  // Addressing Mode Errors
-  inline static const QString instructionDoesNotSupportDIREXT(const QString &s_in) { return "Instruction '" + s_in + "' does not support direct or extended addressing modes."; }
-  inline static const QString instructionDoesNotSupportIND(const QString &s_in) { return "Instruction '" + s_in + "' does not support indexed data"; }
-  inline static const QString instructionDoesNotSupportIMM(const QString &s_in) { return "Instruction '" + s_in + "' does not support immediate data"; }
-  inline static const QString mixedIMMandIND() { return "Immediate and indexed data may not be mixed"; }
-};
-//convert string which represents a hex number prefixed with $ to NumParseResult(int32_t)
+/**
+* Converts hexadecimal string prefixed with '$' to numeric value
+* 
+* @param input Hexadecimal number string (e.g., '$FF')
+* @return Parsed number or failure result
+*/
 Assembler::NumParseResult Assembler::parseHex(const QString &input) {
   if (input.length() <= 1) {
     return NumParseResult::failure(Err::parsingEmptyNumber());
@@ -94,11 +32,17 @@ Assembler::NumParseResult Assembler::parseHex(const QString &input) {
   if (!ok) {
     return NumParseResult::failure(Err::invalidHexOrRange(input));
   } else if (number > 0xFFFF || number < 0) {
-    return NumParseResult::failure(Err::numOutOfRangeWord(number));
+    return NumParseResult::failure(Err::numOutOfRange(number, 0xFFFF));
   }
   return NumParseResult::success(number);
 }
-//convert string which represents a binary number prefixed with % to NumParseResult(int32_t)
+
+/**
+* Converts binary string prefixed with '%' to numeric value
+* 
+* @param input Binary number string (e.g., '%10101010')
+* @return Parsed number or failure result
+*/
 Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   if (input.length() <= 1) {
     return NumParseResult::failure(Err::parsingEmptyNumber());
@@ -109,11 +53,18 @@ Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   if (!ok) {
     return NumParseResult::failure(Err::invalidBinOrRange(input));
   } else if (number > 0xFFFF || number < 0) {
-    return NumParseResult::failure(Err::numOutOfRangeWord(number));
+    return NumParseResult::failure(Err::numOutOfRange(number, 0xFFFF));
   }
   return NumParseResult::success(number);
 }
-//convert string which represents a decimal number to NumParseResult(int32_t)
+
+/**
+* Converts decimal string to numeric value
+* 
+* @param input decimal number string
+* @param allowNeg flag to permit negative numbers (for relative addressing)
+* @return Parsed number or failure result
+*/
 Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNeg) {
   bool ok;
   int32_t number = input.toInt(&ok);
@@ -127,12 +78,18 @@ Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNe
     if (!ok) {
       return NumParseResult::failure(Err::invalidDecOrRange(input));
     } else if (number > 0xFFFF || number < 0) {
-      return NumParseResult::failure(Err::numOutOfRangeWord(number));
+      return NumParseResult::failure(Err::Err::numOutOfRange(number, 0xFFFF));
     }
   }
   return NumParseResult::success(number);
 }
-//convert a string that represents an asci character in specific syntax('a') to its ASCII value NumParseResult(int32_t)
+
+/**
+* Converts ASCII character literal to numeric value
+* 
+* @param input Character literal (e.g., 'A')
+* @return Parsed ASCII value or failure result
+*/
 Assembler::NumParseResult Assembler::parseASCII(const QString &input) {
   if (input.length() != 3 || !input.startsWith("'") || !input.endsWith("'")) {
     return NumParseResult::failure(Err::invalidAsciiConversionSyntax());
@@ -143,7 +100,15 @@ Assembler::NumParseResult Assembler::parseASCII(const QString &input) {
   }
   return NumParseResult::success(static_cast<uint8_t>(number));
 }
-//converts a string to a NumParseResult(int32_t) using helper methods
+
+/**
+* Universal number parsing method
+* 
+* @param input Number string in various formats
+* @return Parsed number or failure result
+* 
+* Supports: ASCII literal, Hex ($FF), Binary (%10101010), Decimal
+*/
 Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
   if (input.contains("'")) {
     return parseASCII(input);
@@ -155,13 +120,22 @@ Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
     return parseDec(input, false);
   }
 }
-//converts an operand(string) used in relative addressing to a number(NumParseRelativeResult(uint8_t))
+/**
+* Converts an operand to a number for relative addressing
+* 
+* @param input Operand string in various formats
+* @return Parsed relative address or failure result
+* 
+* Handles numeric and literal inputs, with specific restrictions:
+* - Rejects values $FE and $FF for relative jumps
+* - Constrains value to -128 to 127 range
+* - Adjusts negative values for offset calculation
+*/
 Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input) {
   if (input.startsWith("'") || input.startsWith("$") || input.startsWith("%")) {
     NumParseResult result = parseNumber(input);
     if (!result.ok)
       return NumParseRelativeResult::fromParseResult(result);
-
     if (result.value > 0xFF) {
       return NumParseRelativeResult::failure(Err::numOutOfRelRange(result.value));
     }
@@ -185,8 +159,19 @@ Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input
     return NumParseRelativeResult::fromParseResult(result);
   }
 }
-//evaluates an expression and returns its value ExpressionEvaluationResult(int32_t)
-//If errOnUndefined it will return unsuccessfully(ok = false,  undefined = true) if the expression contains an undefined label, otherwise it will return (ok = true, undefined = true)
+/**
+ * Evaluates an expression and returns its value
+ * 
+ * @param expr Expression to evaluate
+ * @param labelValMap Map of label values
+ * @param errOnUndefined Controls undefined label handling
+ * @return Evaluation result
+ * 
+ * If errOnUndefined:
+ * - Returns unsuccessfully (ok=false, undefined=true) if expression contains undefined label
+ * Otherwise:
+ * - Returns (ok=true, undefined=true) for undefined labels
+ */
 Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined) {
   QList<QString> symbols;
 
@@ -270,76 +255,86 @@ inline bool Assembler::isLabelOrExpression(QString s_op) {
 }
 
 //adds a label and its value to the label-to-value map.
-Assembler::AssignmentResult Assembler::assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap) {
+void Assembler::assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine) {
   if (label.isEmpty()) {
-    return AssignmentResult::success();
+    return;
   }
   if (labelValMap.count(label) != 0) {
-    return AssignmentResult::failure(Err::labelDefinedTwice(label));
+    throw AssemblyError::failure(Err::labelDefinedTwice(label), assemblerLine, -1);
   }
   labelValMap[label] = value;
-  return AssignmentResult::success();
+  return;
 }
 //validations and error checks.
-Assembler::ValidationResult Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion) {
-  if (!DataTypes::getInstructionSupported(processorVersion, opCode)) {
-    return ValidationResult::failure(Err::instructionNotSupported(s_in));
+void Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine) {
+  if (!getInstructionSupported(processorVersion, opCode)) {
+    throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::validateMnemonicSupportForIMM(QString s_in) {
-  if (mnemonics[s_in].opCodes[1] == 0) {
-    return ValidationResult::failure(Err::instructionDoesNotSupportIMM(s_in));
+void Assembler::validateMnemonicSupportForAddressingMode(QString s_in, AddressingMode mode, int assemblerLine) {
+  if (mnemonics[s_in].opCodes[addressingModes[mode].id] == 0) {
+    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, mode), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::validateMnemonicSupportForIND(QString s_in) {
-  if (mnemonics[s_in].opCodes[3] == 0) {
-    return ValidationResult::failure(Err::instructionDoesNotSupportIND(s_in));
-  }
-  return ValidationResult::success();
-}
-Assembler::ValidationResult Assembler::errorCheckUnexpectedOperand(QString s_op) {
+
+void Assembler::errorCheckUnexpectedOperand(QString s_op, int assemblerLine) {
   if (!s_op.isEmpty()) {
-    return ValidationResult::failure(Err::unexpectedOperand());
+    throw AssemblyError::failure(Err::unexpectedOperand(), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckMissingOperand(QString s_op) {
+void Assembler::errorCheckMissingOperand(QString s_op, int assemblerLine) {
   if (s_op.isEmpty()) {
-    return ValidationResult::failure(Err::missingOperand());
+    throw AssemblyError::failure(Err::missingOperand(), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckMissingLabel(QString label) {
+void Assembler::errorCheckMissingLabel(QString label, int assemblerLine) {
   if (label.isEmpty()) {
-    return ValidationResult::failure(Err::missingLabel());
+    throw AssemblyError::failure(Err::missingLabel(), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op) {
+void Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op, int assemblerLine) {
   if (s_op.contains(',')) {
-    return ValidationResult::failure(Err::instructionDoesNotSupportIND(s_in));
+    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IND), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op) {
+void Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op, int assemblerLine) {
   if (s_op.contains('#')) {
-    return ValidationResult::failure(Err::instructionDoesNotSupportIMM(s_in));
+    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IMM), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckOperandIMMINDMixed(QString s_op) {
+void Assembler::errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine) {
   if (s_op.contains('#') && s_op.contains(',')) {
-    return ValidationResult::failure(Err::mixedIMMandIND());
+    throw AssemblyError::failure(Err::mixedIMMandIND(), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
 }
-Assembler::ValidationResult Assembler::errorCheckValueAboveFF(int value) {
+void Assembler::validateValueRange(int32_t value, int32_t max, int assemblerLine) {
   if (value > 0xFF) {
-    return ValidationResult::failure(Err::numOutOfRangeByte(value));
+    throw AssemblyError::failure(Err::numOutOfRange(value, max), assemblerLine, -1);
   }
-  return ValidationResult::success();
+  return;
+}
+
+void Assembler::checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion) {
+  if (alliasMap.contains(s_in)) {
+    if (!(alliasMap[s_in].supportedVersions & processorVersion)) {
+      throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
+    }
+    s_in = alliasMap[s_in].mnemonic;
+  }
+  if (!mnemonics.contains(s_in)) {
+    throw AssemblyError::failure(Err::instructionUnknown(s_in), assemblerLine, -1);
+  }
+  if (!(mnemonics[s_in].supportedVersions & processorVersion)) {
+    throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
+  }
 }
 
 //assembles input code and returns a memory image containing the machine code.
@@ -354,7 +349,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
   QList<Msg> messages;
   AssemblyError assemblyError = AssemblyError::none();
-  DataTypes::AssemblyMap assemblyMap;
+  AssemblyMap assemblyMap;
 
   bool HCFwarn = false; //should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
 
@@ -362,10 +357,10 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   const int totalLines = lines.count();
 
   //sets predifned labels for interrupt pointers
-  assignLabelValue(QString("IRQ_PTR"), 0xFFF8, labelValMap);
-  assignLabelValue(QString("SWI_PTR"), 0xFFFA, labelValMap);
-  assignLabelValue(QString("NMI_PTR"), 0xFFFC, labelValMap);
-  assignLabelValue(QString("RST_PTR"), 0xFFFE, labelValMap);
+  assignLabelValue(QString("IRQ_PTR"), 0xFFF8, labelValMap, assemblerLine);
+  assignLabelValue(QString("SWI_PTR"), 0xFFFA, labelValMap, assemblerLine);
+  assignLabelValue(QString("NMI_PTR"), 0xFFFC, labelValMap, assemblerLine);
+  assignLabelValue(QString("RST_PTR"), 0xFFFE, labelValMap, assemblerLine);
 
   try {
     for (; assemblerLine < totalLines; assemblerLine++) {
@@ -388,42 +383,33 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
       checkGeneralInstructionSupport(s_in, assemblerLine, processorVersion);
 
-      int instructionAddress = assemblerAddress;
+      uint16_t instructionAddress = assemblerAddress;
 
       if (s_in[0] == '.') {
         if (s_in == ".BYTE") {
-          VoidOpRes voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
-          voidOpRes = assignLabelValue(label, assemblerAddress, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           QStringList opList = s_op.split(",");
           foreach (QString curOp, opList) {
             if (curOp.isEmpty()) {
               throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }
+
             auto result = expressionEvaluator(curOp, labelValMap, true);
             if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
             }
             int value = result.value;
 
-            voidOpRes = errorCheckValueAboveFF(value);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            validateValueRange(value, 0xFF, assemblerLine);
 
             Memory[assemblerAddress++] = value;
           }
         } else if (s_in == ".EQU") {
-          VoidOpRes voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
-          voidOpRes = errorCheckMissingLabel(label);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
+          errorCheckMissingLabel(s_op, assemblerLine);
 
           auto result = expressionEvaluator(s_op, labelValMap, true);
           if (!result.ok) {
@@ -431,14 +417,10 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int value = result.value;
 
-          voidOpRes = assignLabelValue(label, value, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, value, labelValMap, assemblerLine);
 
         } else if (s_in == ".ORG") {
-          VoidOpRes voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
           auto result = expressionEvaluator(s_op, labelValMap, true);
           if (!result.ok) {
@@ -452,18 +434,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           Memory[interruptLocations] = value & 0xFF;
           assemblerAddress = value;
 
-          voidOpRes = assignLabelValue(label, assemblerAddress, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
         } else if (s_in == ".WORD") {
-          VoidOpRes voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
-          voidOpRes = assignLabelValue(label, assemblerAddress, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           QStringList opList = s_op.split(",");
           foreach (QString curOp, opList) {
@@ -487,13 +463,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
 
         } else if (s_in == ".RMB") {
-          VoidOpRes voidOpRes = assignLabelValue(label, assemblerAddress, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
-          voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           NumParseResult result = parseNumber(s_op);
           if (!result.ok) {
@@ -541,9 +513,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           Memory[adr] = operand1;
           Memory[adr + 1] = operand2;
 
-          VoidOpRes voidOpRes = assignLabelValue(label, adr, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, adr, labelValMap, assemblerLine);
 
         } else if (s_in == ".SETB") {
           if (s_op.count(",") != 1) {
@@ -581,18 +551,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           Memory[adr] = operand1;
           Memory[adr + 1] = operand2;
 
-          VoidOpRes voidOpRes = assignLabelValue(label, adr, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, adr, labelValMap, assemblerLine);
 
         } else if (s_in == ".STR") {
-          VoidOpRes voidOpRes = errorCheckMissingOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
-          voidOpRes = assignLabelValue(label, assemblerAddress, labelValMap);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           if (s_op[0] != '"' || s_op.length() < 3) {
             throw AssemblyError::failure(Err::invalidSTRSyntax(), assemblerLine, -1);
@@ -610,69 +574,46 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
         }
 
-        bool hasLocation = (DataTypes::directivesWithLocation.contains(s_in));
+        bool hasLocation = (directivesWithLocation.contains(s_in));
         assemblyMap.addInstruction(hasLocation ? instructionAddress : -1, assemblerLine, opCode, operand1, operand2, s_in, s_op);
       } else {
-        VoidOpRes generalLabelAsignment = assignLabelValue(label, assemblerAddress, labelValMap);
-        if (!generalLabelAsignment.ok)
-          throw AssemblyError::failure(generalLabelAsignment.message, assemblerLine, -1);
+        assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
-        if (mnemonics[s_in].opCodes[0] != 0) { // VSE
-          VoidOpRes voidOpRes = errorCheckUnexpectedOperand(s_op);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+        if (mnemonics[s_in].opCodes[addressingModes[AddressingMode::INH].id] != 0) { // INH
+          errorCheckUnexpectedOperand(s_op, assemblerLine);
 
-          opCode = mnemonics[s_in].opCodes[0];
-
-          voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-          if (!voidOpRes.ok)
-            throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::INH].id];
+          validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
           Memory[assemblerAddress++] = opCode;
         } else {
-          VoidOpRes generalOperandCheck = errorCheckMissingOperand(s_op);
-          if (!generalOperandCheck.ok)
-            throw AssemblyError::failure(generalOperandCheck.message, assemblerLine, -1);
+          errorCheckMissingOperand(s_op, assemblerLine);
 
-          if (mnemonics[s_in].opCodes[5] != 0) { // REL
-            VoidOpRes voidOpRes = errorCheckOperandContainsIMM(s_in, s_op);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+          if (mnemonics[s_in].opCodes[addressingModes[AddressingMode::REL].id] != 0) { // REL
+            errorCheckOperandContainsIMM(s_in, s_op, assemblerLine);
+            errorCheckOperandContainsIND(s_in, s_op, assemblerLine);
 
-            voidOpRes = errorCheckOperandContainsIND(s_in, s_op);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
-
-            opCode = mnemonics[s_in].opCodes[5];
-            voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::REL].id];
+            validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (s_op[0].isLetter()) {
               callLabelRelMap[assemblerAddress + 1] = s_op;
               operand1 = 0;
             } else {
               NumParseRelativeResult resultVal = getNumRelative(s_op);
-              if (!resultVal.ok) {
+              if (!resultVal.ok)
                 throw AssemblyError::failure(resultVal.message, assemblerLine, -1);
-              }
+
               operand1 = resultVal.value;
             }
             Memory[assemblerAddress++] = opCode;
             Memory[assemblerAddress++] = operand1;
           } else if (s_op.contains(',')) { // IND
-            VoidOpRes voidOpRes = errorCheckOperandIMMINDMixed(s_op);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            errorCheckOperandIMMINDMixed(s_op, assemblerLine);
 
-            voidOpRes = validateMnemonicSupportForIND(s_in);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
-
-            opCode = mnemonics[s_in].opCodes[3];
-            voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            validateMnemonicSupportForAddressingMode(s_in, AddressingMode::IND, assemblerLine);
+            opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::IND].id];
+            validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (s_op.length() < 2 || s_op.count(',') != 1 || s_op[s_op.length() - 2] != ',') {
               throw AssemblyError::failure(Err::invalidINDSyntax(), assemblerLine, -1);
@@ -697,9 +638,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               }
               int value = resultVal.value;
 
-              voidOpRes = errorCheckValueAboveFF(value);
-              if (!voidOpRes.ok)
-                throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+              validateValueRange(value, 0xFF, assemblerLine);
 
               operand1 = value;
             }
@@ -709,14 +648,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           } else if (s_op.startsWith("#")) { // IMM
             s_op = s_op.sliced(1);
 
-            VoidOpRes voidOpRes = validateMnemonicSupportForIMM(s_in);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
-
-            opCode = mnemonics[s_in].opCodes[1];
-            voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-            if (!voidOpRes.ok)
-              throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            validateMnemonicSupportForAddressingMode(s_in, AddressingMode::IMM, assemblerLine);
+            opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::IMM].id];
+            validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (getInstructionMode(processorVersion, opCode) == AddressingMode::IMMEXT) {
               if (isLabelOrExpression(s_op)) {
@@ -745,9 +679,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
                 }
                 int value = resultVal.value;
 
-                voidOpRes = errorCheckValueAboveFF(value);
-                if (!voidOpRes.ok)
-                  throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+                validateValueRange(value, 0xFF, assemblerLine);
 
                 operand1 = value;
               }
@@ -762,6 +694,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               if (!result.ok) {
                 throw AssemblyError::failure(result.message, assemblerLine, -1);
               }
+
               if (result.undefined) {
                 skipDir = true;
                 callLabelExtMap[(assemblerAddress + 1) % 0x10000] = s_op;
@@ -780,17 +713,15 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               skipDir = true;
             }
 
-            if (mnemonics[s_in].opCodes[2] != 0 && !skipDir) {
-              opCode = mnemonics[s_in].opCodes[2];
+            if (mnemonics[s_in].opCodes[addressingModes[AddressingMode::DIR].id] != 0 && !skipDir) {
+              opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::DIR].id];
               if (getInstructionSupported(processorVersion, opCode)) {
                 operand1 = value;
                 Memory[assemblerAddress++] = opCode;
                 Memory[assemblerAddress++] = operand1;
-              } else if (mnemonics[s_in].opCodes[4] != 0) {
-                opCode = mnemonics[s_in].opCodes[4];
-                VoidOpRes voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-                if (!voidOpRes.ok)
-                  throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+              } else if (mnemonics[s_in].opCodes[addressingModes[AddressingMode::EXT].id] != 0) {
+                opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::EXT].id];
+                validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
                 operand1 = (value >> 8) & 0xFF;
                 operand2 = value & 0xFF;
@@ -798,13 +729,11 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
                 Memory[assemblerAddress++] = operand1;
                 Memory[assemblerAddress++] = operand2;
               } else {
-                throw AssemblyError::failure(Err::instructionDoesNotSupportDIREXT(s_in), assemblerLine, -1);
+                throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::EXT), assemblerLine, -1);
               }
-            } else if (mnemonics[s_in].opCodes[4] != 0) {
-              opCode = mnemonics[s_in].opCodes[4];
-              VoidOpRes voidOpRes = validateInstructionSupport(s_in, opCode, processorVersion);
-              if (!voidOpRes.ok)
-                throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+            } else if (mnemonics[s_in].opCodes[addressingModes[AddressingMode::EXT].id] != 0) {
+              opCode = mnemonics[s_in].opCodes[addressingModes[AddressingMode::EXT].id];
+              validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
               operand1 = (value >> 8) & 0xFF;
               operand2 = value & 0xFF;
@@ -812,7 +741,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               Memory[assemblerAddress++] = operand1;
               Memory[assemblerAddress++] = operand2;
             } else {
-              throw AssemblyError::failure(Err::instructionDoesNotSupportDIREXT(s_in), assemblerLine, -1);
+              throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::EXT), assemblerLine, -1);
             }
           }
         }
@@ -833,11 +762,8 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
         throw AssemblyError::failure(result.message, assemblerLine, -1);
       }
 
-      VoidOpRes voidOpRes = errorCheckValueAboveFF(result.value);
-      if (!voidOpRes.ok)
-        throw AssemblyError::failure(voidOpRes.message, assemblerLine, -1);
+      validateValueRange(result.value, 0xFF, assemblerLine);
 
-      result.value = result.value & 0xFF;
       Memory[location] = result.value;
       instruction.byte2 = result.value;
     }
@@ -850,7 +776,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       if (!result.ok) {
         throw AssemblyError::failure(result.message, assemblerLine, -1);
       }
-      //CHECK_VALUE_ABOVE_FFFF(result.value)
 
       Memory[location] = (result.value >> 8) & 0xFF;
       Memory[location + 1] = result.value & 0xFF;
@@ -886,9 +811,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
     assemblyError = e;
   }
   if (assemblyError.ok && HCFwarn) {
-    messages.append(DataTypes::Msg{MsgType::WARN,
-                                   "Instructions 0x9D and 0xDD are undefined for the M6800 and would cause processor lockup (Halt and Catch Fire) on real hardware. If you are "
-                                   "using a M6803 or similar then this warning is irrelevant."});
+    messages.append(Msg{MsgType::WARN,
+                        "Instructions 0x9D and 0xDD are undefined for the M6800 and would cause processor lockup (Halt and Catch Fire) on real hardware. If you are "
+                        "using a M6803 or similar then this warning is irrelevant."});
   }
   for (int i = messages.size() - 1; i >= 0; --i) {
     if (messages[i].type == MsgType::NONE) {
@@ -896,7 +821,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
     }
   }
   for (auto it = labelValMap.rbegin(); it != labelValMap.rend(); ++it) {
-    messages.prepend(DataTypes::Msg{MsgType::DEBUG, "Value: $" + QString::number(it->second, 16) + " assigned to label '" + it->first + "'"});
+    messages.prepend(Msg{MsgType::DEBUG, "Value: $" + QString::number(it->second, 16) + " assigned to label '" + it->first + "'"});
   }
   return AssemblyResult{messages, assemblyError, assemblyMap};
 }
@@ -1003,7 +928,7 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
     if (immAdr) {
       charNum++;
       if (line.sliced(charNum).isEmpty() || line[charNum] == ' ' || line[charNum] == '\t') {
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Missing operand."});
+        messages.append(Msg{MsgType::ERROR, "Missing operand."});
         
       }
     }
@@ -1014,14 +939,14 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
           while (charNum < line.length()) {
             if (line[charNum] != '\t' && line[charNum] != ' ') {
               errorCharNum = charNum;
-              messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
               
             }
             charNum++;
           }
         } else if (!line[charNum].isDigit()) {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
           
         }
 
@@ -1034,14 +959,14 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
           while (charNum < line.length()) {
             if (line[charNum] != '\t' && line[charNum] != ' ') {
               errorCharNum = charNum;
-              messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
               
             }
             charNum++;
           }
         } else if (!line[charNum].isDigit() && !(line[charNum].toUpper() >= 'A' && line[charNum].toUpper() <= 'F')) {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Hexadecimal numbers (prefixed by $) may only contain the numbers from 0 to 9 and letters from A to F. Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Hexadecimal numbers (prefixed by $) may only contain the numbers from 0 to 9 and letters from A to F. Unexpected character: '" % line[charNum] % "'"});
           
         }
 
@@ -1054,18 +979,18 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
           while (charNum < line.length()) {
             if (line[charNum] != '\t' && line[charNum] != ' ') {
               errorCharNum = charNum;
-              messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
               
             }
             charNum++;
           }
         } else if (line[charNum].isDigit() && line[charNum] != '0' && line[charNum] != '1') {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Binary numbers (prefixed by %) may only contain the numbers 1 and 0."});
+          messages.append(Msg{MsgType::ERROR, "Binary numbers (prefixed by %) may only contain the numbers 1 and 0."});
           
         } else if (line[charNum] != '0' && line[charNum] != '1') {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
           
         }
 
@@ -1078,14 +1003,14 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
           while (charNum < line.length()) {
             if (line[charNum] != '\t' && line[charNum] != ' ') {
               errorCharNum = charNum;
-              messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
               
             }
             charNum++;
           }
         } else if (!line[charNum].isLetterOrNumber() && line[charNum] != '_') {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
+          messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
           
         }
 
@@ -1093,14 +1018,14 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
       }
     } else if (line[charNum] == '\'') { //char
       if (line.sliced(charNum).length() < 3 || line[charNum + 2] != '\'') {
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"});
+        messages.append(Msg{MsgType::ERROR, "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"});
         
       }
       charNum += 3;
       while (charNum < line.length()) {
         if (line[charNum] != '\t' && line[charNum] != ' ') {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
           
         }
         charNum++;
@@ -1108,17 +1033,17 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
     } else if (line[charNum] == '-') { //neg rel decimal
       if (immAdr) {
         errorCharNum = charNum;
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Negative numbers may only be used with relative addressing."});
+        messages.append(Msg{MsgType::ERROR, "Negative numbers may only be used with relative addressing."});
         
       }
       charNum++;
       if (line.sliced(charNum).isEmpty()) {
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Missing operand."});
+        messages.append(Msg{MsgType::ERROR, "Missing operand."});
         
       }
       if (line[charNum] == '$' || line[charNum] == '%') {
         errorCharNum = charNum;
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
+        messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
         
       }
       while (charNum < line.length()) {
@@ -1126,18 +1051,18 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
           while (charNum < line.length()) {
             if (line[charNum] != '\t' && line[charNum] != ' ') {
               errorCharNum = charNum;
-              messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
               
             }
             charNum++;
           }
         } else if ((line[charNum].toUpper() >= 'A' && line[charNum].toUpper() <= 'F')) {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
+          messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
           
         } else if (!line[charNum].isDigit()) {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
           
         }
         charNum++;
@@ -1145,12 +1070,12 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
     } else if (line[charNum] == '"') { //string
       if (s_in != ".STR" && s_in != "STR") {
         errorCharNum = charNum;
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Strings may not be used outside the .STR directive."});
+        messages.append(Msg{MsgType::ERROR, "Strings may not be used outside the .STR directive."});
         
       }
       if (immAdr) {
         errorCharNum = charNum - 1;
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Assembler directives do not support addressing modes like immediate (prefix: #)"});
+        messages.append(Msg{MsgType::ERROR, "Assembler directives do not support addressing modes like immediate (prefix: #)"});
         
       }
       while (charNum < line.length()) {
@@ -1161,35 +1086,21 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
       }
       if (line[charNum - 1] != '"') {
         errorCharNum = charNum - 1;
-        messages.append(DataTypes::Msg{MsgType::ERROR, "Strings must begin and end with a quotes."});
+        messages.append(Msg{MsgType::ERROR, "Strings must begin and end with a quotes."});
         
       }
       while (charNum < line.length()) {
         if (line[charNum] != '\t' && line[charNum] != ' ') {
           errorCharNum = charNum;
-          messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
           
         }
         charNum++;
       }
     } else {
       errorCharNum = charNum;
-      messages.append(DataTypes::Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
+      messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
       
     }
 */
-}
-void Assembler::checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion) {
-  if (alliasMap.contains(s_in)) {
-    if (!(alliasMap[s_in].supportedVersions & processorVersion)) {
-      throw AssemblyError::failure(Err::instructionNotSupported(s_in), assemblerLine, -1);
-    }
-    s_in = alliasMap[s_in].mnemonic;
-  }
-  if (!mnemonics.contains(s_in)) {
-    throw AssemblyError::failure(Err::instructionUnknown(s_in), assemblerLine, -1);
-  }
-  if (!(mnemonics[s_in].supportedVersions & processorVersion)) {
-    throw AssemblyError::failure(Err::instructionNotSupported(s_in), assemblerLine, -1);
-  }
 }

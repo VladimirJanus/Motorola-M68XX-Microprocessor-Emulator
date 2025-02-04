@@ -20,7 +20,7 @@
 
 DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory) {
   QString code;
-  DataTypes::AssemblyMap assemblyMap;
+  AssemblyMap assemblyMap;
   QList<Msg> messages;
 
   int line = 0;

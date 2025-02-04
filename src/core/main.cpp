@@ -16,15 +16,15 @@
  */
 #include <QApplication>
 #include "src/assembler/Assembler.h"
+#include "src/core/Core.h"
 #include "src/ui/MainWindow.h"
-#include "src/utils/DataTypes.h"
 #include <array>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 void printHelp() {
-  std::cout << DataTypes::programName.toStdString() << "\n"
+  std::cout << Core::programName.toStdString() << "\n"
             << "Usage: MotorolaEmulator.exe [options]\n\n"
             << "Options:\n"
             << "  --help, -h                      Show this help message\n"
@@ -37,7 +37,7 @@ void printHelp() {
 }
 
 void printVersion() {
-  std::cout << "Current version: " << DataTypes::softwareVersion.toStdString() << std::endl;
+  std::cout << "Current version: " << Core::softwareVersion.toStdString() << std::endl;
 }
 bool readInputFile(const std::string& inputFile, std::string& content) {
   std::ifstream file(inputFile);
@@ -63,7 +63,7 @@ bool writeOutputFile(const std::string& outputFile, const std::array<uint8_t, 0x
 }
 
 int handleAssembly(int argc, char* argv[]) {
-  DataTypes::ProcessorVersion processorVersion = DataTypes::ProcessorVersion::M6800;
+  Core::ProcessorVersion processorVersion = Core::ProcessorVersion::M6800;
   std::string inputFile;
   std::string outputFile;
 
@@ -88,7 +88,7 @@ int handleAssembly(int argc, char* argv[]) {
       if (++i < argc) {
         std::string procVersionStr = argv[i];
         if (procVersionStr == "M6803") {
-          processorVersion = DataTypes::ProcessorVersion::M6803;
+          processorVersion = Core::ProcessorVersion::M6803;
         } else if (procVersionStr != "M6800") {
           std::cerr << "Error: Invalid processor version. Use M6800 or M6803.\n";
           return 1;
@@ -130,7 +130,7 @@ int handleAssembly(int argc, char* argv[]) {
   }
 
   if (outputFile.empty()) {
-    outputFile = "assembled_" + (processorVersion == DataTypes::ProcessorVersion::M6803 ? std::string("M6803") : std::string("M6800")) + ".bin";
+    outputFile = "assembled_" + (processorVersion == Core::ProcessorVersion::M6803 ? std::string("M6803") : std::string("M6800")) + ".bin";
   }
   if (!writeOutputFile(outputFile, memory)) {
     return 1;

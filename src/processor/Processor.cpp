@@ -210,7 +210,7 @@ void Processor::interruptCheckCPS() {
     if (WAIStatus) {
       cycleCount = 0;
     } else {
-      cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+      cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     }
     break;
   case Interrupt::RST:
@@ -240,7 +240,7 @@ void Processor::interruptCheckCPS() {
       if (WAIStatus) {
         cycleCount = 0;
       } else {
-        cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+        cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
       }
       pendingInterrupt = Interrupt::NONE;
     }
@@ -248,7 +248,7 @@ void Processor::interruptCheckCPS() {
   case Interrupt::RSTCYCLESERVICE:
     updateFlags(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::RST);
-    cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+    cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
     WAIStatus = false;
     break;
@@ -260,7 +260,7 @@ void Processor::interruptCheckCPS() {
     }
     updateFlags(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::NMI);
-    cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+    cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
     break;
   case Interrupt::IRQCYCLESERVICE:
@@ -271,7 +271,7 @@ void Processor::interruptCheckCPS() {
     }
     updateFlags(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::IRQ);
-    cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+    cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
     break;
   }
@@ -313,11 +313,11 @@ void Processor::interruptCheckIPS() {
     break;
   }
 }
-void Processor::startExecution(float OPS, DataTypes::AssemblyMap list) {
+void Processor::startExecution(float OPS, AssemblyMap list) {
   assemblyMap = list;
   running = true;
   curCycle = 1;
-  cycleCount = DataTypes::getInstructionCycleCount(processorVersion, Memory[PC]);
+  cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
 
   int nanoDelay = 1000000000 / OPS;
   int uiUpdateSpeed = 250;

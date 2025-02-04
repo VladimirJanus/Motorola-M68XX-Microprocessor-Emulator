@@ -30,8 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
   , ui(new Ui::MainWindow) {
   // UI Setup
   ui->setupUi(this);
-  QWidget::setWindowTitle(DataTypes::programName);
-  ui->plainTextInfo->append("Current version: " + DataTypes::softwareVersion + ", designed for Windows 10.");
+  QWidget::setWindowTitle(Core::programName);
+  ui->plainTextInfo->append("Current version: " + Core::softwareVersion + ", designed for Windows 10.");
 
   sessionId = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
 
@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
       QTableWidgetItem *item = new QTableWidgetItem("00");
-      item->setBackground(QBrush(memoryCellDefaultColor));
+      item->setBackground(QBrush(Core::memoryCellDefaultColor));
       item->setTextAlignment(Qt::AlignCenter);
       QFont cellFont(font, fontSize, QFont::Bold);
       item->setFont(cellFont);
@@ -104,19 +104,19 @@ MainWindow::MainWindow(QWidget *parent)
     QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(i, 4, 16, QChar('0')).toUpper());
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-    item->setBackground(QBrush(SMMemoryCellColor));
+    item->setBackground(QBrush(Core::SMMemoryCellColor));
     ui->tableWidgetSM->setItem(i, 0, item);
 
     item = new QTableWidgetItem(QString("%1").arg(processor.Memory[i], 2, 16, QChar('0').toUpper()));
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-    item->setBackground(QBrush(SMMemoryCellColor2));
+    item->setBackground(QBrush(Core::SMMemoryCellColor2));
     ui->tableWidgetSM->setItem(i, 1, item);
 
     item = new QTableWidgetItem("");
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-    item->setBackground(QBrush(SMMemoryCellColor));
+    item->setBackground(QBrush(Core::SMMemoryCellColor));
     ui->tableWidgetSM->setItem(i, 2, item);
   }
 
@@ -355,7 +355,7 @@ void MainWindow::updateLinesBox(bool redraw) {
   if (redraw) {
     if (ui->checkAdvancedInfo->isChecked()) {
       for (int i = 0; i < rowCount; i++) {
-        const DataTypes::AssemblyMap::MappedInstr &instr = assemblyMap.getObjectByLine(i);
+        const AssemblyMap::MappedInstr &instr = assemblyMap.getObjectByLine(i);
         if (instr.address == -1) {
           text += QString("%1:----\n").arg(i, 5, 10, QChar('0'));
         } else {

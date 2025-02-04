@@ -62,9 +62,9 @@ void MainWindow::colorMemory(int address, ColorType colorType) {
     if (row >= 0 && row < 20) {
       QBrush brush = getBrushForType(colorType);
       if (colorType == ColorType::NONE) {
-        ui->tableWidgetSM->item(row, 0)->setBackground(QBrush(SMMemoryCellColor));
-        ui->tableWidgetSM->item(row, 1)->setBackground(QBrush(SMMemoryCellColor2));
-        ui->tableWidgetSM->item(row, 2)->setBackground(QBrush(SMMemoryCellColor));
+        ui->tableWidgetSM->item(row, 0)->setBackground(QBrush(Core::SMMemoryCellColor));
+        ui->tableWidgetSM->item(row, 1)->setBackground(QBrush(Core::SMMemoryCellColor2));
+        ui->tableWidgetSM->item(row, 2)->setBackground(QBrush(Core::SMMemoryCellColor));
       } else {
         ui->tableWidgetSM->item(row, 0)->setBackground(brush);
         ui->tableWidgetSM->item(row, 1)->setBackground(brush);
@@ -115,9 +115,9 @@ void MainWindow::drawMemorySelections() {
         ui->tableWidgetSM->item(row, 1)->setBackground(getBrushForType(ColorType::HIGHLIGHT));
         ui->tableWidgetSM->item(row, 2)->setBackground(getBrushForType(ColorType::HIGHLIGHT));
       } else {
-        ui->tableWidgetSM->item(row, 0)->setBackground(QBrush(SMMemoryCellColor));
-        ui->tableWidgetSM->item(row, 1)->setBackground(QBrush(SMMemoryCellColor2));
-        ui->tableWidgetSM->item(row, 2)->setBackground(QBrush(SMMemoryCellColor));
+        ui->tableWidgetSM->item(row, 0)->setBackground(QBrush(Core::SMMemoryCellColor));
+        ui->tableWidgetSM->item(row, 1)->setBackground(QBrush(Core::SMMemoryCellColor2));
+        ui->tableWidgetSM->item(row, 2)->setBackground(QBrush(Core::SMMemoryCellColor));
       }
     }
   } else {
@@ -215,9 +215,9 @@ void MainWindow::clearSelections() {
     }
   } else {
     for (int i = 0; i < 20; ++i) {
-      ui->tableWidgetSM->item(i, 0)->setBackground(QBrush(SMMemoryCellColor));
-      ui->tableWidgetSM->item(i, 1)->setBackground(QBrush(SMMemoryCellColor2));
-      ui->tableWidgetSM->item(i, 2)->setBackground(QBrush(SMMemoryCellColor));
+      ui->tableWidgetSM->item(i, 0)->setBackground(QBrush(Core::SMMemoryCellColor));
+      ui->tableWidgetSM->item(i, 1)->setBackground(QBrush(Core::SMMemoryCellColor2));
+      ui->tableWidgetSM->item(i, 2)->setBackground(QBrush(Core::SMMemoryCellColor));
     }
   }
   highlightLineList.clear();

@@ -15,11 +15,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "src/utils/DataTypes.h"
+#include "src/core/Core.h"
 #include <mutex>
 #include <vector>
-using DataTypes::Action;
-using DataTypes::ActionType;
+using Core::Action;
+using Core::ActionType;
 class ActionQueue {
 public:
   void addAction(const Action& action) {

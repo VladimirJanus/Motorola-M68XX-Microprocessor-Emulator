@@ -27,21 +27,21 @@ FORMS += \
 HEADERS += \
     src/assembler/Assembler.h \
     src/assembler/disassembler.h \
+    src/core/Core.h \
     src/processor/Processor.h \
     src/ui/ExternalDisplay.h \
     src/ui/InstructionInfoDialog.h \
     src/ui/MainWindow.h \
-    src/utils/ActionQueue.h \
-    src/utils/DataTypes.h
+    src/utils/ActionQueue.h
 
 SOURCES += \
     src/assembler/Assembler.cpp \
     src/assembler/disassembler.cpp \
+    src/core/Core.cpp \
     src/core/main.cpp \
     src/processor/InstructionFunctions.cpp \
     src/processor/Processor.cpp \
     src/ui/ExternalDisplay.cpp \
     src/ui/InstructionInfoDialog.cpp \
     src/ui/MainWindow.cpp \
-    src/ui/SelectionSys.cpp \
-    src/utils/DataTypes.cpp
+    src/ui/SelectionSys.cpp

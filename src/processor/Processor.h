@@ -18,31 +18,32 @@
 #define PROCESSOR_H
 
 #include <QObject>
+#include "src/core/Core.h"
 #include "src/utils/ActionQueue.h"
-#include "src/utils/datatypes.h"
 #include <cstdint>
 #include <qfuturewatcher.h>
 
-using DataTypes::bit;
-using DataTypes::Flag;
-using DataTypes::Flag::Carry;
-using DataTypes::Flag::HalfCarry;
-using DataTypes::Flag::InterruptMask;
-using DataTypes::Flag::Negative;
-using DataTypes::Flag::Overflow;
-using DataTypes::Flag::Zero;
-using DataTypes::Interrupt;
-using DataTypes::interruptLocations;
-using DataTypes::M6800InstructionPage;
-using DataTypes::M6803InstructionPage;
-using DataTypes::ProcessorVersion;
+using Core::AssemblyMap;
+using Core::bit;
+using Core::Flag;
+using Core::Flag::Carry;
+using Core::Flag::HalfCarry;
+using Core::Flag::InterruptMask;
+using Core::Flag::Negative;
+using Core::Flag::Overflow;
+using Core::Flag::Zero;
+using Core::Interrupt;
+using Core::interruptLocations;
+using Core::M6800InstructionPage;
+using Core::M6803InstructionPage;
+using Core::ProcessorVersion;
 
 class Processor : public QObject {
   Q_OBJECT
 private:
   typedef void (Processor::*funcPtr)();
   ActionQueue actionQueue;
-  DataTypes::AssemblyMap assemblyMap;
+  AssemblyMap assemblyMap;
   QFutureWatcher<void> futureWatcher;
   funcPtr executeInstruction;
   ProcessorVersion processorVersion = ProcessorVersion::M6800;
@@ -78,7 +79,7 @@ public:
   //run stop step
   void reset();
   void executeStep();
-  void startExecution(float OPS, DataTypes::AssemblyMap list);
+  void startExecution(float OPS, AssemblyMap list);
   void stopExecution();
 
   //change settings
