@@ -428,8 +428,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int value = result.value;
 
-          //CHECK_VALUE_ABOVE_FFFF(value);
-
           Memory[interruptLocations - 1] = (value & 0xFF00) >> 8;
           Memory[interruptLocations] = value & 0xFF;
           assemblerAddress = value;
@@ -453,8 +451,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             }
             int value = result.value;
 
-            //CHECK_VALUE_ABOVE_FFFF(value);
-
             operand1 = (value >> 8) & 0xFF;
             operand2 = value & 0xFF;
 
@@ -472,8 +468,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
           int value = result.value;
-
-          //CHECK_VALUE_ABOVE_FFFF(value);
 
           assemblerAddress += value;
 
@@ -531,8 +525,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int adr = result.value;
 
-          //CHECK_VALUE_ABOVE_FFFF(adr);
-
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
             throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
@@ -544,12 +536,8 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int val = result.value;
 
-          //CHECK_VALUE_ABOVE_FFFF(val);
-
-          operand1 = (val >> 8) & 0xFF;
-          operand2 = val & 0xFF;
-          Memory[adr] = operand1;
-          Memory[adr + 1] = operand2;
+          validateValueRange(val, 0xFF, assemblerLine);
+          Memory[adr] = val;
 
           assignLabelValue(label, adr, labelValMap, assemblerLine);
 
@@ -662,7 +650,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
                 }
                 int value = resultVal.value;
 
-                //CHECK_VALUE_ABOVE_FFFF(value);
                 operand1 = (value >> 8) & 0xFF;
                 operand2 = value & 0xFF;
               }
@@ -708,7 +695,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               }
               value = resultVal.value;
             }
-            //CHECK_VALUE_ABOVE_FFFF(value);
+
             if (value > 0xFF) {
               skipDir = true;
             }
