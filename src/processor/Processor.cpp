@@ -331,7 +331,9 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
     auto next = std::chrono::steady_clock::now() + std::chrono::nanoseconds(nanoDelay * batchSize);
     while (running) {
       while (std::chrono::steady_clock::now() < next)
-        ;
+        if (!running) {
+          break;
+        };
 
       next = next + std::chrono::nanoseconds(nanoDelay * batchSize);
 
@@ -369,6 +371,7 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
 }
 
 void Processor::stopExecution() {
+  curCycle = 1;
   if (running == true) {
     running = false;
     futureWatcher.waitForFinished();
