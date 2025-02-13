@@ -21,6 +21,8 @@ The source code history is missing because the project was moved many times and 
     - **Disassembler.cpp**: Implements disassembler logic.
     - **Disassembler.h**
   - **core/**: Contains the core application logic.
+    - **Core.cpp**: Implements various data types and constant data.
+    - **Core.h**
     - **main.cpp**: The entry point of the application.
   - **processor/**: Contains processor-related functionalities.
     - **InstructionFunctions.cpp**: Implements processor instruction functions.
@@ -39,8 +41,6 @@ The source code history is missing because the project was moved many times and 
     - **SelectionSys.cpp**: Implements line selection system logic.
   - **utils/**: Contains utility functions and helper classes.
     - **ActionQueue.h**: Declares action queue class for processor interractions while emulating.
-    - **DataTypes.cpp**: Implements various data types and constant data.
-    - **DataTypes.h**
 
 
 GNU Affero General Public License v3.0 (AGPL-3.0)
