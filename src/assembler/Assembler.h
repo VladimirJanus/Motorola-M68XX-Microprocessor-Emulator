@@ -85,13 +85,13 @@ private:
 
   static bool lineEmpty(QString &line);
   static LineParts disectLine(QString line, int assemblerLine);
-  static void checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion);
 
   static inline bool isLabelOrExpression(QString s_op);
 
   static void assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine);
   static void validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine);
   static void validateMnemonicSupportForAddressingMode(QString s_in, AddressingMode mode, int assemblerLine);
+  static void validateMnemonicSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion);
 
   static void errorCheckUnexpectedOperand(QString s_op, int assemblerLine);
   static void errorCheckMissingOperand(QString s_op, int assemblerLine);

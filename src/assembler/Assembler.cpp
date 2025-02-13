@@ -17,11 +17,17 @@
 #include "src/assembler/Assembler.h"
 
 /**
-* Converts hexadecimal string prefixed with '$' to numeric value
-* 
-* @param input Hexadecimal number string (e.g., '$FF')
-* @return Parsed number or failure result
-*/
+ * @brief Parses a hexadecimal string (format: $FF).
+ * 
+ * This function takes a hexadecimal string with a $ prefix and converts it to an integer value.
+ * It validates that the input string is within the 16-bit range (0x0000-0xFFFF).
+ * 
+ * @param input Hexadecimal string with $ prefix.
+ * @return NumParseResult containing the parsed value or an error message.
+ * 
+ * @note The function returns an error if the input string is empty, contains invalid characters,
+ *       or if the parsed number is out of the 16-bit range.
+ */
 Assembler::NumParseResult Assembler::parseHex(const QString &input) {
   if (input.length() <= 1) {
     return NumParseResult::failure(Err::parsingEmptyNumber());
@@ -38,11 +44,17 @@ Assembler::NumParseResult Assembler::parseHex(const QString &input) {
 }
 
 /**
-* Converts binary string prefixed with '%' to numeric value
-* 
-* @param input Binary number string (e.g., '%10101010')
-* @return Parsed number or failure result
-*/
+ * @brief Parses binary string (format: %1010)
+ * 
+ * This function takes a binary string with a % prefix and converts it to an integer value.
+ * It validates that the input string is within the 16-bit range (0x0000-0xFFFF).
+ * 
+ * @param input Binary string with % prefix.
+ * @return NumParseResult containing the parsed value or an error message.
+ * 
+ * @note The function returns an error if the input string is empty, contains invalid characters,
+ *       or if the parsed number is out of the 16-bit range.
+ */
 Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   if (input.length() <= 1) {
     return NumParseResult::failure(Err::parsingEmptyNumber());
@@ -59,12 +71,18 @@ Assembler::NumParseResult Assembler::parseBin(const QString &input) {
 }
 
 /**
-* Converts decimal string to numeric value
-* 
-* @param input decimal number string
-* @param allowNeg flag to permit negative numbers (for relative addressing)
-* @return Parsed number or failure result
-*/
+ * @brief Parses decimal string with optional negative values.
+ * 
+ * This function takes a decimal string and converts it to an integer value.
+ * It can optionally allow negative numbers for relative addressing.
+ * 
+ * @param input Decimal string.
+ * @param allowNeg Allow negative numbers for relative addressing.
+ * @return NumParseResult containing the parsed value or an error message.
+ * 
+ * @note The function returns an error if the input string is empty, contains invalid characters,
+ *       or if the parsed number is out of the corresponding range.
+ */
 Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNeg) {
   bool ok;
   int32_t number = input.toInt(&ok);
@@ -85,11 +103,16 @@ Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNe
 }
 
 /**
-* Converts ASCII character literal to numeric value
-* 
-* @param input Character literal (e.g., 'A')
-* @return Parsed ASCII value or failure result
-*/
+ * @brief Parses ASCII character literal (format: 'A').
+ * 
+ * This function takes an ASCII character literal enclosed in single quotes and converts it to its ASCII value.
+ * It enforces the 7-bit ASCII range (0-127).
+ * 
+ * @param input Character literal.
+ * @return NumParseResult containing the ASCII value or an error message.
+ * 
+ * @note The function returns an error if the input string is not in the correct format or if the character is out of the 7-bit ASCII range.
+ */
 Assembler::NumParseResult Assembler::parseASCII(const QString &input) {
   if (input.length() != 3 || !input.startsWith("'") || !input.endsWith("'")) {
     return NumParseResult::failure(Err::invalidAsciiConversionSyntax());
@@ -102,13 +125,13 @@ Assembler::NumParseResult Assembler::parseASCII(const QString &input) {
 }
 
 /**
-* Universal number parsing method
-* 
-* @param input Number string in various formats
-* @return Parsed number or failure result
-* 
-* Supports: ASCII literal, Hex ($FF), Binary (%10101010), Decimal
-*/
+ * @brief Universal number parser with format detection.
+ * 
+ * This function detects the format of the input string (ASCII, Hex, Binary, Decimal) and parses it accordingly.
+ * 
+ * @param input Number string in supported formats.
+ * @return NumParseResult containing the parsed value or an error message.
+ */
 Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
   if (input.contains("'")) {
     return parseASCII(input);
@@ -121,16 +144,14 @@ Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
   }
 }
 /**
-* Converts an operand to a number for relative addressing
-* 
-* @param input Operand string in various formats
-* @return Parsed relative address or failure result
-* 
-* Handles numeric and literal inputs, with specific restrictions:
-* - Rejects values $FE and $FF for relative jumps
-* - Constrains value to -128 to 127 range
-* - Adjusts negative values for offset calculation
-*/
+ * @brief Processes relative address operands.
+ * 
+ * This function processes relative address expressions and adjusts the offset value.
+ * It blocks $FE/$FF values and enforces the -128 to 127 range.
+ * 
+ * @param input Relative address expression.
+ * @return NumParseRelativeResult containing the adjusted offset value or an error message.
+ */
 Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input) {
   if (input.startsWith("'") || input.startsWith("$") || input.startsWith("%")) {
     NumParseResult result = parseNumber(input);
@@ -160,17 +181,18 @@ Assembler::NumParseRelativeResult Assembler::getNumRelative(const QString &input
   }
 }
 /**
- * Evaluates an expression and returns its value
+ * @brief Evaluates arithmetic expressions with labels.
  * 
- * @param expr Expression to evaluate
- * @param labelValMap Map of label values
- * @param errOnUndefined Controls undefined label handling
- * @return Evaluation result
+ * This function evaluates mathematical expressions that may include labels.
+ * It can control the handling of undefined labels based on the errOnUndefined parameter.
  * 
- * If errOnUndefined:
- * - Returns unsuccessfully (ok=false, undefined=true) if expression contains undefined label
- * Otherwise:
- * - Returns (ok=true, undefined=true) for undefined labels
+ * @param expr Mathematical expression string.
+ * @param labelValMap Current label values.
+ * @param errOnUndefined Control undefined label handling.
+ * @return ExpressionEvaluationResult containing the evaluated value or an error message.
+ * 
+ * @note If errOnUndefined is true, the function returns unsuccessfully if the expression contains an undefined label.
+ *       If errOnUndefined is false, the function returns successfully but indicates that the label is undefined.
  */
 Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined) {
   QList<QString> symbols;
@@ -249,12 +271,29 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString exp
   return ExpressionEvaluationResult::success(value);
 }
 
-//returns true if a string represents a label or an expression
+/**
+ * @brief Checks if a string represents a label or an expression.
+ * 
+ * This function returns true if the input string represents a label or an expression.
+ * 
+ * @param s_op Input string.
+ * @return True if the string represents a label or an expression, false otherwise.
+ */
 inline bool Assembler::isLabelOrExpression(QString s_op) {
   return (s_op[0].isLetter() || s_op.contains('+') || s_op.contains('-'));
 }
 
-//adds a label and its value to the label-to-value map.
+/**
+ * @brief Adds a label and its value to the label-to-value map.
+ * 
+ * This function assigns a value to a label and adds it to the label-to-value map.
+ * 
+ * @param label Label to assign.
+ * @param value Value to assign to the label.
+ * @param labelValMap Map of label values.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the label is already defined.
+ */
 void Assembler::assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine) {
   if (label.isEmpty()) {
     return;
@@ -265,13 +304,35 @@ void Assembler::assignLabelValue(const QString &label, int value, std::map<QStri
   labelValMap[label] = value;
   return;
 }
-//validations and error checks.
+
+/**
+ * @brief Validates instruction support for the specified processor version.
+ * 
+ * This function checks if an instruction is supported by the specified processor version.
+ * 
+ * @param s_in Instruction mnemonic.
+ * @param opCode Operation code.
+ * @param processorVersion Processor version.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the instruction is not supported by the processor.
+ */
 void Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine) {
   if (!getInstructionSupported(processorVersion, opCode)) {
     throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
   }
   return;
 }
+
+/**
+ * @brief Validates mnemonic support for the specified addressing mode.
+ * 
+ * This function checks if a mnemonic supports the specified addressing mode.
+ * 
+ * @param s_in Mnemonic to check.
+ * @param mode Addressing mode.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the mnemonic does not support the addressing mode.
+ */
 void Assembler::validateMnemonicSupportForAddressingMode(QString s_in, AddressingMode mode, int assemblerLine) {
   if (mnemonics[s_in].opCodes[addressingModes[mode].id] == 0) {
     throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, mode), assemblerLine, -1);
@@ -279,50 +340,17 @@ void Assembler::validateMnemonicSupportForAddressingMode(QString s_in, Addressin
   return;
 }
 
-void Assembler::errorCheckUnexpectedOperand(QString s_op, int assemblerLine) {
-  if (!s_op.isEmpty()) {
-    throw AssemblyError::failure(Err::unexpectedOperand(), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::errorCheckMissingOperand(QString s_op, int assemblerLine) {
-  if (s_op.isEmpty()) {
-    throw AssemblyError::failure(Err::missingOperand(), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::errorCheckMissingLabel(QString label, int assemblerLine) {
-  if (label.isEmpty()) {
-    throw AssemblyError::failure(Err::missingLabel(), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op, int assemblerLine) {
-  if (s_op.contains(',')) {
-    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IND), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op, int assemblerLine) {
-  if (s_op.contains('#')) {
-    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IMM), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine) {
-  if (s_op.contains('#') && s_op.contains(',')) {
-    throw AssemblyError::failure(Err::mixedIMMandIND(), assemblerLine, -1);
-  }
-  return;
-}
-void Assembler::validateValueRange(int32_t value, int32_t max, int assemblerLine) {
-  if (value > 0xFF) {
-    throw AssemblyError::failure(Err::numOutOfRange(value, max), assemblerLine, -1);
-  }
-  return;
-}
-
-void Assembler::checkGeneralInstructionSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion) {
+/**
+ * @brief Validates general mnemonic support on the specified processor.
+ * 
+ * This function checks if a mnemonic is supported by the specified processor version.
+ * 
+ * @param s_in Mnemonic to check.
+ * @param assemblerLine Current line number.
+ * @param processorVersion Processor version.
+ * @throws AssemblyError if the mnemonic is not supported by the processor.
+ */
+void Assembler::validateMnemonicSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion) {
   if (alliasMap.contains(s_in)) {
     if (!(alliasMap[s_in].supportedVersions & processorVersion)) {
       throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
@@ -337,7 +365,135 @@ void Assembler::checkGeneralInstructionSupport(QString &s_in, int assemblerLine,
   }
 }
 
-//assembles input code and returns a memory image containing the machine code.
+/**
+ * @brief Checks for unexpected operand.
+ * 
+ * This function throws an error if the operand is not empty.
+ * 
+ * @param s_op Operand string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the operand is not empty.
+ */
+void Assembler::errorCheckUnexpectedOperand(QString s_op, int assemblerLine) {
+  if (!s_op.isEmpty()) {
+    throw AssemblyError::failure(Err::unexpectedOperand(), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Checks for missing operand.
+ * 
+ * This function throws an error if the operand is empty.
+ * 
+ * @param s_op Operand string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the operand is empty.
+ */
+void Assembler::errorCheckMissingOperand(QString s_op, int assemblerLine) {
+  if (s_op.isEmpty()) {
+    throw AssemblyError::failure(Err::missingOperand(), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Checks for missing label.
+ * 
+ * This function throws an error if the label is empty.
+ * 
+ * @param label Label string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the label is empty.
+ */
+void Assembler::errorCheckMissingLabel(QString label, int assemblerLine) {
+  if (label.isEmpty()) {
+    throw AssemblyError::failure(Err::missingLabel(), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Checks if operand contains indirect addressing mode.
+ * 
+ * This function throws an error if the operand contains a comma, indicating indirect addressing mode.
+ * 
+ * @param s_in Mnemonic.
+ * @param s_op Operand string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the operand contains a comma.
+ */
+void Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op, int assemblerLine) {
+  if (s_op.contains(',')) {
+    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IND), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Checks if operand contains immediate addressing mode.
+ * 
+ * This function throws an error if the operand contains a hash symbol, indicating immediate addressing mode.
+ * 
+ * @param s_in Mnemonic.
+ * @param s_op Operand string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the operand contains a hash symbol.
+ */
+void Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op, int assemblerLine) {
+  if (s_op.contains('#')) {
+    throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IMM), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Checks if operand contains mixed immediate and indirect addressing modes.
+ * 
+ * This function throws an error if the operand contains both a hash symbol and a comma.
+ * 
+ * @param s_op Operand string.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the operand contains both a hash symbol and a comma.
+ */
+void Assembler::errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine) {
+  if (s_op.contains('#') && s_op.contains(',')) {
+    throw AssemblyError::failure(Err::mixedIMMandIND(), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Validates value range.
+ * 
+ * This function checks if a value is within the specified range.
+ * 
+ * @param value Value to check.
+ * @param max Maximum allowed value.
+ * @param assemblerLine Current line number.
+ * @throws AssemblyError if the value is out of range.
+ */
+void Assembler::validateValueRange(int32_t value, int32_t max, int assemblerLine) {
+  if (value > 0xFF) {
+    throw AssemblyError::failure(Err::numOutOfRange(value, max), assemblerLine, -1);
+  }
+  return;
+}
+
+/**
+ * @brief Assembles the input assembly code into machine code.
+ *
+ * This function processes the input assembly code, validates instructions and operands,
+ * and generates the corresponding machine code in the output memory buffer.
+ * It also handles label assignments, error checking, and message logging.
+ *
+ * @param processorVersion The version of the processor for which the code is being assembled.
+ * @param code The input assembly code as a QString.
+ * @param Memory The output memory buffer where the assembled machine code will be stored.
+ * @return AssemblyResult containing messages, errors, and the assembly map.
+ *
+ * @note The function throws AssemblyError for various syntax and semantic errors in the input code.
+ */
 AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &Memory) {
   int assemblerLine = 0;
   uint16_t assemblerAddress = 0;
@@ -351,12 +507,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   AssemblyError assemblyError = AssemblyError::none();
   AssemblyMap assemblyMap;
 
-  bool HCFwarn = false; //should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
+  bool HCFwarn = false; // should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
 
   const QStringList lines = code.split('\n');
   const int totalLines = lines.count();
 
-  //sets predifned labels for interrupt pointers
+  // Predefined interrupt vectors
   assignLabelValue(QString("IRQ_PTR"), 0xFFF8, labelValMap, assemblerLine);
   assignLabelValue(QString("SWI_PTR"), 0xFFFA, labelValMap, assemblerLine);
   assignLabelValue(QString("NMI_PTR"), 0xFFFC, labelValMap, assemblerLine);
@@ -381,7 +537,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       QString &s_in = parts.s_in;
       QString &s_op = parts.s_op;
 
-      checkGeneralInstructionSupport(s_in, assemblerLine, processorVersion);
+      validateMnemonicSupport(s_in, assemblerLine, processorVersion);
 
       uint16_t instructionAddress = assemblerAddress;
 
@@ -418,7 +574,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           int value = result.value;
 
           assignLabelValue(label, value, labelValMap, assemblerLine);
-
         } else if (s_in == ".ORG") {
           errorCheckMissingOperand(s_op, assemblerLine);
 
@@ -433,7 +588,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           assemblerAddress = value;
 
           assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
-
         } else if (s_in == ".WORD") {
           errorCheckMissingOperand(s_op, assemblerLine);
 
@@ -457,7 +611,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             Memory[assemblerAddress++] = operand1;
             Memory[assemblerAddress++] = operand2;
           }
-
         } else if (s_in == ".RMB") {
           errorCheckMissingOperand(s_op, assemblerLine);
 
@@ -470,7 +623,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           int value = result.value;
 
           assemblerAddress += value;
-
         } else if (s_in == ".SETW") {
           if (s_op.count(",") != 1) {
             throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETW"), assemblerLine, -1);
@@ -487,7 +639,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int adr = result.value;
 
-          //CHECK_VALUE_ABOVE_FFFF(adr);
+          // CHECK_VALUE_ABOVE_FFFF(adr);
 
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
@@ -500,7 +652,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           int val = result.value;
 
-          //CHECK_VALUE_ABOVE_FFFF(val);
+          // CHECK_VALUE_ABOVE_FFFF(val);
 
           operand1 = (val >> 8) & 0xFF;
           operand2 = val & 0xFF;
@@ -508,7 +660,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           Memory[adr + 1] = operand2;
 
           assignLabelValue(label, adr, labelValMap, assemblerLine);
-
         } else if (s_in == ".SETB") {
           if (s_op.count(",") != 1) {
             throw AssemblyError::failure(Err::invalidSETSyntaxMissingComma("SETB"), assemblerLine, -1);
@@ -540,7 +691,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           Memory[adr] = val;
 
           assignLabelValue(label, adr, labelValMap, assemblerLine);
-
         } else if (s_in == ".STR") {
           errorCheckMissingOperand(s_op, assemblerLine);
 
@@ -780,7 +930,6 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
         } else {
           throw AssemblyError::failure(Err::labelUndefined(label), assemblerLine, -1);
         }
-
       } else {
         int location2 = labelValMap[label];
         int value;
@@ -812,6 +961,16 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   }
   return AssemblyResult{messages, assemblyError, assemblyMap};
 }
+
+/**
+ * @brief Checks if a line is empty or a comment.
+ * 
+ * This function determines if a line of assembly code is empty or contains only a comment.
+ * It removes any comments and trims whitespace to make this determination.
+ * 
+ * @param line Reference to the line of assembly code.
+ * @return True if the line is empty or a comment, false otherwise.
+ */
 bool Assembler::lineEmpty(QString &line) {
   if (line.isEmpty()) {
     return true;
@@ -828,7 +987,17 @@ bool Assembler::lineEmpty(QString &line) {
   }
   return false;
 }
-
+/**
+ * @brief Splits a line into label, instruction, and operand components.
+ *
+ * This function parses a line of assembly code and extracts its components: label, instruction, and operand.
+ * It performs syntax validation and throws an error for any invalid syntax.
+ *
+ * @param line Source assembly line.
+ * @param assemblerLine Current line number.
+ * @return LineParts structure containing the label, instruction, and operand.
+ * @throws AssemblyError for invalid syntax, such as missing instruction, illegal characters, or unexpected characters.
+ */
 Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
   LineParts parts{"", "", ""};
   int charNum = 0;
@@ -874,11 +1043,10 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
     parts.label = "";
   } else if (line[0].isDigit()) {
     throw AssemblyError::failure(Err::labelStartsWithIllegalDigit(line[charNum]), assemblerLine, charNum);
-
   } else {
     throw AssemblyError::failure(Err::labelStartsWithIllegalCharacter(line[charNum]), assemblerLine, charNum);
   }
-  //get instruction and operand
+  // get instruction and operand
   if (line.sliced(charNum).isEmpty()) {
     throw AssemblyError::failure(Err::missingInstruction(), assemblerLine, -1);
   }
@@ -905,189 +1073,9 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
   }
 
   parts.s_op = line.sliced(charNum);
-  if (!parts.s_op.contains('\'')) {
+  if (!parts.s_op.contains('\'') && !parts.s_op.contains('\"')) {
     parts.s_op = parts.s_op.toUpper();
   }
   parts.s_op = parts.s_op.trimmed();
   return parts;
-  /*
-    immAdr = line[charNum] == '#';
-    if (immAdr) {
-      charNum++;
-      if (line.sliced(charNum).isEmpty() || line[charNum] == ' ' || line[charNum] == '\t') {
-        messages.append(Msg{MsgType::ERROR, "Missing operand."});
-        
-      }
-    }
-    if (line[charNum].isDigit()) {
-      charNum++;
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') { //check end
-          while (charNum < line.length()) {
-            if (line[charNum] != '\t' && line[charNum] != ' ') {
-              errorCharNum = charNum;
-              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-              
-            }
-            charNum++;
-          }
-        } else if (!line[charNum].isDigit()) {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-
-        charNum++;
-      }
-    } else if (line[charNum] == '$') {
-      charNum++;
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') { //check end
-          while (charNum < line.length()) {
-            if (line[charNum] != '\t' && line[charNum] != ' ') {
-              errorCharNum = charNum;
-              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-              
-            }
-            charNum++;
-          }
-        } else if (!line[charNum].isDigit() && !(line[charNum].toUpper() >= 'A' && line[charNum].toUpper() <= 'F')) {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Hexadecimal numbers (prefixed by $) may only contain the numbers from 0 to 9 and letters from A to F. Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-
-        charNum++;
-      }
-    } else if (line[charNum] == '%') {
-      charNum++;
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') { //check end
-          while (charNum < line.length()) {
-            if (line[charNum] != '\t' && line[charNum] != ' ') {
-              errorCharNum = charNum;
-              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-              
-            }
-            charNum++;
-          }
-        } else if (line[charNum].isDigit() && line[charNum] != '0' && line[charNum] != '1') {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Binary numbers (prefixed by %) may only contain the numbers 1 and 0."});
-          
-        } else if (line[charNum] != '0' && line[charNum] != '1') {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-
-        charNum++;
-      }
-    } else if (line[charNum].isLetter()) { // LABEL
-      charNum++;
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') { //check end
-          while (charNum < line.length()) {
-            if (line[charNum] != '\t' && line[charNum] != ' ') {
-              errorCharNum = charNum;
-              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-              
-            }
-            charNum++;
-          }
-        } else if (!line[charNum].isLetterOrNumber() && line[charNum] != '_') {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
-          
-        }
-
-        charNum++;
-      }
-    } else if (line[charNum] == '\'') { //char
-      if (line.sliced(charNum).length() < 3 || line[charNum + 2] != '\'') {
-        messages.append(Msg{MsgType::ERROR, "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character"});
-        
-      }
-      charNum += 3;
-      while (charNum < line.length()) {
-        if (line[charNum] != '\t' && line[charNum] != ' ') {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-        charNum++;
-      }
-    } else if (line[charNum] == '-') { //neg rel decimal
-      if (immAdr) {
-        errorCharNum = charNum;
-        messages.append(Msg{MsgType::ERROR, "Negative numbers may only be used with relative addressing."});
-        
-      }
-      charNum++;
-      if (line.sliced(charNum).isEmpty()) {
-        messages.append(Msg{MsgType::ERROR, "Missing operand."});
-        
-      }
-      if (line[charNum] == '$' || line[charNum] == '%') {
-        errorCharNum = charNum;
-        messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
-        
-      }
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') { //check end
-          while (charNum < line.length()) {
-            if (line[charNum] != '\t' && line[charNum] != ' ') {
-              errorCharNum = charNum;
-              messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-              
-            }
-            charNum++;
-          }
-        } else if ((line[charNum].toUpper() >= 'A' && line[charNum].toUpper() <= 'F')) {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Negative numbers may only be written in decimal."});
-          
-        } else if (!line[charNum].isDigit()) {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-        charNum++;
-      }
-    } else if (line[charNum] == '"') { //string
-      if (s_in != ".STR" && s_in != "STR") {
-        errorCharNum = charNum;
-        messages.append(Msg{MsgType::ERROR, "Strings may not be used outside the .STR directive."});
-        
-      }
-      if (immAdr) {
-        errorCharNum = charNum - 1;
-        messages.append(Msg{MsgType::ERROR, "Assembler directives do not support addressing modes like immediate (prefix: #)"});
-        
-      }
-      while (charNum < line.length()) {
-        if (line[charNum] == '\t' || line[charNum] == ' ') {
-          break;
-        }
-        charNum++;
-      }
-      if (line[charNum - 1] != '"') {
-        errorCharNum = charNum - 1;
-        messages.append(Msg{MsgType::ERROR, "Strings must begin and end with a quotes."});
-        
-      }
-      while (charNum < line.length()) {
-        if (line[charNum] != '\t' && line[charNum] != ' ') {
-          errorCharNum = charNum;
-          messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-          
-        }
-        charNum++;
-      }
-    } else {
-      errorCharNum = charNum;
-      messages.append(Msg{MsgType::ERROR, "Unexpected character: '" % line[charNum] % "'"});
-      
-    }
-*/
 }
