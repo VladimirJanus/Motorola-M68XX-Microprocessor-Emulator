@@ -26,7 +26,7 @@ FORMS += \
 
 HEADERS += \
     src/assembler/Assembler.h \
-    src/assembler/disassembler.h \
+    src/assembler/Disassembler.h \
     src/core/Core.h \
     src/processor/Processor.h \
     src/ui/ExternalDisplay.h \
@@ -36,7 +36,7 @@ HEADERS += \
 
 SOURCES += \
     src/assembler/Assembler.cpp \
-    src/assembler/disassembler.cpp \
+    src/assembler/Disassembler.cpp \
     src/core/Core.cpp \
     src/core/main.cpp \
     src/processor/InstructionFunctions.cpp \

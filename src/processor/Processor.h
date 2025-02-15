@@ -57,7 +57,7 @@ private:
   int breakAtValue = 0;
 
 public:
-  Processor();
+  Processor(ProcessorVersion version);
   //processor internals
   std::array<uint8_t, 0x10000> Memory = {};
   std::array<uint8_t, 0x10000> backupMemory = {};
@@ -76,37 +76,37 @@ public:
   volatile bool running = false;
   bool useCycles = false;
 
-  //run stop step
+  //methods
+  void switchVersion(ProcessorVersion version);
+  void addAction(const Action &action);
+
   void reset();
   void executeStep();
   void startExecution(float OPS, AssemblyMap list);
   void stopExecution();
 
-  //change settings
-  void switchVersion(ProcessorVersion version);
-  void addAction(const Action &action);
-
 private:
-  //helper funcs
-  uint16_t getInterruptLocation(Interrupt interrupt);
-  void updateFlags(Flag flag, bool value);
-  void pushStateToMemory();
-  void checkBreak();
-
-  //instructionExecution
-  void interruptCheckCPS();
-  void interruptCheckIPS();
-  void executeM6803();
-  void executeM6800();
-
-  void setUIUpdateData();
-
   //action handling
   void handleAction(const Action &action);
   void handleActions();
 
+  //helper funcs
+  void checkBreak();
+  void pushStateToMemory();
+  void updateFlag(Flag flag, bool value);
+  uint16_t getInterruptLocation(Interrupt interrupt);
+
+  //instructionExecution
+  void setUIUpdateData();
+
+  void executeM6800();
+  void executeM6803();
+
+  void interruptCheckCPS();
+  void interruptCheckIPS();
+
 signals:
-  void uiUpdateData(std::array<uint8_t, 0x10000>, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
+  void uiUpdateData(std::array<uint8_t, 0x10000> memoryCopy, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
   void executionStopped();
 
 private:

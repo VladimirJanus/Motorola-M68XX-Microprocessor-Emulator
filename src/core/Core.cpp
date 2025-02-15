@@ -51,11 +51,25 @@ bool Core::getInstructionSupported(ProcessorVersion version, uint8_t opCode) {
   }
   return true;
 }
-QString Core::getInstructionMnemonic(ProcessorVersion version, uint8_t opCode) {
-  if (version == M6800) {
-    return M6800Mnemonics[opCode];
-  } else if (version == M6803) {
-    return M6803Mnemonics[opCode];
+
+Core::MnemonicInfo Core::getInfoByMnemonic(ProcessorVersion version, QString mnemonic) {
+  for (MnemonicInfo info : mnemonics) {
+    if (info.mnemonic == mnemonic && (version & info.supportedVersions)) {
+      return info;
+    }
   }
-  return "INVALID";
+  return invalidMnemonic;
+}
+
+Core::MnemonicInfo Core::getInfoByOpCode(ProcessorVersion version, uint8_t opCode) {
+  for (MnemonicInfo info : mnemonics) {
+    if (info.opCodes.contains(opCode) && (version & info.supportedVersions)) {
+      return info;
+    }
+  }
+  return invalidMnemonic;
+}
+
+bool Core::isMnemonic(QString s) {
+  return (getInfoByMnemonic(allProcessorVersionsMask, s).mnemonic != "INVALID") || alliasMap.contains(s);
 }

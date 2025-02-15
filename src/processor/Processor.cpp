@@ -16,23 +16,63 @@
  */
 #include "processor.h"
 #include <QtConcurrent/qtconcurrentrun.h>
-Processor::Processor() {
-  switchVersion(ProcessorVersion::M6800);
+Processor::Processor(ProcessorVersion version) {
+  switchVersion(version);
 }
 
+/**
+ * @brief Switches the processor to the specified version.
+ *
+ * Updates the processor version and assigns the corresponding
+ * execute function to the function pointer.
+ *
+ * @param version The processor version to switch to.
+ */
+void Processor::switchVersion(ProcessorVersion version) {
+  processorVersion = version;
+  switch (version) {
+  case ProcessorVersion::M6800:
+    executeInstruction = &Processor::executeM6800;
+    break;
+  case ProcessorVersion::M6803:
+    executeInstruction = &Processor::executeM6803;
+    break;
+  }
+}
+/**
+ * @brief Adds an action to the processor's action queue.
+ *
+ * The provided action is added to the queue. If the processor is not
+ * currently running, it immediately handles the actions.
+ *
+ * @param action The action to add.
+ */
 void Processor::addAction(const Action &action) {
   actionQueue.addAction(action);
   if (!running)
     handleActions();
 }
 
+/**
+ * @brief Processes all pending actions in the queue.
+ *
+ * Continues retrieving and handling actions until there are no more actions
+ * left in the queue.
+ */
 void Processor::handleActions() {
   while (actionQueue.hasActions()) {
     Action action = actionQueue.getNextAction();
     handleAction(action);
   }
 }
-
+/**
+ * @brief Handles a single action based on its type.
+ *
+ * This function inspects the type of the action and updates the processor's
+ * state accordingly.
+ *
+ * @param action The action to handle.
+ */
 void Processor::handleAction(const Action &action) {
   switch (action.type) {
   case ActionType::SETBREAKWHEN:
@@ -85,53 +125,13 @@ void Processor::handleAction(const Action &action) {
   }
 }
 
-void Processor::switchVersion(ProcessorVersion version) {
-  processorVersion = version;
-  switch (version) {
-  case ProcessorVersion::M6800:
-    executeInstruction = &Processor::executeM6800;
-    break;
-  case ProcessorVersion::M6803:
-    executeInstruction = &Processor::executeM6803;
-    break;
-  }
-}
-
-void Processor::updateFlags(Flag flag, bool value) {
-  flags = (flags & ~(1 << flag)) | (value << flag);
-}
-
-void Processor::reset() {
-  stopExecution();
-  cycleCount = 0;
-  curCycle = 1;
-  aReg = 0;
-  bReg = 0;
-  xReg = 0;
-  SP = 0x00FF;
-  flags = 0xD0;
-  WAIStatus = false;
-  pendingInterrupt = Interrupt::NONE;
-  std::copy(backupMemory.begin(), backupMemory.end(), Memory.begin());
-  PC = static_cast<uint16_t>(Memory[interruptLocations - 1] << 8) + Memory[interruptLocations];
-}
-
-void Processor::executeM6800() {
-  (this->*M6800Table[Memory[PC]])();
-}
-void Processor::executeM6803() {
-  (this->*M6803Table[Memory[PC]])();
-}
-
-void Processor::executeStep() {
-  interruptCheckIPS();
-}
-
-void Processor::setUIUpdateData() {
-  std::array<uint8_t, 0x10000> memoryCopy;
-  std::copy(Memory.begin(), Memory.end(), memoryCopy.begin());
-  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles);
-}
+/**
+ * @brief Checks if a breakpoint condition is met.
+ *
+ * Depending on the breakWhenIndex and breakIsValue, various processor states
+ * (e.g. PC, SP, register values, flag bits, or memory contents) are checked.
+ * If the condition is satisfied, the processor execution is halted.
+ */
 void Processor::checkBreak() {
   switch (breakWhenIndex) {
   case 0:
@@ -190,6 +190,11 @@ void Processor::checkBreak() {
     break;
   }
 }
+/**
+ * @brief Pushes the current processor state onto the memory stack.
+ *
+ * The state includes the program counter, index register, accumulators, and flags.
+ */
 void Processor::pushStateToMemory() {
   Memory[SP--] = PC & 0xFF;
   Memory[SP--] = (PC >> 8);
@@ -199,10 +204,61 @@ void Processor::pushStateToMemory() {
   Memory[SP--] = bReg;
   Memory[SP--] = flags;
 }
+/**
+ * @brief Updates a specific flag in the processor's flag register.
+ *
+ * Sets or clears the given flag based on the provided value.
+ *
+ * @param flag The flag to update.
+ * @param value The boolean value to set for the flag (true for set, false for clear).
+ */
+void Processor::updateFlag(Flag flag, bool value) {
+  flags = (flags & ~(1 << flag)) | (value << flag);
+}
+/**
+ * @brief Retrieves the interrupt vector location for a given interrupt.
+ *
+ * This inline function computes the interrupt address from memory based on the
+ * interrupt type and predefined interrupt locations.
+ *
+ * @param interrupt The interrupt type for which to get the location.
+ * @return The 16-bit interrupt vector address.
+ */
 inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
   return (Memory[(interruptLocations - static_cast<int>(interrupt) * 2 - 1)] << 8) + Memory[(interruptLocations - static_cast<int>(interrupt) * 2)];
 }
 
+/**
+ * @brief Prepares and emits UI update data.
+ *
+ * Copies the entire memory and sends the current processor state (cycle count,
+ * flags, registers, etc.) to the UI via the uiUpdateData signal.
+ */
+void Processor::setUIUpdateData() {
+  std::array<uint8_t, 0x10000> memoryCopy;
+  std::copy(Memory.begin(), Memory.end(), memoryCopy.begin());
+  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles);
+}
+
+/**
+ * @brief Executes the current instruction using the M6800 function pointer table.
+ */
+void Processor::executeM6800() {
+  (this->*M6800Table[Memory[PC]])();
+}
+/**
+ * @brief Executes the current instruction using the M6803 function pointer table.
+ */
+void Processor::executeM6803() {
+  (this->*M6803Table[Memory[PC]])();
+}
+
+/**
+ * @brief Checks and handles pending interrupts in cycle-per-step (CPS) mode.
+ *
+ * Depending on the pending interrupt state, this function either executes the
+ * instruction normally or handles the interrupt service routine.
+ */
 void Processor::interruptCheckCPS() {
   switch (pendingInterrupt) {
   case Interrupt::NONE:
@@ -246,7 +302,7 @@ void Processor::interruptCheckCPS() {
     }
     break;
   case Interrupt::RSTCYCLESERVICE:
-    updateFlags(Flag::InterruptMask, 1);
+    updateFlag(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::RST);
     cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
@@ -258,7 +314,7 @@ void Processor::interruptCheckCPS() {
     } else {
       WAIStatus = false;
     }
-    updateFlags(Flag::InterruptMask, 1);
+    updateFlag(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::NMI);
     cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
@@ -269,20 +325,26 @@ void Processor::interruptCheckCPS() {
     } else {
       WAIStatus = false;
     }
-    updateFlags(Flag::InterruptMask, 1);
+    updateFlag(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::IRQ);
     cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
     pendingInterrupt = Interrupt::NONE;
     break;
   }
 }
+/**
+ * @brief Checks and handles pending interrupts in instruction-per-step (IPS) mode.
+ *
+ * This function processes pending interrupts and executes the corresponding
+ * interrupt service routines or normal instructions.
+ */
 void Processor::interruptCheckIPS() {
   switch (pendingInterrupt) {
   case Interrupt::NONE:
     (this->*executeInstruction)();
     break;
   case Interrupt::RST:
-    updateFlags(Flag::InterruptMask, 1);
+    updateFlag(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::RST);
     pendingInterrupt = Interrupt::NONE;
     WAIStatus = false;
@@ -291,7 +353,7 @@ void Processor::interruptCheckIPS() {
     if (!WAIStatus) {
       pushStateToMemory();
     }
-    updateFlags(Flag::InterruptMask, 1);
+    updateFlag(Flag::InterruptMask, 1);
     PC = getInterruptLocation(Interrupt::NMI);
     pendingInterrupt = Interrupt::NONE;
     WAIStatus = false;
@@ -301,7 +363,7 @@ void Processor::interruptCheckIPS() {
       if (!WAIStatus) {
         pushStateToMemory();
       }
-      updateFlags(Flag::InterruptMask, 1);
+      updateFlag(Flag::InterruptMask, 1);
       PC = getInterruptLocation(Interrupt::IRQ);
       WAIStatus = false;
     } else {
@@ -313,6 +375,26 @@ void Processor::interruptCheckIPS() {
     break;
   }
 }
+
+/**
+ * @brief Executes a single instruction.
+ * 
+ * This function processes a single step by checking for interrupts and then
+ * executing the corresponding instruction.
+ */
+void Processor::executeStep() {
+  interruptCheckIPS();
+}
+/**
+ * @brief Starts the processor execution in a separate thread.
+ *
+ * This function sets up the execution parameters based on the provided
+ * operations per second (OPS) and assembly mapping, then starts a concurrent
+ * execution loop that processes instructions and updates the UI.
+ *
+ * @param OPS The number of operations per second.
+ * @param list The assembly mapping used for debugging breakpoints.
+ */
 void Processor::startExecution(float OPS, AssemblyMap list) {
   assemblyMap = list;
   running = true;
@@ -369,11 +451,36 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
     emit executionStopped();
   }));
 }
-
+/**
+ * @brief Stops the processor execution.
+ *
+ * This function halts the execution loop and waits for the execution thread
+ * to finish its current processing.
+ */
 void Processor::stopExecution() {
   curCycle = 1;
   if (running == true) {
     running = false;
     futureWatcher.waitForFinished();
   }
+}
+/**
+ * @brief Stops execution and resets the processor's internals and registers.
+ */
+void Processor::reset() {
+  stopExecution();
+
+  std::copy(backupMemory.begin(), backupMemory.end(), Memory.begin());
+
+  WAIStatus = false;
+  pendingInterrupt = Interrupt::NONE;
+  cycleCount = 0;
+  curCycle = 1;
+
+  aReg = 0;
+  bReg = 0;
+  xReg = 0;
+  SP = 0x00FF;
+  PC = static_cast<uint16_t>(Memory[interruptLocations - 1] << 8) + Memory[interruptLocations];
+  flags = 0xD0;
 }

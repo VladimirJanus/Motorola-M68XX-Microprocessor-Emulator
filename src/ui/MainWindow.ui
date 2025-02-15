@@ -5058,7 +5058,7 @@ Created by Vladimir Januš</string>
                   <item>
                    <widget class="QCheckBox" name="checkIncrementPC">
                     <property name="text">
-                     <string>increment PC on unkown instruction</string>
+                     <string>increment PC on unknown instruction</string>
                     </property>
                    </widget>
                   </item>
@@ -5869,7 +5869,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;  &lt;span style=&quot; font-weight:700;&quot;&gt;* Use cycles per second instead of instructions per second:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;    &lt;span style=&quot; font-size:9pt;&quot;&gt;Toggle between CPS (cycles per second) for precise timing and IPS (instructions per second) for user-friendly operation.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;	&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;  &lt;span style=&quot; font-weight:700;&quot;&gt;* Increment PC on unkown instruction: &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;  &lt;span style=&quot; font-weight:700;&quot;&gt;* Increment PC on unknown instruction: &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;    If the instruction at the current PC is unknown or unsupported the PC will be incremented by 1 and the processor will not halt.&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;  &lt;span style=&quot; font-weight:700;&quot;&gt;* IRQ on every key press: &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;    An IRQ will be called every time key input is detected.&lt;/p&gt;

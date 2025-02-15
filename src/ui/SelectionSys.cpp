@@ -19,21 +19,16 @@
 #include <qscrollbar.h>
 #include <qtextobject.h>
 
-struct Selection {
-  QTextEdit::ExtraSelection lineSelection;
-  QTextEdit::ExtraSelection codeSelection;
-};
-
 int runTimeSelectionAddress = 0;
 
 QVector<int> highlightLineList;
 QVector<int> highlightAddressList;
 
-QBrush brushHighlight(Qt::green);
-QBrush brushRuntime(Qt::yellow);
+QBrush brushHighlight(Qt::GlobalColor::green);
+QBrush brushRuntime(Qt::GlobalColor::yellow);
 QBrush brushHighlightRuntime(Qt::GlobalColor::cyan);
-QBrush brushError(Qt::darkYellow);
-QBrush brushErrorChar(Qt::darkGreen);
+QBrush brushError(Qt::GlobalColor::darkYellow);
+QBrush brushErrorChar(Qt::GlobalColor::darkGreen);
 QBrush brushNone(QColor(230, 230, 255));
 
 QBrush &getBrushForType(ColorType colorType) {

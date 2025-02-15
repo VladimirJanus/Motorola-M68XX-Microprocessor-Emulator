@@ -59,8 +59,8 @@ private:
   AssemblyMap assemblyMap;
   QPlainTextEdit *plainTextDisplay;
 
-  Processor processor;
   ProcessorVersion processorVersion = M6800;
+  Processor processor = Processor(processorVersion);
 
   void drawOPC();
   bool startAssembly();

@@ -201,16 +201,13 @@ MainWindow::~MainWindow() {
 void MainWindow::drawOPC() {
   ui->treeWidget->clear();
 
-  for (auto it = mnemonics.begin(); it != mnemonics.end(); ++it) {
-    QString mnemonic = it.key();
-    const MnemonicInfo &info = it.value();
-
+  for (MnemonicInfo info : mnemonics) {
     bool isMnemonicSupported = (info.supportedVersions & processorVersion) != 0;
     if (!isMnemonicSupported)
       continue;
 
     QTreeWidgetItem *item = new QTreeWidgetItem();
-    item->setText(0, mnemonic);
+    item->setText(0, info.mnemonic);
     item->setText(1, info.shortDescription);
 
     /*   if (!isMnemonicSupported) {
@@ -242,7 +239,7 @@ void MainWindow::drawOPC() {
     item->setText(11, info.longDescription);
     ui->treeWidget->addTopLevelItem(item);
     for (auto aliasIt = alliasMap.begin(); aliasIt != alliasMap.end(); ++aliasIt) {
-      if (aliasIt.value().mnemonic == mnemonic) {
+      if (aliasIt.value().mnemonic == info.mnemonic) {
         if (!(aliasIt.value().supportedVersions & processorVersion)) {
           continue;
         }
@@ -295,7 +292,7 @@ void MainWindow::showMnemonicInfo() {
 
     QString selectedWord = (plainText.mid(leftIndex + 1, rightIndex - leftIndex - 1)).toUpper();
 
-    if (mnemonics.contains(selectedWord)) {
+    if (Core::isMnemonic(selectedWord)) {
       showInstructionInfoWindow(selectedWord);
     }
   }
@@ -618,24 +615,8 @@ void MainWindow::handleDisplayScrollHorizontal() {
 void MainWindow::resetEmulator() {
   processor.reset();
   drawProcessor();
-  ui->plainTextDisplay->setPlainText(
-    "                                                      \n                                                      \n                                                      \n      "
-    "                                                \n                                                      \n              "
-    "                                        \n                                                      \n                                                      \n                    "
-    "                                  \n                                                      \n                            "
-    "                          \n                                                      \n                                                      \n                                  "
-    "                    \n                                                      \n                                          "
-    "            \n                                                      \n                                                      \n                                                "
-    "      \n                                                       ,");
-  plainTextDisplay->setPlainText(
-    "                                                      \n                                                      \n                                                      \n      "
-    "                                                \n                                                      \n              "
-    "                                        \n                                                      \n                                                      \n                    "
-    "                                  \n                                                      \n                            "
-    "                          \n                                                      \n                                                      \n                                  "
-    "                    \n                                                      \n                                          "
-    "            \n                                                      \n                                                      \n                                                "
-    "      \n                                                       ,");
+  ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+  plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
 }
 
 void MainWindow::drawProcessor() {

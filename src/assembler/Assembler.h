@@ -26,7 +26,11 @@ using Core::AssemblyError;
 using Core::AssemblyMap;
 using Core::AssemblyResult;
 using Core::directivesWithLocation;
+using Core::getInfoByMnemonic;
+using Core::getInfoByOpCode;
 using Core::interruptLocations;
+using Core::isMnemonic;
+using Core::MnemonicInfo;
 using Core::mnemonics;
 using Core::Msg;
 using Core::MsgType;
@@ -52,6 +56,7 @@ private:
     static NumParseRelativeResult fromParseResult(const NumParseResult &result) { return {result.ok, static_cast<uint8_t>(result.value), result.message}; }
     static NumParseRelativeResult failure(const QString &msg) { return {false, 0, msg}; }
   };
+
   enum ExprOperation {
     PLUS,
     MINUS,
@@ -74,24 +79,25 @@ private:
     QString s_op;
   };
 
-  static NumParseResult getNum(const QString &input);
-  static NumParseRelativeResult getNumRelative(const QString &input);
-  static ExpressionEvaluationResult expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined);
-  static NumParseResult parseNumber(const QString &input);
-  static NumParseResult parseASCII(const QString &input);
   static NumParseResult parseDec(const QString &input, bool allowNeg);
-  static NumParseResult parseBin(const QString &input);
   static NumParseResult parseHex(const QString &input);
+  static NumParseResult parseBin(const QString &input);
+  static NumParseResult parseASCII(const QString &input);
 
-  static bool lineEmpty(QString &line);
-  static LineParts disectLine(QString line, int assemblerLine);
+  static NumParseResult parseNumber(const QString &input);
+  static NumParseRelativeResult parseNumberRelative(const QString &input);
+
+  static ExpressionEvaluationResult expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined);
 
   static inline bool isLabelOrExpression(QString s_op);
+  static bool trimLineAndCheckEmpty(QString &line);
 
   static void assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine);
+
+  static MnemonicInfo getMnemonicInfo(QString &s_in, ProcessorVersion processorVersion, int assemblerLine);
+
   static void validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine);
-  static void validateMnemonicSupportForAddressingMode(QString s_in, AddressingMode mode, int assemblerLine);
-  static void validateMnemonicSupport(QString &s_in, int assemblerLine, ProcessorVersion processorVersion);
+  static void validateMnemonicSupportForAddressingMode(MnemonicInfo &info, AddressingMode mode, int assemblerLine);
 
   static void errorCheckUnexpectedOperand(QString s_op, int assemblerLine);
   static void errorCheckMissingOperand(QString s_op, int assemblerLine);
@@ -101,6 +107,8 @@ private:
   static void errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine);
 
   static void validateValueRange(int32_t value, int32_t max, int assemblerLine);
+
+  static LineParts disectLine(QString line, int assemblerLine);
 
   //struct for defining possible assembly errors
   struct Err {

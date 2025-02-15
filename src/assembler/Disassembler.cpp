@@ -65,9 +65,12 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
 
   for (int address = begLoc; address <= lastNonZero;) {
     int opCode = Memory[address];
-    int inSize = getInstructionLength(ver, opCode);
+
+    Core::MnemonicInfo mnemonicInfo = Core::getInfoByOpCode(ver, opCode);
+
+    QString in = mnemonicInfo.mnemonic;
+    uint8_t inSize = getInstructionLength(ver, opCode);
     AddressingMode inType = getInstructionMode(ver, opCode);
-    QString in = getInstructionMnemonic(ver, opCode);
 
     if (inType == AddressingMode::INVALID) {
       messages.append(Msg{MsgType::WARN, "Unknown/unsupported instruction at address: $" + QString::number(address, 16).toUpper()});
@@ -78,10 +81,10 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
         }
         code.append("\t.RMB " + QString::number(zeroCount) + "\n");
         assemblyMap.addInstruction(address, line++, 0, 0, 0, "RMB", "");
-        address += zeroCount + 1;
+        address += zeroCount;
 
       } else {
-        code.append("\t.BYTE $" + QString::number(Memory[address], 16).toUpper() + " ;UNKOWN INSTRUCTION\n");
+        code.append("\t.BYTE $" + QString::number(Memory[address], 16).toUpper() + " ;UNKNOWN INSTRUCTION\n");
         assemblyMap.addInstruction(address, line++, 0, 0, 0, "BYTE", "");
         address++;
       }

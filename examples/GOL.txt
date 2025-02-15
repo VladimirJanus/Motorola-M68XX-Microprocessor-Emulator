@@ -6,6 +6,11 @@ DISPLAYLASTX	.equ 53
 DISPLAYLASTY	.equ 19
 
 
+;PREDEFINED PATTERN (10 cells straight)
+		.org $fda0
+		.byte $23,$23,$23,$23,$23,$23,$23,$23,$23,$23
+
+
 		.org $100
 mainLoop	jsr update
 		jmp mainLoop

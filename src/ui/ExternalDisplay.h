@@ -30,7 +30,6 @@ class ExternalDisplay : public QDialog {
 public:
   explicit ExternalDisplay(QWidget *parent = nullptr);
   ~ExternalDisplay();
-  //bool eventFilter(QObject* obj, QEvent* event);
   QPlainTextEdit *getPlainTextEdit() { return ui->plainTextDisplay; }
   void checkMousePos();
 
