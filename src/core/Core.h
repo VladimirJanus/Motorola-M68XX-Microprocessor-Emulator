@@ -73,7 +73,7 @@ namespace Core {
     std::vector<MappedInstr> instructions;
   };
 
-  const QString softwareVersion = "1.9.2";
+  const QString softwareVersion = "1.10.0";
   const QString programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
 
   const uint16_t interruptLocations = 0xFFFF;
