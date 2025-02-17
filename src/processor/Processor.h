@@ -52,9 +52,9 @@ private:
   bool WAIStatus = false;
   bool IRQOnKeyPressed = false;
   bool incrementPCOnMissingInstruction = false;
-  int breakWhenIndex = 0;
-  int breakIsValue = 0;
-  int breakAtValue = 0;
+  uint16_t breakWhenIndex = 0;
+  uint16_t breakIsValue = 0;
+  uint16_t breakAtValue = 0;
 
 public:
   Processor(ProcessorVersion version);

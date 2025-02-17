@@ -3,6 +3,13 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 
+
+#QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast -Woverloaded-virtual -Wfloat-equal -Wundef -Wnon-virtual-dtor -Wformat=2 -Wredundant-decls -Wmissing-declarations -Wcast-align -Wzero-as-null-pointer-constant -Wdouble-promotion -Wstrict-overflow=5 -Werror
+#QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
+
+win32: LIBS += -ldbghelp
+
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -42,6 +49,8 @@ SOURCES += \
     src/processor/InstructionFunctions.cpp \
     src/processor/Processor.cpp \
     src/ui/ExternalDisplay.cpp \
+    src/ui/FileManager.cpp \
     src/ui/InstructionInfoDialog.cpp \
     src/ui/MainWindow.cpp \
+    src/ui/MainWindowSlots.cpp \
     src/ui/SelectionSys.cpp

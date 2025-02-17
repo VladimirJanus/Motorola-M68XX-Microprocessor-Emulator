@@ -901,7 +901,7 @@ void Processor::RELBSR() {
   int8_t sInt8 = Memory[(PC + 1) & 0xFFFF];
   PC += 2;
   Memory[SP] = (PC & 0xFF);
-  Memory[SP - 1] = ((PC >> 8));
+  Memory[(SP - 1) & 0xFFFF] = ((PC >> 8));
   SP -= 2;
 
   PC += sInt8;
@@ -1039,7 +1039,7 @@ void Processor::DIRJSR() {
   PC += 2;
   Memory[SP] = (PC & 0xFF);
 
-  Memory[SP - 1] = (PC >> 8);
+  Memory[(SP - 1) & 0xFFFF] = (PC >> 8);
 
   SP -= 2;
   PC = adr;
@@ -1191,7 +1191,7 @@ void Processor::INDJSR() {
   PC += 2;
   Memory[SP] = (PC & 0xFF);
 
-  Memory[SP - 1] = ((PC >> 8));
+  Memory[(SP - 1) & 0xFFFF] = ((PC >> 8));
 
   SP -= 2;
   PC = adr;
@@ -1343,7 +1343,7 @@ void Processor::EXTJSR() {
   PC += 3;
   Memory[SP] = (PC & 0xFF);
 
-  Memory[SP - 1] = ((PC >> 8));
+  Memory[(SP - 1) & 0xFFFF] = ((PC >> 8));
 
   SP -= 2;
   PC = adr;
@@ -1617,7 +1617,7 @@ void Processor::DIRLDD() {
 void Processor::DIRSTD() {
   uint16_t adr = Memory[(PC + 1) & 0xFFFF];
   Memory[adr] = aReg;
-  Memory[adr + 1] = bReg;
+  Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
   updateFlag(Overflow, 0);
@@ -1771,7 +1771,7 @@ void Processor::INDLDD() {
 void Processor::INDSTD() {
   uint16_t adr = (Memory[(PC + 1) & 0xFFFF] + *curIndReg) & 0xFFFF;
   Memory[adr] = aReg;
-  Memory[adr + 1] = bReg;
+  Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
   updateFlag(Overflow, 0);
@@ -1925,7 +1925,7 @@ void Processor::EXTLDD() {
 void Processor::EXTSTD() {
   uint16_t adr = (Memory[(PC + 1) & 0xFFFF] << 8) + Memory[(PC + 2) & 0xFFFF];
   Memory[adr] = aReg;
-  Memory[adr + 1] = bReg;
+  Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
   updateFlag(Overflow, 0);

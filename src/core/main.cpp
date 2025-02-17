@@ -22,6 +22,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <ctime>
+#include <string>
+#include <csignal>
 
 void printHelp() {
   std::cout << Core::programName.toStdString() << "\n"
@@ -140,26 +143,98 @@ int handleAssembly(int argc, char* argv[]) {
   return 0;
 }
 
+#ifdef __linux__
+#include <execinfo.h>
+#include <unistd.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#include <dbghelp.h>
+#endif
+
+// Common crash reporting function
+void writeCrashReport(const std::string& message) {
+  std::ofstream crashFile("crashreport.txt", std::ios::app);
+  if (crashFile) {
+    std::time_t now = std::time(nullptr);
+    crashFile << "[" << std::ctime(&now) << "] " << message << "\n";
+
+// Add stack trace if available
+#ifdef __linux__
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (int i = 0; i < frames; ++i) {
+      crashFile << strs[i] << "\n";
+    }
+    free(strs);
+#elif defined(_WIN32)
+    void* callstack[128];
+    HANDLE process = GetCurrentProcess();
+    SymInitialize(process, nullptr, TRUE);
+    WORD frames = CaptureStackBackTrace(0, 128, callstack, nullptr);
+    SYMBOL_INFO* symbol = (SYMBOL_INFO*) calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    symbol->MaxNameLen = 255;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    for (WORD i = 0; i < frames; ++i) {
+      SymFromAddr(process, (DWORD64) (callstack[i]), 0, symbol);
+      crashFile << symbol->Name << "\n";
+    }
+    free(symbol);
+#endif
+
+    crashFile << "\n";
+  }
+}
+
+#ifdef __linux__
+void segfaultHandler(int signal) {
+  writeCrashReport("Segmentation fault (signal " + std::to_string(signal) + ")");
+  std::exit(1);
+}
+#elif defined(_WIN32)
+LONG WINAPI exceptionHandler(PEXCEPTION_POINTERS pExceptionInfo) {
+  writeCrashReport("Critical exception (code " + std::to_string(pExceptionInfo->ExceptionRecord->ExceptionCode) + ")");
+  return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
+
 int main(int argc, char* argv[]) {
-  if (argc > 1) {
-    std::string arg = argv[1];
-    if (arg == "--help" || arg == "-h") {
-      printHelp();
-      return 0;
+// Register platform-specific crash handlers
+#ifdef __linux__
+  std::signal(SIGSEGV, segfaultHandler);
+#elif defined(_WIN32)
+  SetUnhandledExceptionFilter(exceptionHandler);
+#endif
+
+  try {
+    // CLI argument handling
+    if (argc > 1) {
+      std::string arg = argv[1];
+      if (arg == "--help" || arg == "-h") {
+        printHelp();
+        return 0;
+      }
+      if (arg == "--asm" || arg == "--assemble") {
+        return handleAssembly(argc, argv);
+      }
+      if (arg == "--version" || arg == "--ver") {
+        printVersion();
+        return 0;
+      }
+      std::cerr << "Unknown command. Use --help for usage information.\n";
+      return 1;
+    } else {
+      //GUI mode
+      QApplication a(argc, argv);
+      MainWindow w;
+      w.show();
+      return a.exec();
     }
-    if (arg == "--asm" || arg == "--assemble") {
-      return handleAssembly(argc, argv);
-    }
-    if (arg == "--version" || arg == "--ver") {
-      printVersion();
-      return 0;
-    }
-    std::cerr << "Unknown command. Use --help for usage information.\n";
+  } catch (const std::exception& ex) {
+    writeCrashReport(std::string("Exception: ") + ex.what());
     return 1;
-  } else {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+  } catch (...) {
+    writeCrashReport("Unknown exception occurred");
+    return 1;
   }
 }

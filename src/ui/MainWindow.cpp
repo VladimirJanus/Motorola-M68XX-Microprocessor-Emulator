@@ -19,6 +19,7 @@
 #include <QInputDialog>
 #include <QScrollBar>
 #include <QTimer>
+#include <QMessageBox>
 #include "instructioninfodialog.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
@@ -28,27 +29,66 @@
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::MainWindow) {
-  // UI Setup
+  // Basic UI setup and version info display
   ui->setupUi(this);
   QWidget::setWindowTitle(Core::programName);
   ui->plainTextInfo->append("Current version: " + Core::softwareVersion + ", designed for Windows 10.");
 
+  // Generate unique session ID
   sessionId = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
-
-  // Initialization
   assemblyMap.clear();
 
-  // External Display
+  // Initialize external display window
+  setupExternalDisplay();
+
+  // Configure memory table display settings
+  setupMemoryTable();
+
+  // Initialize simple memory view
+  setupSimpleMemory();
+
+  // Configure operation code tree widget
+  setupOPCTree();
+
+  // Set up UI indicators and controls
+  setupIndicators();
+
+  // Connect scrollbar signals
+  setupScrollbarConnections();
+
+  // Install event filters for UI components
+  setupEventFilters();
+
+  // Configure code editor settings
+  setupCodeEditor();
+
+  // Connect processor signals
+  setupProcessorConnections();
+
+  // Initialize memory corner widget
+  setupMemoryCornerWidget();
+
+  // Set up main menu structure
+  setupMenus();
+
+  // Apply initial settings
+  applyInitialSettings();
+}
+
+// Helper methods for component initialization
+
+void MainWindow::setupExternalDisplay() {
   externalDisplay = new ExternalDisplay(this);
   plainTextDisplay = externalDisplay->findChild<QPlainTextEdit *>("plainTextDisplay");
   connect(externalDisplay, &QDialog::finished, this, [=]() { ui->menuDisplayStatus->setCurrentIndex(0); });
-
-  // Memory Table Configuration
+}
+void MainWindow::setupMemoryTable() {
   const int memWidth = 28;
   const int memHeight = 20;
   const int fontSize = 9;
   const QString font = "Lucida Console";
 
+  // Set table dimensions
   ui->tableWidgetMemory->horizontalHeader()->setMinimumSectionSize(memWidth);
   ui->tableWidgetMemory->verticalHeader()->setMinimumSectionSize(memHeight);
   ui->tableWidgetMemory->horizontalHeader()->setMaximumSectionSize(memWidth);
@@ -56,10 +96,12 @@ MainWindow::MainWindow(QWidget *parent)
   ui->tableWidgetMemory->horizontalHeader()->setDefaultSectionSize(memWidth);
   ui->tableWidgetMemory->verticalHeader()->setDefaultSectionSize(memHeight);
 
+  // Initialize memory cells
   for (int row = 0; row <= 0xFFF; ++row) {
     QString address = QString("%1").arg(row * 16, 4, 16, QChar('0')).toUpper();
     ui->tableWidgetMemory->insertRow(row);
 
+    // Set row header (address)
     QTableWidgetItem *headerItem = new QTableWidgetItem(address);
     headerItem->setTextAlignment(Qt::AlignCenter);
     headerItem->setBackground(QBrush(QColor(210, 210, 255)));
@@ -67,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     headerItem->setFont(headerFont);
     ui->tableWidgetMemory->setVerticalHeaderItem(row, headerItem);
 
+    // Initialize memory cells
     for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
       QTableWidgetItem *item = new QTableWidgetItem("00");
       item->setBackground(QBrush(Core::memoryCellDefaultColor));
@@ -77,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
   }
 
+  // Style column headers
   for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
     QTableWidgetItem *columnHeaderItem = ui->tableWidgetMemory->horizontalHeaderItem(col);
     columnHeaderItem->setBackground(QBrush(QColor(210, 210, 255)));
@@ -87,7 +131,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   ui->tableWidgetMemory->setTextElideMode(Qt::ElideNone);
 
-  // Disable Cell Interaction
+  // Disable cell editing
   for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
     for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
       QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
@@ -95,51 +139,46 @@ MainWindow::MainWindow(QWidget *parent)
       item->setFlags(item->flags() & ~Qt::ItemIsUserCheckable);
     }
   }
-
-  // Simple Memory Initialization
+}
+void MainWindow::setupSimpleMemory() {
   ui->groupSimpleMemory->setVisible(false);
   ui->groupSimpleMemory->setEnabled(false);
 
+  // Initialize simple memory view cells
   for (uint8_t i = 0; i < 20; ++i) {
+    // Address column
     QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(i, 4, 16, QChar('0')).toUpper());
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     item->setBackground(QBrush(Core::SMMemoryCellColor));
     ui->tableWidgetSM->setItem(i, 0, item);
 
+    // Value column
     item = new QTableWidgetItem(QString("%1").arg(processor.Memory[i], 2, 16, QChar('0').toUpper()));
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     item->setBackground(QBrush(Core::SMMemoryCellColor2));
     ui->tableWidgetSM->setItem(i, 1, item);
 
+    // Description column
     item = new QTableWidgetItem("");
     item->setTextAlignment(Qt::AlignCenter);
     item->setFlags(item->flags() & ~Qt::ItemIsEditable);
     item->setBackground(QBrush(Core::SMMemoryCellColor));
     ui->tableWidgetSM->setItem(i, 2, item);
   }
-
-  // OPC Configuration
+}
+void MainWindow::setupOPCTree() {
   ui->treeWidget->sortByColumn(0, Qt::AscendingOrder);
 
+  // Set column widths
+  const QVector<int> columnWidths = {90, 200, 30, 30, 30, 30, 30, 30, 50, 60, 60, 1000};
   for (int col = 0; col < ui->treeWidget->columnCount(); ++col) {
-    if (col == 0) {
-      ui->treeWidget->setColumnWidth(col, 90);
-    } else if (col == 1) {
-      ui->treeWidget->setColumnWidth(col, 200);
-    } else if (col == 8) {
-      ui->treeWidget->setColumnWidth(col, 50);
-    } else if (col == 9 || col == 10) {
-      ui->treeWidget->setColumnWidth(col, 60);
-    } else if (col == ui->treeWidget->columnCount() - 1) {
-      ui->treeWidget->setColumnWidth(col, 1000);
-    } else {
-      ui->treeWidget->setColumnWidth(col, 30);
-    }
+    ui->treeWidget->setColumnWidth(col, columnWidths[col]);
   }
-
-  // Indicator and Button Visibility
+}
+void MainWindow::setupIndicators() {
+  // Configure visibility and initial state of UI indicators
   ui->labelRunningIndicatior->setVisible(false);
   ui->labelRunningIndicatior->setText("Operation/second: " + QString::number(std::pow(2, ui->menuSpeedSelector->currentIndex())));
   ui->labelRunningCycleNum->setVisible(false);
@@ -150,39 +189,210 @@ MainWindow::MainWindow(QWidget *parent)
   ui->labelWritingMode->setEnabled(false);
   ui->labelAt->setVisible(false);
   ui->menuBreakAt->setVisible(false);
-
-  // Scrollbar Connections
+}
+void MainWindow::setupScrollbarConnections() {
   connect(ui->plainTextCode->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::handleCodeVerticalScrollBarValueChanged);
   connect(ui->plainTextLines->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::handleLinesScroll);
   connect(ui->plainTextDisplay->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::handleDisplayScrollVertical);
   connect(ui->plainTextDisplay->horizontalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::handleDisplayScrollHorizontal);
-
-  // Event Filters
+}
+void MainWindow::setupEventFilters() {
   ui->plainTextDisplay->installEventFilter(this);
   ui->plainTextLines->installEventFilter(this);
   plainTextDisplay->installEventFilter(this);
   ui->tableWidgetMemory->installEventFilter(this);
-
-  // Code Editor Settings
+}
+void MainWindow::setupCodeEditor() {
+  // Configure code editor properties
   ui->plainTextCode->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->plainTextCode, &QPlainTextEdit::customContextMenuRequested, this, &MainWindow::showContextMenu);
   ui->plainTextCode->setUndoRedoEnabled(true);
   ui->plainTextCode->moveCursor(QTextCursor::End);
 
+  // Set tab width based on font metrics
   QFontMetrics metrics(ui->plainTextCode->font());
   ui->plainTextCode->setTabStopDistance(metrics.horizontalAdvance(' ') * ui->spinBoxTabWidth->value());
-
-  // Processor Connections
+}
+void MainWindow::setupProcessorConnections() {
   connect(&processor, &Processor::uiUpdateData, this, &MainWindow::drawProcessorRunning);
   connect(&processor, &Processor::executionStopped, this, &MainWindow::onExecutionStopped);
-
-  // Memory corner widget
+}
+void MainWindow::setupMemoryCornerWidget() {
   ui->memoryAddressSpinBox->setMaximum(0xFFFF);
   ui->memoryAddressSpinBox->setMinimum(0);
   ui->memoryAddressSpinBox->setSingleStep(1);
   ui->memoryAddressSpinBox->setDisplayIntegerBase(16);
+}
+void MainWindow::setupMenus() {
+  // FILE
+  QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+  QAction *newAction = new QAction(tr("New"), this);
+  newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+  fileMenu->addAction(newAction);
+  QAction *openAction = new QAction(tr("Open"), this);
+  openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+  fileMenu->addAction(openAction);
+  QAction *saveAction = new QAction(tr("Save"), this);
+  saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+  fileMenu->addAction(saveAction);
+  QAction *saveAsAction = new QAction(tr("Save As"), this);
+  saveAsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
+  fileMenu->addAction(saveAsAction);
 
-  // Init settings
+  fileMenu->addSeparator();
+
+  QAction *exitAction = new QAction(tr("Exit"), this);
+  fileMenu->addAction(exitAction);
+
+  connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
+  connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
+  connect(saveAction, &QAction::triggered, this, &MainWindow::saveFile);
+  connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
+  connect(exitAction, &QAction::triggered, this, &MainWindow::exit);
+
+  //EDIT
+  QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+
+  QAction *undoAction = new QAction(tr("Undo"), this);
+  undoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z));
+  editMenu->addAction(undoAction);
+  QAction *redoAction = new QAction(tr("Redo"), this);
+  redoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y));
+  editMenu->addAction(redoAction);
+
+  editMenu->addSeparator();
+
+  QAction *cutAction = new QAction(tr("Cut"), this);
+  cutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_X));
+  editMenu->addAction(cutAction);
+  QAction *copyAction = new QAction(tr("Copy"), this);
+  copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
+  editMenu->addAction(copyAction);
+  QAction *pasteAction = new QAction(tr("Paste"), this);
+  pasteAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
+  editMenu->addAction(pasteAction);
+
+  editMenu->addSeparator();
+
+  QAction *selectAllAction = new QAction(tr("Select All"), this);
+  selectAllAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
+  editMenu->addAction(selectAllAction);
+
+  editMenu->addSeparator();
+
+  QAction *mnemonicInfoAction = new QAction(tr("Mnemonic Info"), this);
+  mnemonicInfoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
+  editMenu->addAction(mnemonicInfoAction);
+
+  connect(undoAction, &QAction::triggered, this, [this]() { ui->plainTextCode->undo(); });
+  connect(redoAction, &QAction::triggered, this, [this]() { ui->plainTextCode->redo(); });
+  connect(cutAction, &QAction::triggered, this, [this]() { ui->plainTextCode->cut(); });
+  connect(copyAction, &QAction::triggered, this, [this]() { ui->plainTextCode->copy(); });
+  connect(pasteAction, &QAction::triggered, this, [this]() { ui->plainTextCode->paste(); });
+  connect(selectAllAction, &QAction::triggered, this, [this]() { ui->plainTextCode->selectAll(); });
+  connect(mnemonicInfoAction, &QAction::triggered, this, [this]() { showMnemonicInfo(ui->plainTextCode->textCursor().position()); });
+
+  //EMULATOR
+  QMenu *emulationMenu = menuBar()->addMenu(tr("&Emulator"));
+
+  QAction *assembleAction = new QAction(tr("Assemble"), this);
+  assembleAction->setShortcut(QKeySequence(Qt::Key_F9));
+  emulationMenu->addAction(assembleAction);
+
+  emulationMenu->addSeparator();
+
+  QAction *runAction = new QAction(tr("Run/Stop"), this);
+  runAction->setShortcut(QKeySequence(Qt::Key_F5));
+  emulationMenu->addAction(runAction);
+  QAction *stepAction = new QAction(tr("Step"), this);
+  stepAction->setShortcut(QKeySequence(Qt::Key_F6));
+  emulationMenu->addAction(stepAction);
+  QAction *resetAction = new QAction(tr("Reset"), this);
+  resetAction->setShortcut(QKeySequence(Qt::Key_F7));
+  emulationMenu->addAction(resetAction);
+
+  emulationMenu->addSeparator();
+
+  QAction *switchWritingModeAction = new QAction(tr("Switch Writing Mode"), this);
+  emulationMenu->addAction(switchWritingModeAction);
+  loadMemoryAction = new QAction(tr("Load Memory"), this);
+  loadMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+  emulationMenu->addAction(loadMemoryAction);
+  saveMemoryAction = new QAction(tr("Save Memory"), this);
+  saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+  emulationMenu->addAction(saveMemoryAction);
+
+  emulationMenu->addSeparator();
+
+  QAction *switchDisplayModeAction = new QAction(tr("Switch Display Mode"), this);
+  emulationMenu->addAction(switchDisplayModeAction);
+
+  connect(assembleAction, &QAction::triggered, this, [this]() { on_buttonAssemble_clicked(); });
+
+  connect(runAction, &QAction::triggered, this, [this]() { on_buttonRunStop_clicked(); });
+  connect(resetAction, &QAction::triggered, this, [this]() { resetEmulator(); });
+  connect(stepAction, &QAction::triggered, this, [this]() { on_buttonStep_clicked(); });
+
+  connect(switchWritingModeAction, &QAction::triggered, this, [this]() {
+    if (writingMode == WritingMode::MEMORY) {
+      setWritingMode(WritingMode::CODE);
+    } else {
+      if (!ui->checkMemoryWrite->isChecked()) {
+        setAllowWritingModeSwitch(true);
+      }
+      setWritingMode(WritingMode::MEMORY);
+    }
+  });
+  connect(loadMemoryAction, &QAction::triggered, this, &MainWindow::loadMemory);
+  connect(saveMemoryAction, &QAction::triggered, this, &MainWindow::saveMemory);
+
+  connect(switchDisplayModeAction, &QAction::triggered, this, [this]() { ui->menuDisplayStatus->setCurrentIndex((ui->menuDisplayStatus->currentIndex() + 1) % ui->menuDisplayStatus->count()); });
+
+  //ABOUT
+  QMenu *aboutMenu = menuBar()->addMenu(tr("&About"));
+  QAction *infoAction = new QAction(tr("Info"), this);
+  infoAction->setShortcut(QKeySequence(Qt::Key_F1));
+  aboutMenu->addAction(infoAction);
+  QAction *creditsAction = new QAction(tr("Credits"), this);
+  creditsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_V));
+  aboutMenu->addAction(creditsAction);
+
+  connect(infoAction, &QAction::triggered, this, [this]() {
+    QWidget *window = new QWidget(nullptr);
+    window->setWindowTitle("Info");
+    window->resize(600, 400);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+
+    QTextEdit *textEdit = new QTextEdit(window);
+    textEdit->setHtml(ui->plainTextInfo->toHtml());
+    textEdit->setReadOnly(true);
+
+    QVBoxLayout *layout = new QVBoxLayout(window);
+    layout->addWidget(textEdit);
+    window->setLayout(layout);
+
+    window->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
+    window->show();
+  });
+  connect(creditsAction, &QAction::triggered, this, []() {
+    const QString GES = "Vladimir Januš";
+    const QString projectUrl = "https://github.com/VladimirJanus/Motorola-M68XX-Microprocessor-Emulator";
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("About " + Core::programName);
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setWindowIcon(QIcon(":/images/info_icon.png"));
+
+    QString message = QString("<b>Made by: </b>%1<br><br>" "<b>Project Location: </b><a href='%2'>%2</a><br><br>" "<b>Software Version: </b>%3").arg(GES, projectUrl, Core::softwareVersion);
+
+    msgBox.setText(message);
+    msgBox.setTextFormat(Qt::RichText);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    msgBox.exec();
+  });
+}
+void MainWindow::applyInitialSettings() {
   on_checkShowHex_clicked(ui->checkShowHex->isChecked());
   on_menuSpeedSelector_activated();
   on_menuDisplayStatus_currentIndexChanged(0);
@@ -190,6 +400,7 @@ MainWindow::MainWindow(QWidget *parent)
   on_checkAdvancedInfo_clicked(ui->checkAdvancedInfo->isChecked());
   on_menuBreakWhen_currentIndexChanged(ui->menuBreakWhen->currentIndex());
   enableCellChangedHandler();
+  setAllowWritingModeSwitch(false);
 }
 
 MainWindow::~MainWindow() {
@@ -198,10 +409,75 @@ MainWindow::~MainWindow() {
   delete ui;
 }
 
+void MainWindow::setAllowWritingModeSwitch(bool allow) {
+  if (allow) {
+    ui->checkMemoryWrite->blockSignals(true);
+    ui->checkMemoryWrite->setChecked(true);
+    ui->checkMemoryWrite->blockSignals(false);
+
+    ui->buttonSwitchWrite->setVisible(true);
+    ui->labelWritingMode->setVisible(true);
+    ui->buttonSwitchWrite->setEnabled(true);
+    ui->labelWritingMode->setEnabled(true);
+  } else {
+    ui->checkMemoryWrite->blockSignals(true);
+    ui->checkMemoryWrite->setChecked(false);
+    ui->checkMemoryWrite->blockSignals(false);
+
+    ui->buttonSwitchWrite->setVisible(false);
+    ui->labelWritingMode->setVisible(false);
+    ui->buttonSwitchWrite->setEnabled(false);
+    ui->labelWritingMode->setEnabled(false);
+
+    setWritingMode(WritingMode::CODE);
+  }
+}
+void MainWindow::setWritingMode(WritingMode mode) {
+  writingMode = mode;
+  if (mode == WritingMode::MEMORY) {
+    ui->plainTextCode->setReadOnly(true);
+    ui->checkAssembleOnRun->setEnabled(false);
+    assembleOnRun = false;
+
+    ui->labelWritingMode->setText("Memory");
+    ui->buttonLoad->setText("Load Memory");
+    ui->buttonSave->setText("Save Memory");
+    ui->buttonAssemble->setText("Disassemble");
+
+    for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
+      for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
+        QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+      }
+    }
+  } else {
+    ui->plainTextCode->setReadOnly(false);
+    ui->checkAssembleOnRun->setEnabled(true);
+    assembleOnRun = ui->checkAssembleOnRun->isChecked();
+
+    ui->labelWritingMode->setText("Code");
+    ui->buttonLoad->setText("Load Code");
+    ui->buttonSave->setText("Save Code");
+    ui->buttonAssemble->setText("Assemble");
+
+    for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
+      for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
+        QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+        item->setFlags(item->flags() & ~Qt::ItemIsUserCheckable);
+      }
+    }
+  }
+
+  loadMemoryAction->setEnabled(mode == WritingMode::MEMORY);
+  saveMemoryAction->setEnabled(mode == WritingMode::MEMORY);
+}
+
 void MainWindow::drawOPC() {
   ui->treeWidget->clear();
 
-  for (MnemonicInfo info : mnemonics) {
+  for (const MnemonicInfo &info : mnemonics) {
     bool isMnemonicSupported = (info.supportedVersions & processorVersion) != 0;
     if (!isMnemonicSupported)
       continue;
@@ -209,12 +485,6 @@ void MainWindow::drawOPC() {
     QTreeWidgetItem *item = new QTreeWidgetItem();
     item->setText(0, info.mnemonic);
     item->setText(1, info.shortDescription);
-
-    /*   if (!isMnemonicSupported) {
-      for (int col = 0; col < ui->treeWidget->columnCount(); ++col) {
-        item->setForeground(col, QBrush(Qt::red));
-      }
-    }*/
 
     QStringList bytesList, cyclesList;
     for (int i = 0; i < info.opCodes.length(); ++i) {
@@ -227,10 +497,6 @@ void MainWindow::drawOPC() {
         item->setText(2 + i, hexOpcode);
         bytesList.append(QString::number(getInstructionLength(processorVersion, info.opCodes[i])));
         cyclesList.append(QString::number(getInstructionCycleCount(processorVersion, info.opCodes[i])));
-
-        /*if (!isOpcodeSupported) {
-          item->setForeground(2 + i, QBrush(Qt::red));
-        }*/
       }
     }
     item->setText(8, info.flags);
@@ -260,58 +526,58 @@ void MainWindow::showContextMenu(const QPoint &pos) {
   QMenu *menu = ui->plainTextCode->createStandardContextMenu();
   menu->addSeparator();
 
-  QVariant cursorPosVariant(pos);
-  QAction *action = menu->addAction(tr("Mnemonic info"));
-  action->setData(cursorPosVariant);
-
-  connect(action, SIGNAL(triggered()), this, SLOT(showMnemonicInfo()));
+  QAction *action = menu->addAction(tr("Mnemonic Info"));
+  connect(action, &QAction::triggered, this, [this, pos]() { showMnemonicInfo(ui->plainTextCode->cursorForPosition(pos).position()); });
 
   menu->exec(ui->plainTextCode->mapToGlobal(pos));
   menu->deleteLater();
 }
-void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item) {
-  InstructionInfoDialog dialog(*item, this);
-  dialog.exec();
-}
-void MainWindow::showMnemonicInfo() {
-  QAction *action = qobject_cast<QAction *>(sender());
-  if (action) {
-    QVariant cursorPosVariant = action->data();
-    QPoint cursorPos = cursorPosVariant.toPoint();
-    QString plainText = ui->plainTextCode->toPlainText();
-    int index = ui->plainTextCode->cursorForPosition(cursorPos).position();
-    int rightIndex = index;
-    while (rightIndex < plainText.length() && !plainText[rightIndex].isSpace()) {
-      rightIndex++;
-    }
 
-    int leftIndex = index;
-    while (leftIndex >= 0 && !plainText[leftIndex].isSpace()) {
-      leftIndex--;
-    }
+void MainWindow::showMnemonicInfo(int cursorPos) {
+  const QString plainText = ui->plainTextCode->toPlainText();
 
-    QString selectedWord = (plainText.mid(leftIndex + 1, rightIndex - leftIndex - 1)).toUpper();
+  if (cursorPos < 0 || cursorPos >= plainText.length()) {
+    return;
+  }
 
-    if (Core::isMnemonic(selectedWord)) {
-      showInstructionInfoWindow(selectedWord);
-    }
+  int right = cursorPos;
+  int left = cursorPos;
+  while (right < plainText.length() && !plainText[right].isSpace())
+    right++;
+  while (left >= 0 && !plainText[left].isSpace())
+    left--;
+
+  QString word = plainText.mid(left + 1, right - left - 1).toUpper();
+  if (Core::isMnemonic(word)) {
+    showInstructionInfoWindow(word);
   }
 }
 void MainWindow::showInstructionInfoWindow(QString instruction) {
   QTreeWidgetItem item_;
   for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
     QTreeWidgetItem *item = ui->treeWidget->topLevelItem(i);
-    if (item && item->text(0) == instruction) {
+    if (!item)
+      continue;
+
+    if (item->text(0) == instruction) {
       item_ = *item;
       break;
     }
-  }
 
+    // Check all children (aliases)
+    for (int j = 0; j < item->childCount(); ++j) {
+      QTreeWidgetItem *child = item->child(j);
+      if (child && child->text(0) == instruction) {
+        item_ = *child;
+        break;
+      }
+    }
+  }
   InstructionInfoDialog dialog(item_, this);
   dialog.exec();
 }
 
-inline QString getDisplayText(std::array<uint8_t, 0x10000> memory) {
+QString MainWindow::getDisplayText(std::array<uint8_t, 0x10000> &memory) {
   QString text;
   for (uint16_t i = 0; i < 20 * 54; ++i) {
     uint8_t val = memory[i + 0xFB00];
@@ -326,13 +592,13 @@ inline QString getDisplayText(std::array<uint8_t, 0x10000> memory) {
   return text;
 }
 
-void MainWindow::setCompileStatus(bool isCompiled) {
-  if (isCompiled) {
-    ui->buttonCompile->setStyleSheet(compiledButton);
+void MainWindow::setAssemblyStatus(bool isAssembled) {
+  if (isAssembled) {
+    ui->buttonAssemble->setStyleSheet(greenButton);
     assembled = true;
   } else {
     assembled = false;
-    ui->buttonCompile->setStyleSheet(uncompiledButton);
+    ui->buttonAssemble->setStyleSheet(redButton);
     PrintConsole("");
     assemblyMap.clear();
     clearSelections();
@@ -461,10 +727,6 @@ void MainWindow::PrintConsole(const QString &text, MsgType type) {
   ui->plainTextConsole->appendPlainText(consoleText);
 }
 
-void MainWindow::handleCodeVerticalScrollBarValueChanged(int value) {
-  ui->plainTextLines->verticalScrollBar()->setValue(value);
-}
-int displayPossible = 0;
 void MainWindow::handleResize(QSize newSize) {
   if (newSize.width() >= 1785) {
     if (ui->menuDisplayStatus->count() == 2) {
@@ -487,47 +749,6 @@ void MainWindow::handleResize(QSize newSize) {
 void MainWindow::resizeEvent(QResizeEvent *event) {
   QMainWindow::resizeEvent(event);
   handleResize(this->size());
-}
-void MainWindow::on_plainTextCode_textChanged() {
-  static QTimer backupTimer;
-
-  // Limit line count
-  QString text = ui->plainTextCode->toPlainText();
-  if (text.count('\n') > 65535) {
-    QStringList lines = text.split('\n', Qt::SkipEmptyParts);
-    text = lines.mid(0, 65536).join('\n');
-    ui->plainTextCode->setPlainText(text);
-  }
-
-  // Backup handling with debounce
-  if (!backupTimer.isActive()) {
-    backupTimer.setInterval(3000);
-    backupTimer.setSingleShot(true);
-    QPlainTextEdit *textEdit = ui->plainTextCode;
-    connect(&backupTimer, &QTimer::timeout, this, [textEdit, this]() {
-      QDir tempDir(QCoreApplication::applicationDirPath() + "/autosave");
-      if (!tempDir.exists()) {
-        tempDir.mkpath(".");
-      }
-      QString backupPath = tempDir.filePath("backup_session_" + sessionId + ".txt");
-      QFile backupFile(backupPath);
-      if (backupFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&backupFile);
-        out << textEdit->toPlainText();
-        backupFile.close();
-      }
-    });
-  }
-  backupTimer.start();
-
-  updateLinesBox(false);
-  if (errorDisplayed) {
-    clearSelections();
-  }
-  if (!writeToMemory) {
-    if (assembled)
-      setCompileStatus(false);
-  }
 }
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   if (obj == ui->plainTextLines) {
@@ -575,7 +796,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
       return true;
     }
   } else if (obj == ui->tableWidgetMemory) {
-    if (writeToMemory) {
+    if (writingMode == WritingMode::MEMORY) {
       if (event->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (keyEvent->key() == Qt::Key_Delete) {
@@ -602,15 +823,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   return QMainWindow::eventFilter(obj, event);
 }
 
-void MainWindow::handleLinesScroll() {
-  ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
-}
-void MainWindow::handleDisplayScrollVertical() {
-  ui->plainTextDisplay->verticalScrollBar()->setValue(0);
-}
-void MainWindow::handleDisplayScrollHorizontal() {
-  ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
-}
 
 void MainWindow::resetEmulator() {
   processor.reset();
@@ -763,11 +975,7 @@ void MainWindow::drawProcessorRunning(
 }
 
 void MainWindow::onExecutionStopped() {
-  //endTime = std::chrono::high_resolution_clock::now();
-  //qDebug() << static_cast<qint64>(std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count());
-  //qDebug() << static_cast<qint64>(processor.count);
-  //qDebug() << static_cast<qint64>(std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count()) - processor.count;
-  //processor.count = 0;
+  ui->buttonRunStop->setStyleSheet(redButton);
   drawProcessor();
   ui->labelRunningIndicatior->setVisible(false);
   ui->labelRunningCycleNum->setVisible(false);
@@ -784,13 +992,13 @@ bool MainWindow::startAssembly() {
   } catch (const std::exception &e) {
     PrintConsole("Critical error in assembler: " + QString(e.what()), MsgType::ERROR);
     ui->tabWidget->setCurrentIndex(0);
-    setCompileStatus(false);
+    setAssemblyStatus(false);
     resetEmulator();
     return false;
   } catch (...) {
     PrintConsole("Unknown critical error in assembler", MsgType::ERROR);
     ui->tabWidget->setCurrentIndex(0);
-    setCompileStatus(false);
+    setAssemblyStatus(false);
     resetEmulator();
     return false;
   }
@@ -802,9 +1010,9 @@ bool MainWindow::startAssembly() {
   if (!assResult.error.ok) {
     PrintConsole(assResult.error.message, MsgType::ERROR);
 
-    setCompileStatus(false);
+    setAssemblyStatus(false);
     resetEmulator();
-    setSelectionCompileError(assResult.error.errorCharNum, assResult.error.errorLineNum);
+    setSelectionAssemblyError(assResult.error.errorCharNum, assResult.error.errorLineNum);
     ui->tabWidget->setCurrentIndex(0);
 
     return false;
@@ -812,7 +1020,7 @@ bool MainWindow::startAssembly() {
     assemblyMap = assResult.assemblyMap;
 
     std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
-    setCompileStatus(true);
+    setAssemblyStatus(true);
     PrintConsole("\nAssembly Successful.");
     resetEmulator();
     return true;
@@ -843,594 +1051,17 @@ bool MainWindow::startDisassembly() {
   ui->plainTextCode->setPlainText(disassResult.code);
   assemblyMap = disassResult.assemblyMap;
 
-  setCompileStatus(true);
+  setAssemblyStatus(true);
   resetEmulator();
   foreach (Msg message, disassResult.messages) {
     PrintConsole(message.message, message.type);
   }
   return true;
 }
-bool MainWindow::on_buttonCompile_clicked() {
-  ui->plainTextConsole->clear();
-  if (!writeToMemory) {
-    return startAssembly();
-  } else {
-    return startDisassembly();
-  }
-}
-void MainWindow::on_menuVersionSelector_currentIndexChanged(int index) {
-  switch (index) {
-  case 0:
-    processorVersion = M6800;
-    break;
-  case 1:
-    processorVersion = M6803;
-    break;
-  }
-  processor.switchVersion(processorVersion);
-  setCompileStatus(false);
-  resetEmulator();
-  drawOPC();
-}
-void MainWindow::on_buttonLoad_clicked() {
-  if (!writeToMemory) {
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Text Files (*.txt);;All Files (*)"));
 
-    if (!filePath.isEmpty()) {
-      QFile file(filePath);
-      if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
-        ui->plainTextCode->setPlainText(in.readAll());
-        file.close();
-      } else {
-        PrintConsole("Error loading script", MsgType::ERROR);
-      }
-    }
-  } else {
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Binary Files (*.bin);;All Files (*)"));
-
-    if (!filePath.isEmpty()) {
-      QFile file(filePath);
-      if (file.open(QIODevice::ReadOnly)) {
-        QByteArray byteArray = file.readAll();
-        if (byteArray.size() == sizeof(processor.Memory)) {
-          processor.stopExecution();
-          std::memcpy(processor.Memory.data(), byteArray.constData(), sizeof(processor.Memory));
-          std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
-          setCompileStatus(false);
-
-        } else {
-          PrintConsole("Error: File size doesn't match Memory size", MsgType::ERROR);
-        }
-
-        file.close();
-      } else {
-        PrintConsole("Error loading memory", MsgType::ERROR);
-      }
-    }
-  }
-}
-void MainWindow::on_buttonSave_clicked() {
-  if (!writeToMemory) {
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
-    if (!filePath.isEmpty()) {
-      QFile file(filePath);
-      if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << ui->plainTextCode->toPlainText();
-        file.close();
-      } else {
-        PrintConsole("Error saving script", MsgType::ERROR);
-      }
-    }
-  } else {
-    processor.stopExecution();
-    QByteArray byteArray(reinterpret_cast<const char *>(processor.Memory.data()), processor.Memory.size());
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Binary Files (*.bin);;All Files (*)"));
-
-    if (!filePath.isEmpty()) {
-      QFile file(filePath);
-      if (file.open(QIODevice::WriteOnly)) {
-        file.write(byteArray);
-        file.close();
-      } else {
-        PrintConsole("Error saving memory", MsgType::ERROR);
-      }
-    }
-  }
-}
-void MainWindow::on_buttonReset_clicked() {
-  resetEmulator();
-}
-void MainWindow::on_buttonStep_clicked() {
-  processor.stopExecution();
-
-  bool ok = true;
-  if (!assembled && compileOnRun) {
-    ok = on_buttonCompile_clicked();
-  }
-
-  if (ok) {
-    processor.executeStep();
-    drawProcessor();
-  }
-}
-void MainWindow::on_buttonRunStop_clicked() {
-  if (processor.running) {
-    processor.stopExecution();
-  } else {
-    bool ok = true;
-    if (!assembled && compileOnRun) {
-      ok = on_buttonCompile_clicked();
-    }
-
-    if (ok) {
-      if (ui->checkAutoReset->isChecked()) {
-        if (processor.Memory[processor.PC] == 0) {
-          resetEmulator();
-        }
-      }
-      if (processor.useCycles)
-        ui->labelRunningCycleNum->setVisible(true);
-
-      ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(OPS, assemblyMap);
-    }
-  }
-}
-void MainWindow::on_menuSpeedSelector_activated() {
-  processor.stopExecution();
-
-  OPS = ui->menuSpeedSelector->currentText().toFloat();
-  //qDebug()<< "OPS:"+QString::number(OPS) + "WAIT:"+QString::number(executionSpeed) + " BATCHSIZE:" + QString::number(stepSkipCount);
-  ui->labelRunningIndicatior->setText("Operation/second: " + QString::number(OPS, 'f', OPS < 1 ? 1 : 0));
-}
-void MainWindow::on_checkShowHex_clicked(bool checked) {
-  hexReg = checked;
-  if (checked) {
-    ui->menuBreakAt->setPrefix("$");
-    ui->menuBreakIs->setPrefix("$");
-    ui->menuBreakAt->setDisplayIntegerBase(16);
-    ui->menuBreakIs->setDisplayIntegerBase(16);
-    ui->memoryAddressSpinBox->setDisplayIntegerBase(16);
-  } else {
-    ui->menuBreakAt->setPrefix("");
-    ui->menuBreakIs->setPrefix("");
-    ui->menuBreakAt->setDisplayIntegerBase(10);
-    ui->menuBreakIs->setDisplayIntegerBase(10);
-    ui->memoryAddressSpinBox->setDisplayIntegerBase(10);
-  }
-  drawProcessor(); //NOROST KER DE MED RUNNINGON ACCESSO ONEJE --------------------------------------------------------------------------------------------------------------------------------------------
-}
-void MainWindow::on_checkAdvancedInfo_clicked(bool checked) {
-  if (checked) {
-    ui->plainTextLines->setGeometry(ui->plainTextLines->x(), ui->plainTextLines->y(), 181, ui->plainTextLines->height());
-    ui->plainTextLines->setMaximumWidth(181);
-  } else {
-    ui->plainTextLines->setGeometry(ui->plainTextLines->x(), ui->plainTextLines->y(), 101, ui->plainTextLines->height());
-    ui->plainTextLines->setMaximumWidth(101);
-  }
-
-  updateLinesBox(true);
-  drawTextSelections();
-  handleResize(this->size());
-}
-void MainWindow::on_checkCompileOnRun_clicked(bool checked) {
-  compileOnRun = checked;
-}
-void MainWindow::on_menuScrollLow_valueChanged(int arg1) {
-  autoScrollDownLimit = arg1;
-}
-void MainWindow::on_menuScrollHigh_valueChanged(int arg1) {
-  autoScrollUpLimit = arg1;
-}
-void MainWindow::on_checkMemoryWrite_clicked(bool checked) {
-  if (checked) {
-    ui->buttonSwitchWrite->setVisible(true);
-    ui->labelWritingMode->setVisible(true);
-    ui->buttonSwitchWrite->setEnabled(true);
-    ui->labelWritingMode->setEnabled(true);
-  } else {
-    ui->buttonSwitchWrite->setVisible(false);
-    ui->labelWritingMode->setVisible(false);
-    ui->buttonSwitchWrite->setEnabled(false);
-    ui->labelWritingMode->setEnabled(false);
-    writeToMemory = false;
-    ui->plainTextCode->setReadOnly(false);
-    ui->checkCompileOnRun->setEnabled(true);
-    compileOnRun = true;
-    ui->labelWritingMode->setText("Code");
-    ui->buttonLoad->setText("Load Code");
-    ui->buttonSave->setText("Save Code");
-    ui->buttonCompile->setText("Assemble");
-    for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
-      for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
-        QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
-        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-        item->setFlags(item->flags() & ~Qt::ItemIsUserCheckable);
-      }
-    }
-  }
-}
-void MainWindow::on_buttonSwitchWrite_clicked() {
-  if (writeToMemory) {
-    writeToMemory = false;
-    ui->plainTextCode->setReadOnly(false);
-    ui->checkCompileOnRun->setEnabled(true);
-    compileOnRun = true;
-    ui->labelWritingMode->setText("Code");
-    ui->buttonLoad->setText("Load Code");
-    ui->buttonSave->setText("Save Code");
-    ui->buttonCompile->setText("Assemble");
-    for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
-      for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
-        QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
-        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-        item->setFlags(item->flags() & ~Qt::ItemIsUserCheckable);
-      }
-    }
-  } else {
-    writeToMemory = true;
-    ui->plainTextCode->setReadOnly(true);
-    ui->checkCompileOnRun->setEnabled(false);
-    compileOnRun = false;
-    ui->labelWritingMode->setText("Memory");
-
-    ui->buttonLoad->setText("Load Memory");
-    ui->buttonSave->setText("Save Memory");
-    ui->buttonCompile->setText("Disassemble");
-    for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
-      for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
-        QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-      }
-    }
-  }
-}
-void MainWindow::on_menuBreakWhen_currentIndexChanged(int index) {
-  ui->menuBreakAt->setValue(0);
-  ui->menuBreakIs->setValue(0);
-  processor.addAction(Action{ActionType::SETBREAKWHEN, static_cast<uint32_t>(index)});
-
-  ui->menuBreakIs->setDisplayIntegerBase(16);
-  ui->menuBreakIs->setPrefix("$");
-  ui->labelAt->setVisible(false);
-  ui->menuBreakAt->setVisible(false);
-  ui->labelIs->setVisible(true);
-  ui->menuBreakIs->setVisible(true);
-
-  switch (index) {
-  case 0:
-    ui->menuBreakIs->setVisible(false);
-    ui->labelIs->setVisible(false);
-    break;
-  case 1:
-    ui->menuBreakIs->setMaximum(65535);
-    ui->menuBreakIs->setDisplayIntegerBase(10);
-    ui->menuBreakIs->setPrefix("");
-    break;
-  case 2:
-    ui->menuBreakIs->setMaximum(0xFFFF);
-    break;
-  case 3:
-    ui->menuBreakIs->setMaximum(0xFFFF);
-    break;
-  case 4:
-    ui->menuBreakIs->setMaximum(0xFFFF);
-    break;
-  case 5:
-    ui->menuBreakIs->setMaximum(0xFF);
-    break;
-  case 6:
-    ui->menuBreakIs->setMaximum(0xFF);
-    break;
-  case 7:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 8:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 9:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 10:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 11:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 12:
-    ui->menuBreakIs->setMaximum(1);
-    break;
-  case 13:
-    ui->labelAt->setVisible(true);
-    ui->menuBreakAt->setVisible(true);
-    ui->menuBreakIs->setMaximum(0xFF);
-    break;
-  }
-}
-void MainWindow::on_menuBreakAt_valueChanged(int arg1) {
-  processor.addAction(Action{ActionType::SETBREAKAT, static_cast<uint32_t>(arg1)});
-}
-void MainWindow::on_menuBreakIs_valueChanged(int arg1) {
-  processor.addAction(Action{ActionType::SETBREAKIS, static_cast<uint32_t>(arg1)});
-}
-void MainWindow::on_checkSimpleMemory_clicked(bool checked) {
-  simpleMemory = checked;
-  if (checked) {
-    ui->groupSimpleMemory->setVisible(true);
-    ui->groupSimpleMemory->setEnabled(true);
-    ui->groupMemory->setVisible(false);
-    ui->groupMemory->setEnabled(false);
-  } else {
-    ui->groupMemory->setVisible(true);
-    ui->groupMemory->setEnabled(true);
-    ui->groupSimpleMemory->setVisible(false);
-    ui->groupSimpleMemory->setEnabled(false);
-  }
-  updateMemoryTab();
-  drawMemorySelections();
-}
-void MainWindow::on_simpleMemoryAddressSpinBox_valueChanged(int arg1) {
-  currentSMScroll = arg1;
-  updateMemoryTab();
-  drawMemorySelections();
-}
-void MainWindow::on_memoryAddressSpinBox_valueChanged(int arg1) {
-  int row = arg1 / 16;
-  QModelIndex index = ui->tableWidgetMemory->model()->index(row, 0);
-  ui->tableWidgetMemory->scrollTo(index, QAbstractItemView::PositionAtTop);
-
-  int column = arg1 % 16;
-  auto targetItem = ui->tableWidgetMemory->item(row, column);
-  ui->tableWidgetMemory->setCurrentItem(targetItem);
-}
-void MainWindow::on_checkUseCycles_clicked(bool checked) {
-  processor.stopExecution();
-
-  processor.addAction(Action{ActionType::SETUSECYCLES, checked});
-
-  if (!checked) {
-    ui->labelRunningCycleNum->setVisible(false);
-  } else if (processor.running) {
-    ui->labelRunningCycleNum->setVisible(true);
-  }
-
-  processor.curCycle = 0;
-  processor.cycleCount = 0;
-}
-void MainWindow::on_menuDisplayStatus_currentIndexChanged(int index) {
-  if (index == 0) {
-    externalDisplay->hide();
-    ui->plainTextDisplay->setEnabled(false);
-    ui->plainTextDisplay->setVisible(false);
-    ui->frameDisplay->setEnabled(false);
-    ui->frameDisplay->setVisible(false);
-    displayStatusIndex = 0;
-  } else if (index == 1) {
-    if (ui->menuDisplayStatus->count() == 3) {
-      externalDisplay->hide();
-      ui->plainTextDisplay->setEnabled(true);
-      ui->plainTextDisplay->setVisible(true);
-      ui->frameDisplay->setEnabled(true);
-      ui->frameDisplay->setVisible(true);
-      ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-      displayStatusIndex = 1;
-    } else {
-      ui->plainTextDisplay->setEnabled(false);
-      ui->plainTextDisplay->setVisible(false);
-      ui->frameDisplay->setEnabled(false);
-      ui->frameDisplay->setVisible(false);
-      externalDisplay->show();
-      displayStatusIndex = 2;
-      plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-    }
-  } else {
-    ui->plainTextDisplay->setEnabled(false);
-    ui->plainTextDisplay->setVisible(false);
-    ui->frameDisplay->setEnabled(false);
-    ui->frameDisplay->setVisible(false);
-    externalDisplay->show();
-    displayStatusIndex = 2;
-    plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-  }
-}
-void MainWindow::on_lineEditBin_textChanged(const QString &arg1) {
-  QString arg = arg1;
-  if (arg.startsWith('%')) {
-    arg = arg.mid(1);
-  }
-  if (arg != "X") {
-    bool ok;
-    int number = arg.toInt(&ok, 2);
-    if (ok) {
-      ui->lineEditDec->blockSignals(true);
-      ui->lineEditHex->blockSignals(true);
-      ui->lineEditDec->setText(QString::number(number));
-      ui->lineEditHex->setText('$' + QString::number(number, 16));
-      ui->lineEditDec->blockSignals(false);
-      ui->lineEditHex->blockSignals(false);
-    } else {
-      ui->lineEditDec->setText("X");
-      ui->lineEditHex->setText("X");
-    }
-  }
-}
-
-void MainWindow::on_lineEditHex_textChanged(const QString &arg1) {
-  QString arg = arg1;
-  if (arg.startsWith('$')) {
-    arg = arg.mid(1);
-  }
-  if (arg != "X") {
-    bool ok;
-    int number = arg.toInt(&ok, 16);
-    if (ok) {
-      ui->lineEditDec->blockSignals(true);
-      ui->lineEditBin->blockSignals(true);
-      ui->lineEditDec->setText(QString::number(number));
-      ui->lineEditBin->setText('%' + QString::number(number, 2));
-      ui->lineEditDec->blockSignals(false);
-      ui->lineEditBin->blockSignals(false);
-    } else {
-      ui->lineEditDec->setText("X");
-      ui->lineEditBin->setText("X");
-    }
-  }
-}
-
-void MainWindow::on_lineEditDec_textChanged(const QString &arg1) {
-  if (arg1 != "X") {
-    bool ok;
-    int number = arg1.toInt(&ok);
-    if (ok) {
-      ui->lineEditBin->blockSignals(true);
-      ui->lineEditHex->blockSignals(true);
-      ui->lineEditBin->setText('%' + QString::number(number, 2));
-      ui->lineEditHex->setText('$' + QString::number(number, 16));
-      ui->lineEditBin->blockSignals(false);
-      ui->lineEditHex->blockSignals(false);
-    } else {
-      ui->lineEditBin->setText("X");
-      ui->lineEditHex->setText("X");
-    }
-  }
-}
-void MainWindow::on_spinBoxTabWidth_valueChanged(int arg1) {
-  QFontMetrics metrics(ui->plainTextCode->font());
-  ui->plainTextCode->setTabStopDistance(metrics.horizontalAdvance(' ') * arg1);
-}
-void MainWindow::on_buttonTidyUp_clicked() {
-  QStringList lines = ui->plainTextCode->toPlainText().split("\n");
-
-  int maxLabelLength = 0;
-  for (const QString &line : lines) {
-    if (line.isEmpty())
-      continue;
-    int charNum = 0;
-    if (line[charNum].isLetter()) {
-      for (; charNum < line.length(); ++charNum) {
-        if (line[charNum] == ' ' || line[charNum] == '\t') {
-          break;
-        }
-      }
-
-      maxLabelLength = std::max(maxLabelLength, charNum);
-    }
-  }
-
-  int tabCount = static_cast<int>(ceil((maxLabelLength + 1.0F) / ui->spinBoxTabWidth->value()));
-
-  for (QString &line : lines) {
-    if (line.isEmpty())
-      continue;
-    int charNum = 0;
-    if (line[charNum] == ' ' || line[charNum] == '\t') {
-      for (; charNum < line.length(); ++charNum) {
-        if (line[charNum] != ' ' && line[charNum] != '\t') {
-          break;
-        }
-      }
-
-      line = QString(tabCount, '\t') + line.mid(charNum);
-    } else {
-      for (; charNum < line.length(); ++charNum) {
-        if (line[charNum] == ' ' || line[charNum] == '\t') {
-          break;
-        }
-      }
-
-      float labelEnd = charNum;
-      charNum++;
-      for (; charNum < line.length(); ++charNum) {
-        if (line[charNum] != ' ' && line[charNum] != '\t') {
-          break;
-        }
-      }
-
-      line = line.mid(0, labelEnd) + QString(tabCount - floor(labelEnd / ui->spinBoxTabWidth->value()), '\t') + line.mid(charNum);
-    }
-  }
-
-  QString modifiedCode = lines.join("\n");
-  ui->plainTextCode->setPlainText(modifiedCode);
-}
-void MainWindow::on_buttonRST_clicked() {
-  processor.addAction(Action{ActionType::SETRST, 0});
-}
-void MainWindow::on_buttonNMI_clicked() {
-  processor.addAction(Action{ActionType::SETNMI, 0});
-}
-void MainWindow::on_pushButtonIRQ_clicked() {
-  processor.addAction(Action{ActionType::SETIRQ, 0});
-}
-
-void MainWindow::on_checkIncrementPC_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETINCONUNKNOWN, checked});
-}
 void MainWindow::disableCellChangedHandler() {
   disconnect(ui->tableWidgetMemory, &QTableWidget::cellChanged, this, &MainWindow::tableMemory_cellChanged);
 }
 void MainWindow::enableCellChangedHandler() {
   connect(ui->tableWidgetMemory, &QTableWidget::cellChanged, this, &MainWindow::tableMemory_cellChanged);
-}
-void MainWindow::tableMemory_cellChanged(int row, int column) {
-  ui->tableWidgetMemory->blockSignals(true);
-  QTableWidgetItem *item = ui->tableWidgetMemory->item(row, column);
-  if (item == ui->tableWidgetMemory->currentItem() && ui->tableWidgetMemory->isPersistentEditorOpen(item)) {
-    QString newText = item->text();
-    bool ok;
-    int value;
-    if (hexReg) {
-      value = newText.toInt(&ok, 16);
-    } else {
-      value = newText.toInt(&ok, 10);
-    }
-    uint16_t adr = static_cast<uint16_t>(row * 16 + column);
-    if (!ok) {
-      if (hexReg) {
-        item->setText(QString("%1").arg(processor.Memory[adr], 2, 16, QChar('0')).toUpper());
-      } else {
-        item->setText(QString("%1").arg(processor.Memory[adr]));
-      }
-    } else {
-      if (hexReg) {
-        item->setText(QString("%1").arg(value, 2, 16, QChar('0')).toUpper());
-      } else {
-        item->setText(QString("%1").arg(value));
-      }
-      if (!processor.running) {
-        processor.Memory[adr] = value;
-        if (adr >= 0xFB00 && adr <= 0xFF37) {
-          if (displayStatusIndex == 1) {
-            ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-          } else if (displayStatusIndex == 2) {
-            plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-          }
-        }
-        if (assembled) {
-          setCompileStatus(false);
-        }
-        std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
-      } else {
-        processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(adr | (value << 16))});
-      }
-    }
-  }
-  ui->tableWidgetMemory->blockSignals(false);
-}
-
-void MainWindow::on_checkIRQOnKeyPress_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETIRQONKEYPRESS, checked});
-}
-
-void MainWindow::on_line2COMIN_valueChanged(int i) {
-  if (i <= 0xFF && i >= 0) {
-    uint8_t byte = static_cast<uint8_t>(i);
-    byte = 0xFF - byte + 1;
-    ui->line2COMOUT->setText("$" + QString::number(byte, 16).toUpper());
-  } else {
-    ui->line2COMOUT->setText("X");
-  }
 }

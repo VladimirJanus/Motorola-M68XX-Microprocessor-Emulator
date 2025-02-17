@@ -34,6 +34,21 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>5</number>
+    </property>
+    <property name="topMargin">
+     <number>5</number>
+    </property>
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
     <item>
      <layout class="QVBoxLayout" name="LayVerMain">
       <property name="spacing">
@@ -4228,8 +4243,8 @@ Created by Vladimir Januš</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>660</width>
-                   <height>319</height>
+                   <width>668</width>
+                   <height>327</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -5000,7 +5015,7 @@ Created by Vladimir Januš</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>646</width>
+                   <width>654</width>
                    <height>404</height>
                   </rect>
                  </property>
@@ -5080,9 +5095,9 @@ Created by Vladimir Januš</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="checkCompileOnRun">
+                   <widget class="QCheckBox" name="checkAssembleOnRun">
                     <property name="text">
-                     <string>Compile on run</string>
+                     <string>Assemble on run</string>
                     </property>
                     <property name="checked">
                      <bool>true</bool>
@@ -5830,7 +5845,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Assembly directives may contain expressions or labels but do not support forward references.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:700; color:#00007f;&quot;&gt;Emulator functionality:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:700; color:#00007f;&quot;&gt;EMULATOR FUNCTIONALITY&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;Lines tab:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;On the most left of the window.&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Displays line numbers and corresponding hexadecimal instruction addresses, separated by a colon.&lt;/p&gt;
@@ -6003,7 +6018,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The &lt;span style=&quot; font-weight:700; text-decoration: underline;&quot;&gt;WAI&lt;/span&gt; instruction will suspend the execution of the program until an interrupt is called by the interrupt buttons or by pressing a key on the display.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:14pt; font-weight:700; color:#00007f;&quot;&gt;Credits:&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Made by &lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;Vladimir Januš &lt;/span&gt;in August 2023. &lt;br /&gt;&lt;br /&gt;Copyright (C) 2024 Vladimir Januš&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Made by &lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;Vladimir Januš &lt;/span&gt;in August 2023. &lt;br /&gt;&lt;br /&gt;Copyright (C) 2025 Vladimir Januš&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt; * This program is free software: you can redistribute it and/or modify&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt; * it under the terms of the GNU Affero General Public License as published by&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt; * the Free Software Foundation, either version 3 of the License, or&lt;/p&gt;
@@ -6030,7 +6045,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
               <bool>true</bool>
              </property>
              <attribute name="title">
-              <string>OPC</string>
+              <string>Instruction Set</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <property name="spacing">
@@ -11259,7 +11274,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
          <number>5</number>
         </property>
         <item>
-         <widget class="QPushButton" name="buttonCompile">
+         <widget class="QPushButton" name="buttonAssemble">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -11268,15 +11283,21 @@ li.checked::marker { content: &quot;\2612&quot;; }
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="statusTip">
+           <string/>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -11356,13 +11377,13 @@ QPushButton:pressed{
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
@@ -11396,13 +11417,13 @@ QPushButton:pressed{
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
@@ -11436,97 +11457,7 @@ QPushButton:pressed{
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="buttonSwitchWrite">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>150</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>150</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton{
-	color: rgb(0,0,0);
-	background-color: rgb(225,225,225);
-	border: 1px solid rgb(173,173,173);
-}
-QPushButton:hover{
-    background-color: rgb(229, 241, 251);
-    border: 1px solid rgb(0, 120, 215);
-}
-QPushButton:pressed{
- background-color: rgb(204, 228, 247);
- border: 1px solid rgb(0, 120, 215);
-}</string>
-          </property>
-          <property name="text">
-           <string>Switch Writing Mode:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="labelWritingMode">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Code</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_6">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Policy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
+            <width>40</width>
             <height>20</height>
            </size>
           </property>
@@ -11542,13 +11473,13 @@ QPushButton:pressed{
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
@@ -11582,13 +11513,13 @@ QPushButton:pressed{
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
@@ -11622,13 +11553,13 @@ QPushButton:pressed{
           </property>
           <property name="minimumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>90</width>
             <height>25</height>
            </size>
           </property>
@@ -11808,6 +11739,80 @@ QPushButton:pressed{
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonSwitchWrite">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton{
+	color: rgb(0,0,0);
+	background-color: rgb(225,225,225);
+	border: 1px solid rgb(173,173,173);
+}
+QPushButton:hover{
+    background-color: rgb(229, 241, 251);
+    border: 1px solid rgb(0, 120, 215);
+}
+QPushButton:pressed{
+ background-color: rgb(204, 228, 247);
+ border: 1px solid rgb(0, 120, 215);
+}</string>
+          </property>
+          <property name="text">
+           <string>Switch Writing Mode:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelWritingMode">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Code</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

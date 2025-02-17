@@ -47,6 +47,7 @@ Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNe
   }
   return NumParseResult::success(number);
 }
+
 /**
  * @brief Parses a hexadecimal string (format: $FF).
  * 
@@ -195,7 +196,7 @@ Assembler::NumParseRelativeResult Assembler::parseNumberRelative(const QString &
 Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined) {
   QList<QString> symbols;
 
-  for (int i = expr.length() - 1; i >= 0; --i) {
+  for (qsizetype i = expr.length() - 1; i >= 0; --i) {
     if (expr[i] == '+' || expr[i] == '-') {
       QString part = expr.mid(i).trimmed();
       if (!part.mid(1).isEmpty()) {
@@ -621,7 +622,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   bool HCFwarn = false; // should the assembler warn that there are potential Halt-and-Catch-Fire instructions in the machine code
 
   const QStringList lines = code.split('\n');
-  const int totalLines = lines.count();
+  const qsizetype totalLines = lines.count();
 
   // Predefined interrupt vectors
   assignLabelValue(QString("IRQ_PTR"), 0xFFF8, labelValMap, assemblerLine);
@@ -778,7 +779,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           operand1 = (val >> 8) & 0xFF;
           operand2 = val & 0xFF;
           Memory[adr] = operand1;
-          Memory[adr + 1] = operand2;
+          Memory[(adr + 1) & 0xFFFF] = operand2;
 
           assignLabelValue(label, adr, labelValMap, assemblerLine);
         } else if (s_in == ".SETB") {
@@ -838,10 +839,10 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       } else {
         assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
-        if (uint8_t tempCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::INH].id]; tempCode != 0) { // INH
+        if (uint8_t tempCodeINH = mnemonicInfo.opCodes[addressingModes[AddressingMode::INH].id]; tempCodeINH != 0) { // INH
           errorCheckUnexpectedOperand(s_op, assemblerLine);
 
-          opCode = tempCode;
+          opCode = tempCodeINH;
           validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
           Memory[assemblerAddress++] = opCode;
@@ -856,7 +857,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (s_op[0].isLetter()) {
-              callLabelRelMap[assemblerAddress + 1] = s_op;
+              callLabelRelMap[(assemblerAddress + 1) & 0xFFFF] = s_op;
               operand1 = 0;
             } else {
               NumParseRelativeResult resultVal = parseNumberRelative(s_op);
@@ -888,7 +889,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               operand1 = 0;
             } else if (isLabelOrExpression(s_op)) {
               s_op.chop(2);
-              callLabelMap[(assemblerAddress + 1) % 0x10000] = s_op;
+              callLabelMap[(assemblerAddress + 1) & 0xFFFF] = s_op;
             } else {
               s_op.chop(2);
 
@@ -915,7 +916,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
             if (getInstructionMode(processorVersion, opCode) == AddressingMode::IMMEXT) {
               if (isLabelOrExpression(s_op)) {
-                callLabelExtMap[(assemblerAddress + 1) % 0x10000] = s_op;
+                callLabelExtMap[(assemblerAddress + 1) & 0xFFFF] = s_op;
               } else {
                 NumParseResult resultVal = parseNumber(s_op);
                 if (!resultVal.ok) {
@@ -931,7 +932,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               Memory[assemblerAddress++] = operand2;
             } else {
               if (isLabelOrExpression(s_op)) {
-                callLabelMap[(assemblerAddress + 1) % 0x10000] = s_op;
+                callLabelMap[(assemblerAddress + 1) & 0xFFFF] = s_op;
               } else {
                 NumParseResult resultVal = parseNumber(s_op);
                 if (!resultVal.ok) {
@@ -957,7 +958,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
               if (result.undefined) {
                 skipDir = true;
-                callLabelExtMap[(assemblerAddress + 1) % 0x10000] = s_op;
+                callLabelExtMap[(assemblerAddress + 1) & 0xFFFF] = s_op;
               } else {
                 value = result.value;
               }
@@ -1012,7 +1013,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
         assemblyMap.addInstruction(instructionAddress, assemblerLine, opCode, operand1, operand2, s_in, s_op);
       }
     }
-    // naj compiler pokaze na katere lineje je nedifenrane onej
+    // second pass/passes to resolve undefined expr or labels
     for (const auto &entry : callLabelMap) {
       int location = entry.first;
       QString expr = entry.second;
@@ -1039,9 +1040,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       }
 
       Memory[location] = (result.value >> 8) & 0xFF;
-      Memory[location + 1] = result.value & 0xFF;
+      Memory[(location + 1) & 0xFFFF] = result.value & 0xFF;
       instruction.byte2 = Memory[location];
-      instruction.byte3 = Memory[location + 1];
+      instruction.byte3 = Memory[(location + 1) & 0xFFFF];
     }
     for (const auto &entry : callLabelRelMap) {
       int location = entry.first;
@@ -1075,7 +1076,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
                         "Instructions 0x9D and 0xDD are undefined for the M6800 and would cause processor lockup (Halt and Catch Fire) on real hardware. If you are "
                         "using a M6803 or similar then this warning is irrelevant."});
   }
-  for (int i = messages.size() - 1; i >= 0; --i) {
+  for (qsizetype i = messages.size() - 1; i >= 0; --i) {
     if (messages[i].type == MsgType::NONE) {
       messages.removeAt(i);
     }

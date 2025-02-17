@@ -175,7 +175,7 @@ void MainWindow::setSelectionRuntime(int address) {
 
   drawTextSelections();
 }
-void MainWindow::setSelectionCompileError(int charNum, int lineNum) {
+void MainWindow::setSelectionAssemblyError(int charNum, int lineNum) {
   if (lineNum == -1) {
     return;
   }

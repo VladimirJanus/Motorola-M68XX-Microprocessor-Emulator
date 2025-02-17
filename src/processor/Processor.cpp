@@ -16,6 +16,7 @@
  */
 #include "processor.h"
 #include <QtConcurrent/qtconcurrentrun.h>
+#include <stdexcept>
 Processor::Processor(ProcessorVersion version) {
   switchVersion(version);
 }
@@ -97,17 +98,17 @@ void Processor::handleAction(const Action &action) {
       pendingInterrupt = Interrupt::IRQ;
     break;
   case ActionType::SETMEMORY:
-    Memory[action.parameter & 0xFFFF] = action.parameter >> 16;
+    Memory[action.parameter & 0xFFFF] = (action.parameter >> 16) & 0xFF;
     break;
   case ActionType::SETKEY:
-    Memory[0xFFF0] = action.parameter;
+    Memory[0xFFF0] = action.parameter & 0xFF;
     if (IRQOnKeyPressed || WAIStatus) {
       if (pendingInterrupt == Interrupt::NONE)
         pendingInterrupt = Interrupt::IRQ;
     }
     break;
   case ActionType::SETMOUSECLICK:
-    Memory[0xFFF1] = action.parameter;
+    Memory[0xFFF1] = action.parameter & 0xFF;
     break;
   case ActionType::SETMOUSEX:
     break;
@@ -225,6 +226,9 @@ void Processor::updateFlag(Flag flag, bool value) {
  * @return The 16-bit interrupt vector address.
  */
 inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
+  if (interrupt != Interrupt::IRQ && interrupt != Interrupt::NMI && interrupt != Interrupt::RST) {
+    throw std::invalid_argument("Somehow an invalid interrupt was passed to getInterruptLocation() id: " + std::to_string(static_cast<int>(interrupt)));
+  }
   return (Memory[(interruptLocations - static_cast<int>(interrupt) * 2 - 1)] << 8) + Memory[(interruptLocations - static_cast<int>(interrupt) * 2)];
 }
 
@@ -372,6 +376,11 @@ void Processor::interruptCheckIPS() {
       }
     }
     pendingInterrupt = Interrupt::NONE;
+    break;
+  case Core::Interrupt::RSTCYCLESERVICE:
+  case Core::Interrupt::NMICYCLESERVICE:
+  case Core::Interrupt::IRQCYCLESERVICE:
+    throw std::invalid_argument("CYCLESERVICE interrupt state passed into interruptCheckIPS.");
     break;
   }
 }

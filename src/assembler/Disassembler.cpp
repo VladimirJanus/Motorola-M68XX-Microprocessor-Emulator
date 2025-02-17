@@ -25,8 +25,8 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
 
   int line = 0;
 
-  for (int i = 0xFFF0; i < 0xFFFE; i += 2) {
-    uint16_t value = (Memory[i] << 8) | Memory[i + 1];
+  for (uint16_t i = 0xFFF0; i < 0xFFFE; i += 2) {
+    uint16_t value = (Memory[i] << 8) | Memory[(i + 1) & 0xFFFF];
     if (value != 0) {
       code.append("\t.SETW $" + QString::number(i, 16).toUpper() + ",$" + QString::number(value, 16).toUpper() + "\n");
       assemblyMap.addInstruction(i, line++, 0, 0, 0, "SETW", "");
@@ -34,7 +34,7 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
   }
 
   int lastNonZero = 0xFFEF;
-  for (int i = endLoc; i >= 0; --i) {
+  for (uint16_t i = endLoc; i >= 0; --i) {
     if (Memory[i] != 0) {
       lastNonZero = i;
       break;
@@ -42,7 +42,7 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
   }
 
   int consecutiveZeros = 0;
-  for (int address = 0; address < begLoc; ++address) {
+  for (uint16_t address = 0; address < begLoc; ++address) {
     if (Memory[address] == 0) {
       consecutiveZeros++;
     } else {
@@ -63,8 +63,8 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
   code.append("\t.ORG $" + QString::number(begLoc, 16).toUpper() + "\n");
   assemblyMap.addInstruction(begLoc, line++, 0, 0, 0, "ORG", "");
 
-  for (int address = begLoc; address <= lastNonZero;) {
-    int opCode = Memory[address];
+  for (uint16_t address = begLoc; address <= lastNonZero;) {
+    uint8_t opCode = Memory[address];
 
     Core::MnemonicInfo mnemonicInfo = Core::getInfoByOpCode(ver, opCode);
 
@@ -76,7 +76,8 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
       messages.append(Msg{MsgType::WARN, "Unknown/unsupported instruction at address: $" + QString::number(address, 16).toUpper()});
       if (Memory[address] == 0) {
         int zeroCount = 0;
-        while (Memory[address + zeroCount] == 0) {
+
+        while (address + zeroCount < 0xFFFF && Memory[(address + zeroCount) & 0xFFFF] == 0) {
           zeroCount++;
         }
         code.append("\t.RMB " + QString::number(zeroCount) + "\n");
@@ -146,6 +147,8 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
       } else {
         code.append("\t" + in + " $" + QString::number(operand1, 16).toUpper() + "\n");
       }
+      break;
+    case Core::AddressingMode::INVALID: //this will never happen because of continue in previous check
       break;
     }
 

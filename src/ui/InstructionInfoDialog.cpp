@@ -25,7 +25,10 @@ InstructionInfoDialog::InstructionInfoDialog(QTreeWidgetItem item, QWidget *pare
 
   ui->labelInstruction->setText(item.text(0));
   ui->labelOperation->setText(item.text(1));
-  ui->labelDescription->setText(item.text(11) + "\nFlags: HINZVC:" + item.text(8));
+  ui->labelDescription->setText(item.text(11) + "\n");
+  if (item.text(8) != "") {
+    ui->labelDescription->setText(ui->labelDescription->text() + "Flags HINZVC:\n      " + item.text(8) + "\n(* = changed, - = unchanged, 1/0 = constant)");
+  }
   QStringList g{"INH", "IMM", "DIR", "IND", "EXT", "REL"};
   int count = 0;
   for (int i = 2; i < 8; ++i) {

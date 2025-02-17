@@ -188,7 +188,7 @@ private:
         msg.append("relative");
         break;
       case AddressingMode::INVALID:
-        throw "INVALID PASSED FOR CHECKING MNEMONIC SUPPORT";
+        throw std::invalid_argument("INVALID PASSED FOR CHECKING MNEMONIC SUPPORT");
       }
       msg.append(" addressing.");
       return msg;
