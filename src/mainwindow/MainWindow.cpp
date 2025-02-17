@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "src/ui/MainWindow.h"
+#include "src/mainwindow/MainWindow.h"
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QScrollBar>
 #include <QTimer>
 #include <QMessageBox>
-#include "instructioninfodialog.h"
+#include "src/dialogs/instructioninfodialog.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
 #include "ui_mainwindow.h"

@@ -17,7 +17,7 @@
 #include <QApplication>
 #include "src/assembler/Assembler.h"
 #include "src/core/Core.h"
-#include "src/ui/MainWindow.h"
+#include "src/mainwindow/MainWindow.h"
 #include <array>
 #include <fstream>
 #include <iostream>

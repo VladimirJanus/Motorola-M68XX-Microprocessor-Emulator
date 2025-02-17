@@ -25,7 +25,7 @@
 #include <QTreeWidget>
 
 // Project includes
-#include "externaldisplay.h"
+#include "src/dialogs/externaldisplay.h"
 #include "src/processor/Processor.h"
 
 // Using declarations

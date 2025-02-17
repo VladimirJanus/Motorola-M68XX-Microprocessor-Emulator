@@ -2,7 +2,7 @@
 #include <QDir>
 #include <QTimer>
 #include <QScrollBar>
-#include "src/ui/InstructionInfoDialog.h"
+#include "src/dialogs/InstructionInfoDialog.h"
 #include "ui_MainWindow.h"
 
 // Scroll Handlers

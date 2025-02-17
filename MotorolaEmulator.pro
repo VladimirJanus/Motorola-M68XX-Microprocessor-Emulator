@@ -27,18 +27,18 @@ RESOURCES += \
 RC_ICONS = res/M6800.ico
 
 FORMS += \
-    src/ui/ExternalDisplay.ui \
-    src/ui/InstructionInfoDialog.ui \
-    src/ui/MainWindow.ui
+    src/dialogs/ExternalDisplay.ui \
+    src/dialogs/InstructionInfoDialog.ui \
+    src/mainwindow/MainWindow.ui
 
 HEADERS += \
     src/assembler/Assembler.h \
     src/assembler/Disassembler.h \
     src/core/Core.h \
     src/processor/Processor.h \
-    src/ui/ExternalDisplay.h \
-    src/ui/InstructionInfoDialog.h \
-    src/ui/MainWindow.h \
+    src/dialogs/ExternalDisplay.h \
+    src/dialogs/InstructionInfoDialog.h \
+    src/mainwindow/MainWindow.h \
     src/utils/ActionQueue.h
 
 SOURCES += \
@@ -48,9 +48,9 @@ SOURCES += \
     src/core/main.cpp \
     src/processor/InstructionFunctions.cpp \
     src/processor/Processor.cpp \
-    src/ui/ExternalDisplay.cpp \
-    src/ui/FileManager.cpp \
-    src/ui/InstructionInfoDialog.cpp \
-    src/ui/MainWindow.cpp \
-    src/ui/MainWindowSlots.cpp \
-    src/ui/SelectionSys.cpp
+    src/dialogs/ExternalDisplay.cpp \
+    src/dialogs/InstructionInfoDialog.cpp \
+    src/mainwindow/FileManager.cpp \
+    src/mainwindow/MainWindow.cpp \
+    src/mainwindow/MainWindowSlots.cpp \
+    src/mainwindow/SelectionSys.cpp
