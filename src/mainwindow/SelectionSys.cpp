@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "src/mainwindow/MainWindow.h"
+#include "ui_MainWindow.h"
 #include <qscrollbar.h>
 #include <qtextobject.h>
 

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "src/mainwindow/MainWindow.h"
 #include <QDir>
 #include <QTimer>
 #include <QScrollBar>

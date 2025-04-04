@@ -1,8 +1,8 @@
-#include "MainWindow.h"
+#include "src/mainwindow/MainWindow.h"
 #include <QDir>
 #include <QMessageBox>
 #include <QFileDialog>
-#include "ui_mainwindow.h"
+#include "ui_MainWindow.h"
 
 void MainWindow::saveMemory() {
   processor.stopExecution();

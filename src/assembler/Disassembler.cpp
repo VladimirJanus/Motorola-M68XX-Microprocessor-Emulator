@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "disassembler.h"
+#include "src/assembler/Disassembler.h"
 #include <QInputDialog>
 
 DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory) {
@@ -34,11 +34,14 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
   }
 
   int lastNonZero = 0xFFEF;
-  for (uint16_t i = endLoc; i >= 0; --i) {
-    if (Memory[i] != 0) {
-      lastNonZero = i;
-      break;
-    }
+  for (uint16_t i = endLoc; i != 0; --i) {
+      if (Memory[i] != 0) {
+          lastNonZero = i;
+          break;
+      }
+  }
+  if (endLoc == 0 && Memory[0] != 0) {
+      lastNonZero = 0;
   }
 
   int consecutiveZeros = 0;

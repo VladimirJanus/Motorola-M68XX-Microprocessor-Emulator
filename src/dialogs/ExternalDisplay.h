@@ -19,7 +19,7 @@
 
 #include <QDialog>
 #include <QPlainTextEdit>
-#include "ui_externaldisplay.h"
+#include "ui_ExternalDisplay.h"
 
 namespace Ui {
   class ExternalDisplay;

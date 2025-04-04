@@ -20,7 +20,7 @@
 #include <QList>
 #include <QMap>
 #include <QString>
-#include <Qcolor>
+#include <QColor>
 namespace Core {
   class AssemblyMap {
   public:

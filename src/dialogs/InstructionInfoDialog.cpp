@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "instructioninfodialog.h"
-#include "ui_instructioninfodialog.h"
+#include "src/dialogs/InstructionInfoDialog.h"
+#include "ui_InstructionInfoDialog.h"
 #include <qtreewidget.h>
 
 InstructionInfoDialog::InstructionInfoDialog(QTreeWidgetItem item, QWidget *parent)

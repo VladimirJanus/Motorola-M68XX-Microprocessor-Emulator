@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "processor.h"
+#include "src/processor/Processor.h"
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <stdexcept>
 Processor::Processor(ProcessorVersion version) {

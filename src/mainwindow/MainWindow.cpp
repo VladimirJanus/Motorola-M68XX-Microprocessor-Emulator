@@ -20,11 +20,10 @@
 #include <QScrollBar>
 #include <QTimer>
 #include <QMessageBox>
-#include "src/dialogs/instructioninfodialog.h"
+#include "src/dialogs/InstructionInfoDialog.h"
+#include "ui_MainWindow.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
-#include "ui_mainwindow.h"
-#include <cmath>
 
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
@@ -477,7 +476,7 @@ void MainWindow::setWritingMode(WritingMode mode) {
 void MainWindow::drawOPC() {
   ui->treeWidget->clear();
 
-  for (const MnemonicInfo &info : mnemonics) {
+    for (const MnemonicInfo &info : Core::mnemonics) {
     bool isMnemonicSupported = (info.supportedVersions & processorVersion) != 0;
     if (!isMnemonicSupported)
       continue;
@@ -504,7 +503,7 @@ void MainWindow::drawOPC() {
     item->setText(10, cyclesList.join(","));
     item->setText(11, info.longDescription);
     ui->treeWidget->addTopLevelItem(item);
-    for (auto aliasIt = alliasMap.begin(); aliasIt != alliasMap.end(); ++aliasIt) {
+    for (auto aliasIt = Core::alliasMap.begin(); aliasIt != Core::alliasMap.end(); ++aliasIt) {
       if (aliasIt.value().mnemonic == info.mnemonic) {
         if (!(aliasIt.value().supportedVersions & processorVersion)) {
           continue;
@@ -985,7 +984,7 @@ bool MainWindow::startAssembly() {
   std::fill(std::begin(processor.Memory), std::end(processor.Memory), static_cast<uint8_t>(0));
   std::fill(std::begin(processor.backupMemory), std::end(processor.backupMemory), static_cast<uint8_t>(0));
   assemblyMap.clear();
-  AssemblyResult assResult;
+  Core::AssemblyResult assResult;
   try {
     QString code = ui->plainTextCode->toPlainText();
     assResult = Assembler::assemble(processorVersion, code, processor.Memory);
