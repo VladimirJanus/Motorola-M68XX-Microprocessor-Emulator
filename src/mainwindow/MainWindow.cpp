@@ -400,6 +400,7 @@ void MainWindow::applyInitialSettings() {
   on_menuBreakWhen_currentIndexChanged(ui->menuBreakWhen->currentIndex());
   enableCellChangedHandler();
   setAllowWritingModeSwitch(false);
+  ui->tabWidget->setCurrentIndex(0);
 }
 
 MainWindow::~MainWindow() {
