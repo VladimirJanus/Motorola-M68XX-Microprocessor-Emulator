@@ -32,8 +32,8 @@ void printHelp() {
             << "Options:\n"
             << "  --help, -h                      Show this help message\n"
             << "  --version, --ver                Show version information\n"
-            << "  --ass, --assemble               Assemble a file\n"
-            << "    --input, --in <file>          Input assembly file (required for --ass)\n"
+            << "  --asm, --assemble               Assemble a file\n"
+            << "    --input, --in <file>          Input assembly file (required)\n"
             << "    --output, --out <file>        Output binary file (default: assembled_M6800.bin)\n"
             << "    --processor, --proc <ver>     Processor version (M6800 or M6803, default: M6800)\n"
             << "Running without arguments launches the GUI mode.\n";

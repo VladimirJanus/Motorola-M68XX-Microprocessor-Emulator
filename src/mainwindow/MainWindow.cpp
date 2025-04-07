@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
   // Basic UI setup and version info display
   ui->setupUi(this);
   QWidget::setWindowTitle(Core::programName);
-  ui->plainTextInfo->append("Current version: " + Core::softwareVersion + ", designed for Windows 10.");
+  ui->plainTextInfo->append("Current version: " + Core::softwareVersion + ", designed for " + Core::envName + ".");
 
   // Generate unique session ID
   sessionId = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");

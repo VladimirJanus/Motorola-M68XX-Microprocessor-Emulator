@@ -75,6 +75,11 @@ namespace Core {
 
   const QString softwareVersion = "1.10.0";
   const QString programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
+#ifdef __linux__
+  const QString envName = "Linux";
+#else
+  const QString envName = "Windows 10";
+#endif
 
   const uint16_t interruptLocations = 0xFFFF;
 
