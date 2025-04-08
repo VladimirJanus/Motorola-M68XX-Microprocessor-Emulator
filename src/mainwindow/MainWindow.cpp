@@ -25,7 +25,8 @@
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(
+  QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::MainWindow) {
   // Basic UI setup and version info display

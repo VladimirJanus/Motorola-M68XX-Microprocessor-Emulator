@@ -846,26 +846,7 @@
                   <bool>true</bool>
                  </property>
                  <property name="plainText">
-                  <string>wa                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                       ,</string>
+                  <string/>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::TextInteractionFlag::NoTextInteraction</set>
@@ -5014,7 +4995,7 @@ Created by Vladimir Januš</string>
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>-77</y>
+                   <y>0</y>
                    <width>654</width>
                    <height>404</height>
                   </rect>

@@ -38,6 +38,9 @@ private:
 private slots:
   void handleDisplayScrollVertical();
   void handleDisplayScrollHorizontal();
+
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
 };
 
 #endif // EXTERNALDISPLAY_H
