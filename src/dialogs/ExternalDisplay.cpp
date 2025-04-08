@@ -18,6 +18,7 @@
 #include <QEvent>
 #include <QResizeEvent>
 #include <QScrollBar>
+#include "ui_ExternalDisplay.h"
 
 int defaultW = 498;
 int defaultH = 350;
@@ -40,6 +41,10 @@ ExternalDisplay::ExternalDisplay(
 
 ExternalDisplay::~ExternalDisplay() {
   delete ui;
+}
+
+QPlainTextEdit *ExternalDisplay::getPlainTextEdit() {
+  return ui->plainTextDisplay;
 }
 
 void ExternalDisplay::handleDisplayScrollHorizontal() {

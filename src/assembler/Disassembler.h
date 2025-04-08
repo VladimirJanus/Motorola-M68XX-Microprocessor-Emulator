@@ -18,7 +18,6 @@
 #define DISASSEMBLER_H
 
 #include "src/core/Core.h"
-#include <cstdint>
 using Core::AddressingMode;
 using Core::AssemblyMap;
 using Core::DisassemblyResult;

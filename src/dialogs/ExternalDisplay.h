@@ -19,7 +19,6 @@
 
 #include <QDialog>
 #include <QPlainTextEdit>
-#include "ui_ExternalDisplay.h"
 
 namespace Ui {
   class ExternalDisplay;
@@ -30,8 +29,7 @@ class ExternalDisplay : public QDialog {
 public:
   explicit ExternalDisplay(QWidget *parent = nullptr);
   ~ExternalDisplay();
-  QPlainTextEdit *getPlainTextEdit() { return ui->plainTextDisplay; }
-  void checkMousePos();
+  QPlainTextEdit *getPlainTextEdit();
 
 private:
   Ui::ExternalDisplay *ui;

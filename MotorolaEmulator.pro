@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 
 
-#QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast -Woverloaded-virtual -Wfloat-equal -Wundef -Wnon-virtual-dtor -Wformat=2 -Wredundant-decls -Wmissing-declarations -Wcast-align -Wzero-as-null-pointer-constant -Wdouble-promotion -Wstrict-overflow=5 -Werror
+#QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast -Woverloaded-virtual -Wfloat-equal -Wundef -Wnon-virtual-dtor -Wformat=2 -Wredundant-decls -Wmissing-declarations -Wcast-align -Wzero-as-null-pointer-constant -Wdouble-promotion -Wstrict-overflow=5
 #QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
 
 win32: LIBS += -ldbghelp

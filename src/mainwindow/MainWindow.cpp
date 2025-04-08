@@ -79,7 +79,7 @@ MainWindow::MainWindow(
 
 void MainWindow::setupExternalDisplay() {
   externalDisplay = new ExternalDisplay(this);
-  plainTextDisplay = externalDisplay->findChild<QPlainTextEdit *>("plainTextDisplay");
+  plainTextDisplay = externalDisplay->getPlainTextEdit();
   connect(externalDisplay, &QDialog::finished, this, [=]() { ui->menuDisplayStatus->setCurrentIndex(0); });
 }
 void MainWindow::setupMemoryTable() {
