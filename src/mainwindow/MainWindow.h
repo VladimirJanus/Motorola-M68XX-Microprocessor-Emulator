@@ -97,14 +97,17 @@ private:
   // Display and Drawing
   void drawOPC();
   void drawProcessor();
+  void processDisplayInputs(QPlainTextEdit *display);
+  void handleResize(QSize size);
+  QString getDisplayText(std::array<uint8_t, 0x10000> &memory);
+
+  // Selection System
   void drawTextSelections();
   void drawMemorySelections();
   void clearSelections();
   void clearHighlights();
   void toggleHighlight(int line);
   void updateLinesBox(bool redraw);
-  void handleResize(QSize size);
-  QString getDisplayText(std::array<uint8_t, 0x10000> &memory);
 
   // File Operations
   void newFile();

@@ -806,15 +806,13 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
             for (QTableWidgetItem *item : selectedItems) {
               uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
               processor.Memory[adr] = 0x00;
-              if (adr >= 0xFB00 && adr <= 0xFF37) {
-                if (displayStatusIndex == 1) {
-                  ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-                } else if (displayStatusIndex == 2) {
-                  plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-                }
-              }
             }
             updateMemoryTab();
+            if (displayStatusIndex == 1) {
+              ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+            } else if (displayStatusIndex == 2) {
+              plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+            }
           }
         }
       }
@@ -878,6 +876,22 @@ void MainWindow::drawProcessor() {
   updateMemoryTab();
   setSelectionRuntime(processor.PC);
 }
+void MainWindow::processDisplayInputs(
+  QPlainTextEdit *display) {
+  QPoint position = QCursor::pos();
+  QPoint localMousePos = display->mapFromGlobal(position);
+  localMousePos.setX(localMousePos.x() - 3);
+  localMousePos.setY(localMousePos.y() - 5);
+  QFontMetrics fontMetrics(display->font());
+  int charWidth = fontMetrics.averageCharWidth();
+  int charHeight = fontMetrics.height();
+  int x = localMousePos.x() / charWidth;
+  int y = localMousePos.y() / charHeight;
+  x = std::clamp(x, 0, 53);
+  y = std::clamp(y, 0, 19);
+  processor.Memory[0xFFF2] = static_cast<uint8_t>(x);
+  processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
+}
 void MainWindow::drawProcessorRunning(
   std::array<uint8_t, 0x10000> memory, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles) {
   ui->lineEditHValue->setText(QString::number(bit(flags, 5)));
@@ -940,36 +954,12 @@ void MainWindow::drawProcessorRunning(
   if (displayStatusIndex == 1) {
     ui->plainTextDisplay->setPlainText(getDisplayText(memory));
     if (ui->plainTextDisplay->hasFocus()) {
-      QPoint position = QCursor::pos();
-      QPoint localMousePos = ui->plainTextDisplay->mapFromGlobal(position);
-      localMousePos.setX(localMousePos.x() - 3);
-      localMousePos.setY(localMousePos.y() - 5);
-      QFontMetrics fontMetrics(ui->plainTextDisplay->font());
-      int charWidth = fontMetrics.averageCharWidth();
-      int charHeight = fontMetrics.height();
-      int x = localMousePos.x() / charWidth;
-      int y = localMousePos.y() / charHeight;
-      x = std::clamp(x, 0, 53);
-      y = std::clamp(y, 0, 19);
-      processor.Memory[0xFFF2] = static_cast<uint8_t>(x);
-      processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
+      processDisplayInputs(ui->plainTextDisplay);
     }
   } else if (displayStatusIndex == 2) {
     plainTextDisplay->setPlainText(getDisplayText(memory));
     if (plainTextDisplay->hasFocus()) {
-      QPoint position = QCursor::pos();
-      QPoint localMousePos = plainTextDisplay->mapFromGlobal(position);
-      localMousePos.setX(localMousePos.x() - 3);
-      localMousePos.setY(localMousePos.y() - 5);
-      QFontMetrics fontMetrics(plainTextDisplay->font());
-      int charWidth = fontMetrics.averageCharWidth();
-      int charHeight = fontMetrics.height();
-      int x = localMousePos.x() / charWidth;
-      int y = localMousePos.y() / charHeight;
-      x = std::clamp(x, 0, 53);
-      y = std::clamp(y, 0, 19);
-      processor.Memory[0xFFF2] = static_cast<uint8_t>(x);
-      processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
+      processDisplayInputs(plainTextDisplay);
     }
   }
   setSelectionRuntime(PC);

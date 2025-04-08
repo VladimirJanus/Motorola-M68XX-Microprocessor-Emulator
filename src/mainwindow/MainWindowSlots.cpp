@@ -13,10 +13,10 @@ void MainWindow::handleLinesScroll() {
   ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
 }
 void MainWindow::handleDisplayScrollVertical() {
-  ui->plainTextDisplay->verticalScrollBar()->setValue(0);
+  //ui->plainTextDisplay->verticalScrollBar()->setValue(0);
 }
 void MainWindow::handleDisplayScrollHorizontal() {
-  ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
+  //ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
 }
 
 // Button bar Handlers
@@ -185,7 +185,7 @@ void MainWindow::on_checkShowHex_clicked(bool checked) {
     ui->menuBreakIs->setDisplayIntegerBase(10);
     ui->memoryAddressSpinBox->setDisplayIntegerBase(10);
   }
-  drawProcessor(); //NOROST KER DE MED RUNNINGON ACCESSO ONEJE --------------------------------------------------------------------------------------------------------------------------------------------
+  drawProcessor(); //SLABO KER DE MED RUNNINGON ACCESSO ONEJE --------------------------------------------------------------------------------------------------------------------------------------------
 }
 
 void MainWindow::on_menuScrollLow_valueChanged(int arg1) {

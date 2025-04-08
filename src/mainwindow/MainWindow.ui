@@ -72,7 +72,7 @@
             <item>
              <widget class="QPlainTextEdit" name="plainTextLines">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
@@ -915,11 +915,14 @@
                  <bool>false</bool>
                 </property>
                 <widget class="QLineEdit" name="lineEditAValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>80</x>
                    <y>180</y>
-                   <width>81</width>
+                   <width>80</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -945,6 +948,12 @@
                  <property name="text">
                   <string>00</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -953,11 +962,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditAName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>20</x>
                    <y>180</y>
-                   <width>61</width>
+                   <width>60</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1182,6 +1194,12 @@
                  <property name="text">
                   <string>A:</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -1190,11 +1208,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditBName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>170</x>
                    <y>180</y>
-                   <width>61</width>
+                   <width>60</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1419,6 +1440,12 @@
                  <property name="text">
                   <string>B:</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -1427,11 +1454,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditBValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>230</x>
                    <y>180</y>
-                   <width>81</width>
+                   <width>80</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1457,6 +1487,12 @@
                  <property name="text">
                   <string>00</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -1465,11 +1501,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditXName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>20</x>
                    <y>130</y>
-                   <width>61</width>
+                   <width>60</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1694,6 +1733,12 @@
                  <property name="text">
                   <string>X:</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -1702,11 +1747,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditXValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>80</x>
                    <y>130</y>
-                   <width>81</width>
+                   <width>80</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1731,6 +1779,12 @@
                  </property>
                  <property name="text">
                   <string>0000</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1740,11 +1794,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditSPValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>230</x>
                    <y>30</y>
-                   <width>81</width>
+                   <width>80</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -1770,6 +1827,12 @@
                  <property name="text">
                   <string>0000</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -1778,11 +1841,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditSName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>170</x>
                    <y>30</y>
-                   <width>61</width>
+                   <width>60</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2007,6 +2073,12 @@
                  <property name="text">
                   <string>SP:</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2015,11 +2087,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditPCValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>80</x>
                    <y>30</y>
-                   <width>81</width>
+                   <width>80</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2045,6 +2120,12 @@
                  <property name="text">
                   <string>0000</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2053,11 +2134,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditPCName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>20</x>
                    <y>30</y>
-                   <width>61</width>
+                   <width>60</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2282,6 +2366,12 @@
                  <property name="text">
                   <string>PC:</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2290,11 +2380,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditNName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
-                   <x>120</x>
+                   <x>119</x>
                    <y>230</y>
-                   <width>20</width>
+                   <width>21</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2519,6 +2612,12 @@
                  <property name="text">
                   <string>N</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2527,11 +2626,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditNValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
-                   <x>139</x>
+                   <x>140</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2557,14 +2659,26 @@
                  <property name="text">
                   <string>0</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>1</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
                  <property name="readOnly">
                   <bool>true</bool>
                  </property>
+                 <property name="clearButtonEnabled">
+                  <bool>false</bool>
+                 </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditZName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>170</x>
@@ -2794,6 +2908,12 @@
                  <property name="text">
                   <string>Z</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2802,11 +2922,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditZValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
-                   <x>189</x>
+                   <x>190</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -2832,6 +2955,12 @@
                  <property name="text">
                   <string>0</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -2840,11 +2969,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditVName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>220</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3069,6 +3201,12 @@
                  <property name="text">
                   <string>V</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3077,11 +3215,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditVValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>240</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3107,6 +3248,12 @@
                  <property name="text">
                   <string>0</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3115,11 +3262,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditCName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>270</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3344,6 +3494,12 @@
                  <property name="text">
                   <string>C</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3352,11 +3508,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditCValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>290</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3381,6 +3540,12 @@
                  </property>
                  <property name="text">
                   <string>0</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -3390,11 +3555,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditIValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
-                   <x>89</x>
+                   <x>90</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3420,6 +3588,12 @@
                  <property name="text">
                   <string>0</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3428,6 +3602,9 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditIName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>70</x>
@@ -3657,6 +3834,12 @@
                  <property name="text">
                   <string>I</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3665,11 +3848,14 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditHValue">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
                    <x>40</x>
                    <y>230</y>
-                   <width>21</width>
+                   <width>20</width>
                    <height>31</height>
                   </rect>
                  </property>
@@ -3695,6 +3881,12 @@
                  <property name="text">
                   <string>0</string>
                  </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
@@ -3703,9 +3895,12 @@
                  </property>
                 </widget>
                 <widget class="QLineEdit" name="lineEditHName">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="geometry">
                   <rect>
-                   <x>21</x>
+                   <x>20</x>
                    <y>230</y>
                    <width>20</width>
                    <height>31</height>
@@ -3931,6 +4126,12 @@
                  </property>
                  <property name="text">
                   <string>H</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignmentFlag::AlignCenter</set>
