@@ -47,6 +47,13 @@ InstructionInfoDialog::InstructionInfoDialog(QTreeWidgetItem item, QWidget *pare
 
   if (count == 0)
     ui->tableWidget->setVisible(false);
+  else {
+    int width = ui->tableWidget->verticalHeader()->width() + (ui->tableWidget->columnWidth(0) * ui->tableWidget->columnCount()) + (ui->tableWidget->frameWidth() * 2);
+
+    int height = ui->tableWidget->horizontalHeader()->height() + (ui->tableWidget->rowHeight(0) * ui->tableWidget->rowCount()) + (ui->tableWidget->frameWidth() * 2);
+
+    ui->tableWidget->setFixedSize(width, height);
+  }
 }
 
 InstructionInfoDialog::~InstructionInfoDialog() {

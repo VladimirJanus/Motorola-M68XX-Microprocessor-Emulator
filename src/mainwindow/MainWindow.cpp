@@ -505,7 +505,6 @@ void MainWindow::setAssemblyStatus(bool isAssembled) {
   } else {
     assembled = false;
     ui->buttonAssemble->setStyleSheet(redButton);
-    PrintConsole("");
     assemblyMap.clear();
     clearSelections();
     ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
@@ -631,6 +630,7 @@ void MainWindow::PrintConsole(const QString &text, MsgType type) {
   }
 
   ui->plainTextConsole->appendPlainText(consoleText);
+  ui->plainTextConsole->moveCursor(QTextCursor::End);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
@@ -879,6 +879,7 @@ bool MainWindow::startAssembly() {
   std::fill(std::begin(processor.backupMemory), std::end(processor.backupMemory), static_cast<uint8_t>(0));
   assemblyMap.clear();
   Core::AssemblyResult assResult;
+  PrintConsole("\nStarting assembly: Time: " + QTime::currentTime().toString("hh:mm:ss") + "\n");
   try {
     QString code = ui->plainTextCode->toPlainText();
     assResult = Assembler::assemble(processorVersion, code, processor.Memory);

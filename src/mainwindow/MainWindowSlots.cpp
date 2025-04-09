@@ -37,7 +37,7 @@ void MainWindow::handleDisplayScrollHorizontal() {
 
 // Button bar Handlers
 bool MainWindow::on_buttonAssemble_clicked() {
-  ui->plainTextConsole->clear();
+  //ui->plainTextConsole->clear();
   if (writingMode == WritingMode::CODE) {
     return startAssembly();
   } else {
