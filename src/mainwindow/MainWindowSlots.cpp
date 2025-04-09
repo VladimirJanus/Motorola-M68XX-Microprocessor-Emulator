@@ -165,7 +165,6 @@ void MainWindow::on_checkAdvancedInfo_clicked(bool checked) {
 
   updateLinesBox(true);
   drawTextSelections();
-  handleResize(this->size());
 }
 void MainWindow::on_checkSimpleMemory_clicked(bool checked) {
   simpleMemory = checked;

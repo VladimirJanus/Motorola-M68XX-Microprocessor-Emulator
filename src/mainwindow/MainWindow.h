@@ -98,7 +98,6 @@ private:
   void drawOPC();
   void drawProcessor();
   void processDisplayInputs(QPlainTextEdit *display);
-  void handleResize(QSize size);
   QString getDisplayText(std::array<uint8_t, 0x10000> &memory);
 
   // Selection System

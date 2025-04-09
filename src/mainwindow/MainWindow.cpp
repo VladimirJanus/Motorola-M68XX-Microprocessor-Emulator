@@ -38,40 +38,17 @@ MainWindow::MainWindow(
   sessionId = QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss");
   assemblyMap.clear();
 
-  // Initialize external display window
   setupExternalDisplay();
-
-  // Configure memory table display settings
   setupMemoryTable();
-
-  // Initialize simple memory view
   setupSimpleMemory();
-
-  // Configure operation code tree widget
   setupOPCTree();
-
-  // Set up UI indicators and controls
   setupIndicators();
-
-  // Connect scrollbar signals
   setupScrollbarConnections();
-
-  // Install event filters for UI components
   setupEventFilters();
-
-  // Configure code editor settings
   setupCodeEditor();
-
-  // Connect processor signals
   setupProcessorConnections();
-
-  // Initialize memory corner widget
   setupMemoryCornerWidget();
-
-  // Set up main menu structure
   setupMenus();
-
-  // Apply initial settings
   applyInitialSettings();
 }
 
@@ -83,62 +60,57 @@ void MainWindow::setupExternalDisplay() {
   connect(externalDisplay, &QDialog::finished, this, [=]() { ui->menuDisplayStatus->setCurrentIndex(0); });
 }
 void MainWindow::setupMemoryTable() {
-  const int memWidth = 28;
-  const int memHeight = 20;
+  // Constants
+  const int memCellWidth = 28;
+  const int memCellHeight = 20;
   const int fontSize = 9;
   const QString font = "Lucida Console";
+  QFont cellFont(font, fontSize, QFont::Bold);
 
-  // Set table dimensions
-  ui->tableWidgetMemory->horizontalHeader()->setMinimumSectionSize(memWidth);
-  ui->tableWidgetMemory->verticalHeader()->setMinimumSectionSize(memHeight);
-  ui->tableWidgetMemory->horizontalHeader()->setMaximumSectionSize(memWidth);
-  ui->tableWidgetMemory->verticalHeader()->setMaximumSectionSize(memHeight);
-  ui->tableWidgetMemory->horizontalHeader()->setDefaultSectionSize(memWidth);
-  ui->tableWidgetMemory->verticalHeader()->setDefaultSectionSize(memHeight);
+  // Set table dimensions - use the same size for min/max/default
+  auto *hHeader = ui->tableWidgetMemory->horizontalHeader();
+  auto *vHeader = ui->tableWidgetMemory->verticalHeader();
 
-  // Initialize memory cells
-  for (int row = 0; row <= 0xFFF; ++row) {
-    QString address = QString("%1").arg(row * 16, 4, 16, QChar('0')).toUpper();
-    ui->tableWidgetMemory->insertRow(row);
+  hHeader->setMinimumSectionSize(memCellWidth);
+  hHeader->setMaximumSectionSize(memCellWidth);
+  hHeader->setDefaultSectionSize(memCellWidth);
 
-    // Set row header (address)
-    QTableWidgetItem *headerItem = new QTableWidgetItem(address);
-    headerItem->setTextAlignment(Qt::AlignCenter);
-    headerItem->setBackground(QBrush(QColor(210, 210, 255)));
-    QFont headerFont(font, fontSize, QFont::Bold);
-    headerItem->setFont(headerFont);
-    ui->tableWidgetMemory->setVerticalHeaderItem(row, headerItem);
-
-    // Initialize memory cells
-    for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
-      QTableWidgetItem *item = new QTableWidgetItem("00");
-      item->setBackground(QBrush(Core::memoryCellDefaultColor));
-      item->setTextAlignment(Qt::AlignCenter);
-      QFont cellFont(font, fontSize, QFont::Bold);
-      item->setFont(cellFont);
-      ui->tableWidgetMemory->setItem(row, col, item);
-    }
-  }
+  vHeader->setMinimumSectionSize(memCellHeight);
+  vHeader->setMaximumSectionSize(memCellHeight);
+  vHeader->setDefaultSectionSize(memCellHeight);
 
   // Style column headers
   for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
-    QTableWidgetItem *columnHeaderItem = ui->tableWidgetMemory->horizontalHeaderItem(col);
-    columnHeaderItem->setBackground(QBrush(QColor(210, 210, 255)));
-    columnHeaderItem->setTextAlignment(Qt::AlignCenter);
-    QFont columnHeaderFont(font, fontSize, QFont::Bold);
-    columnHeaderItem->setFont(columnHeaderFont);
+    QTableWidgetItem *header = ui->tableWidgetMemory->horizontalHeaderItem(col);
+    header->setBackground(QBrush(QColor(210, 210, 255)));
+    header->setTextAlignment(Qt::AlignCenter);
+    header->setFont(cellFont);
+  }
+
+  // Initialize memory cells (rows and columns)
+  for (int row = 0; row <= 0xFFF; ++row) {
+    ui->tableWidgetMemory->insertRow(row);
+
+    // Set row header (address)
+    QString address = QString("%1").arg(row * 16, 4, 16, QChar('0')).toUpper();
+    QTableWidgetItem *rowHeader = new QTableWidgetItem(address);
+    rowHeader->setTextAlignment(Qt::AlignCenter);
+    rowHeader->setBackground(QBrush(QColor(210, 210, 255)));
+    rowHeader->setFont(cellFont);
+    ui->tableWidgetMemory->setVerticalHeaderItem(row, rowHeader);
+
+    // Initialize memory cells in this row
+    for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
+      QTableWidgetItem *cell = new QTableWidgetItem("00");
+      cell->setBackground(QBrush(Core::memoryCellDefaultColor));
+      cell->setTextAlignment(Qt::AlignCenter);
+      cell->setFont(cellFont);
+      cell->setFlags(cell->flags() & ~(Qt::ItemIsEditable | Qt::ItemIsUserCheckable));
+      ui->tableWidgetMemory->setItem(row, col, cell);
+    }
   }
 
   ui->tableWidgetMemory->setTextElideMode(Qt::ElideNone);
-
-  // Disable cell editing
-  for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
-    for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
-      QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
-      item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-      item->setFlags(item->flags() & ~Qt::ItemIsUserCheckable);
-    }
-  }
 }
 void MainWindow::setupSimpleMemory() {
   ui->groupSimpleMemory->setVisible(false);
@@ -224,116 +196,47 @@ void MainWindow::setupMemoryCornerWidget() {
   ui->memoryAddressSpinBox->setDisplayIntegerBase(16);
 }
 void MainWindow::setupMenus() {
-  // FILE
+  // Helper function to create and connect actions
+  auto createAction = [this](QMenu *menu, const QString &name, QKeySequence shortcut, auto callback) {
+    QAction *action = new QAction(name, this);
+    action->setShortcut(shortcut);
+    menu->addAction(action);
+    connect(action, &QAction::triggered, this, callback);
+    return action;
+  };
+
+  // FILE MENU
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  QAction *newAction = new QAction(tr("New"), this);
-  newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-  fileMenu->addAction(newAction);
-  QAction *openAction = new QAction(tr("Open"), this);
-  openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
-  fileMenu->addAction(openAction);
-  QAction *saveAction = new QAction(tr("Save"), this);
-  saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
-  fileMenu->addAction(saveAction);
-  QAction *saveAsAction = new QAction(tr("Save As"), this);
-  saveAsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
-  fileMenu->addAction(saveAsAction);
-
+  createAction(fileMenu, tr("New"), QKeySequence(Qt::CTRL | Qt::Key_N), &MainWindow::newFile);
+  createAction(fileMenu, tr("Open"), QKeySequence(Qt::CTRL | Qt::Key_O), &MainWindow::openFile);
+  createAction(fileMenu, tr("Save"), QKeySequence(Qt::CTRL | Qt::Key_S), &MainWindow::saveFile);
+  createAction(fileMenu, tr("Save As"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S), &MainWindow::saveAsFile);
   fileMenu->addSeparator();
+  createAction(fileMenu, tr("Exit"), QKeySequence(), &MainWindow::exit);
 
-  QAction *exitAction = new QAction(tr("Exit"), this);
-  fileMenu->addAction(exitAction);
-
-  connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
-  connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
-  connect(saveAction, &QAction::triggered, this, &MainWindow::saveFile);
-  connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAsFile);
-  connect(exitAction, &QAction::triggered, this, &MainWindow::exit);
-
-  //EDIT
+  // EDIT MENU
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-
-  QAction *undoAction = new QAction(tr("Undo"), this);
-  undoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z));
-  editMenu->addAction(undoAction);
-  QAction *redoAction = new QAction(tr("Redo"), this);
-  redoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y));
-  editMenu->addAction(redoAction);
-
+  createAction(editMenu, tr("Undo"), QKeySequence(Qt::CTRL | Qt::Key_Z), [this]() { ui->plainTextCode->undo(); });
+  createAction(editMenu, tr("Redo"), QKeySequence(Qt::CTRL | Qt::Key_Y), [this]() { ui->plainTextCode->redo(); });
   editMenu->addSeparator();
-
-  QAction *cutAction = new QAction(tr("Cut"), this);
-  cutAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_X));
-  editMenu->addAction(cutAction);
-  QAction *copyAction = new QAction(tr("Copy"), this);
-  copyAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
-  editMenu->addAction(copyAction);
-  QAction *pasteAction = new QAction(tr("Paste"), this);
-  pasteAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
-  editMenu->addAction(pasteAction);
-
+  createAction(editMenu, tr("Cut"), QKeySequence(Qt::CTRL | Qt::Key_X), [this]() { ui->plainTextCode->cut(); });
+  createAction(editMenu, tr("Copy"), QKeySequence(Qt::CTRL | Qt::Key_C), [this]() { ui->plainTextCode->copy(); });
+  createAction(editMenu, tr("Paste"), QKeySequence(Qt::CTRL | Qt::Key_V), [this]() { ui->plainTextCode->paste(); });
   editMenu->addSeparator();
-
-  QAction *selectAllAction = new QAction(tr("Select All"), this);
-  selectAllAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-  editMenu->addAction(selectAllAction);
-
+  createAction(editMenu, tr("Select All"), QKeySequence(Qt::CTRL | Qt::Key_A), [this]() { ui->plainTextCode->selectAll(); });
   editMenu->addSeparator();
+  createAction(editMenu, tr("Mnemonic Info"), QKeySequence(Qt::CTRL | Qt::Key_I), [this]() { showMnemonicInfo(ui->plainTextCode->textCursor().position()); });
 
-  QAction *mnemonicInfoAction = new QAction(tr("Mnemonic Info"), this);
-  mnemonicInfoAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-  editMenu->addAction(mnemonicInfoAction);
-
-  connect(undoAction, &QAction::triggered, this, [this]() { ui->plainTextCode->undo(); });
-  connect(redoAction, &QAction::triggered, this, [this]() { ui->plainTextCode->redo(); });
-  connect(cutAction, &QAction::triggered, this, [this]() { ui->plainTextCode->cut(); });
-  connect(copyAction, &QAction::triggered, this, [this]() { ui->plainTextCode->copy(); });
-  connect(pasteAction, &QAction::triggered, this, [this]() { ui->plainTextCode->paste(); });
-  connect(selectAllAction, &QAction::triggered, this, [this]() { ui->plainTextCode->selectAll(); });
-  connect(mnemonicInfoAction, &QAction::triggered, this, [this]() { showMnemonicInfo(ui->plainTextCode->textCursor().position()); });
-
-  //EMULATOR
+  // EMULATOR MENU
   QMenu *emulationMenu = menuBar()->addMenu(tr("&Emulator"));
-
-  QAction *assembleAction = new QAction(tr("Assemble"), this);
-  assembleAction->setShortcut(QKeySequence(Qt::Key_F9));
-  emulationMenu->addAction(assembleAction);
-
+  createAction(emulationMenu, tr("Assemble"), QKeySequence(Qt::Key_F9), [this]() { on_buttonAssemble_clicked(); });
+  emulationMenu->addSeparator();
+  createAction(emulationMenu, tr("Run/Stop"), QKeySequence(Qt::Key_F5), [this]() { on_buttonRunStop_clicked(); });
+  createAction(emulationMenu, tr("Step"), QKeySequence(Qt::Key_F6), [this]() { on_buttonStep_clicked(); });
+  createAction(emulationMenu, tr("Reset"), QKeySequence(Qt::Key_F7), [this]() { resetEmulator(); });
   emulationMenu->addSeparator();
 
-  QAction *runAction = new QAction(tr("Run/Stop"), this);
-  runAction->setShortcut(QKeySequence(Qt::Key_F5));
-  emulationMenu->addAction(runAction);
-  QAction *stepAction = new QAction(tr("Step"), this);
-  stepAction->setShortcut(QKeySequence(Qt::Key_F6));
-  emulationMenu->addAction(stepAction);
-  QAction *resetAction = new QAction(tr("Reset"), this);
-  resetAction->setShortcut(QKeySequence(Qt::Key_F7));
-  emulationMenu->addAction(resetAction);
-
-  emulationMenu->addSeparator();
-
-  QAction *switchWritingModeAction = new QAction(tr("Switch Writing Mode"), this);
-  emulationMenu->addAction(switchWritingModeAction);
-  loadMemoryAction = new QAction(tr("Load Memory"), this);
-  loadMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
-  emulationMenu->addAction(loadMemoryAction);
-  saveMemoryAction = new QAction(tr("Save Memory"), this);
-  saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
-  emulationMenu->addAction(saveMemoryAction);
-
-  emulationMenu->addSeparator();
-
-  QAction *switchDisplayModeAction = new QAction(tr("Switch Display Mode"), this);
-  emulationMenu->addAction(switchDisplayModeAction);
-
-  connect(assembleAction, &QAction::triggered, this, [this]() { on_buttonAssemble_clicked(); });
-
-  connect(runAction, &QAction::triggered, this, [this]() { on_buttonRunStop_clicked(); });
-  connect(resetAction, &QAction::triggered, this, [this]() { resetEmulator(); });
-  connect(stepAction, &QAction::triggered, this, [this]() { on_buttonStep_clicked(); });
-
-  connect(switchWritingModeAction, &QAction::triggered, this, [this]() {
+  createAction(emulationMenu, tr("Switch Writing Mode"), QKeySequence(), [this]() {
     if (writingMode == WritingMode::MEMORY) {
       setWritingMode(WritingMode::CODE);
     } else {
@@ -343,21 +246,19 @@ void MainWindow::setupMenus() {
       setWritingMode(WritingMode::MEMORY);
     }
   });
-  connect(loadMemoryAction, &QAction::triggered, this, &MainWindow::loadMemory);
-  connect(saveMemoryAction, &QAction::triggered, this, &MainWindow::saveMemory);
 
-  connect(switchDisplayModeAction, &QAction::triggered, this, [this]() { ui->menuDisplayStatus->setCurrentIndex((ui->menuDisplayStatus->currentIndex() + 1) % ui->menuDisplayStatus->count()); });
+  loadMemoryAction = createAction(emulationMenu, tr("Load Memory"), QKeySequence(), &MainWindow::loadMemory);
+  loadMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
 
-  //ABOUT
+  saveMemoryAction = createAction(emulationMenu, tr("Save Memory"), QKeySequence(), &MainWindow::saveMemory);
+  saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+
+  emulationMenu->addSeparator();
+  createAction(emulationMenu, tr("Switch Display Mode"), QKeySequence(), [this]() { ui->menuDisplayStatus->setCurrentIndex((ui->menuDisplayStatus->currentIndex() + 1) % ui->menuDisplayStatus->count()); });
+
+  // ABOUT MENU
   QMenu *aboutMenu = menuBar()->addMenu(tr("&About"));
-  QAction *infoAction = new QAction(tr("Info"), this);
-  infoAction->setShortcut(QKeySequence(Qt::Key_F1));
-  aboutMenu->addAction(infoAction);
-  QAction *creditsAction = new QAction(tr("Credits"), this);
-  creditsAction->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_V));
-  aboutMenu->addAction(creditsAction);
-
-  connect(infoAction, &QAction::triggered, this, [this]() {
+  createAction(aboutMenu, tr("Info"), QKeySequence(Qt::Key_F1), [this]() {
     QWidget *window = new QWidget(nullptr);
     window->setWindowTitle("Info");
     window->resize(600, 400);
@@ -374,7 +275,8 @@ void MainWindow::setupMenus() {
     window->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
     window->show();
   });
-  connect(creditsAction, &QAction::triggered, this, []() {
+
+  createAction(aboutMenu, tr("Credits"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_V), [this]() {
     const QString GES = "Vladimir Januš";
     const QString projectUrl = "https://github.com/VladimirJanus/Motorola-M68XX-Microprocessor-Emulator";
 
@@ -383,7 +285,10 @@ void MainWindow::setupMenus() {
     msgBox.setIcon(QMessageBox::Information);
     msgBox.setWindowIcon(QIcon(":/images/info_icon.png"));
 
-    QString message = QString("<b>Made by: </b>%1<br><br>" "<b>Project Location: </b><a href='%2'>%2</a><br><br>" "<b>Software Version: </b>%3").arg(GES, projectUrl, Core::softwareVersion);
+    QString message = QString("<b>Made by: </b>%1<br><br>"
+                              "<b>Project Location: </b><a href='%2'>%2</a><br><br>"
+                              "<b>Software Version: </b>%3")
+                        .arg(GES, projectUrl, Core::softwareVersion);
 
     msgBox.setText(message);
     msgBox.setTextFormat(Qt::RichText);
@@ -728,8 +633,9 @@ void MainWindow::PrintConsole(const QString &text, MsgType type) {
   ui->plainTextConsole->appendPlainText(consoleText);
 }
 
-void MainWindow::handleResize(QSize newSize) {
-  if (newSize.width() >= 1785) {
+void MainWindow::resizeEvent(QResizeEvent *event) {
+  QMainWindow::resizeEvent(event);
+  if (this->size().width() >= 1785) {
     if (ui->menuDisplayStatus->count() == 2) {
       ui->menuDisplayStatus->insertItem(1, "Main Window");
     }
@@ -746,10 +652,6 @@ void MainWindow::handleResize(QSize newSize) {
       ui->menuDisplayStatus->model()->removeRow(1);
     }
   }
-}
-void MainWindow::resizeEvent(QResizeEvent *event) {
-  QMainWindow::resizeEvent(event);
-  handleResize(this->size());
 }
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   if (obj == ui->plainTextLines) {
