@@ -271,34 +271,22 @@ void MainWindow::on_buttonTidyUp_clicked() {
 void MainWindow::on_menuDisplayStatus_currentIndexChanged(int index) {
   if (index == 0) {
     externalDisplay->hide();
-    ui->plainTextDisplay->setEnabled(false);
-    ui->plainTextDisplay->setVisible(false);
-    ui->frameDisplay->setEnabled(false);
-    ui->frameDisplay->setVisible(false);
+    SetMainDisplayVisibility(false);
     displayStatusIndex = 0;
   } else if (index == 1) {
     if (ui->menuDisplayStatus->count() == 3) {
       externalDisplay->hide();
-      ui->plainTextDisplay->setEnabled(true);
-      ui->plainTextDisplay->setVisible(true);
-      ui->frameDisplay->setEnabled(true);
-      ui->frameDisplay->setVisible(true);
+      SetMainDisplayVisibility(true);
       ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
       displayStatusIndex = 1;
     } else {
-      ui->plainTextDisplay->setEnabled(false);
-      ui->plainTextDisplay->setVisible(false);
-      ui->frameDisplay->setEnabled(false);
-      ui->frameDisplay->setVisible(false);
+      SetMainDisplayVisibility(false);
       externalDisplay->show();
       displayStatusIndex = 2;
       plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
     }
   } else {
-    ui->plainTextDisplay->setEnabled(false);
-    ui->plainTextDisplay->setVisible(false);
-    ui->frameDisplay->setEnabled(false);
-    ui->frameDisplay->setVisible(false);
+    SetMainDisplayVisibility(false);
     externalDisplay->show();
     displayStatusIndex = 2;
     plainTextDisplay->setPlainText(getDisplayText(processor.Memory));

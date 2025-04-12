@@ -234,8 +234,14 @@ void MainWindow::setupMenus() {
   createAction(emulationMenu, tr("Run/Stop"), QKeySequence(Qt::Key_F5), [this]() { on_buttonRunStop_clicked(); });
   createAction(emulationMenu, tr("Step"), QKeySequence(Qt::Key_F6), [this]() { on_buttonStep_clicked(); });
   createAction(emulationMenu, tr("Reset"), QKeySequence(Qt::Key_F7), [this]() { resetEmulator(); });
-  emulationMenu->addSeparator();
 
+  loadMemoryAction = createAction(emulationMenu, tr("Load Memory"), QKeySequence(), &MainWindow::loadMemory);
+  loadMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+
+  saveMemoryAction = createAction(emulationMenu, tr("Save Memory"), QKeySequence(), &MainWindow::saveMemory);
+  saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+
+  emulationMenu->addSeparator();
   createAction(emulationMenu, tr("Switch Writing Mode"), QKeySequence(), [this]() {
     if (writingMode == WritingMode::MEMORY) {
       setWritingMode(WritingMode::CODE);
@@ -247,14 +253,25 @@ void MainWindow::setupMenus() {
     }
   });
 
-  loadMemoryAction = createAction(emulationMenu, tr("Load Memory"), QKeySequence(), &MainWindow::loadMemory);
-  loadMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+  QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+  QAction *showRegisters = createAction(viewMenu, tr("Show Registers"), QKeySequence(), [this]() {
+    bool checked = ui->groupRegisters->isVisible();
+    ui->groupRegisters->setEnabled(!checked);
+    ui->groupRegisters->setVisible(!checked);
+  });
+  showRegisters->setCheckable(true);
+  showRegisters->setChecked(true);
 
-  saveMemoryAction = createAction(emulationMenu, tr("Save Memory"), QKeySequence(), &MainWindow::saveMemory);
-  saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
+  QAction *showUtility = createAction(viewMenu, tr("Show Utility"), QKeySequence(), [this]() {
+    bool checked = ui->tabWidget->isVisible();
+    ui->tabWidget->setEnabled(!checked);
+    ui->tabWidget->setVisible(!checked);
+  });
+  showUtility->setCheckable(true);
+  showUtility->setChecked(true);
 
-  emulationMenu->addSeparator();
-  createAction(emulationMenu, tr("Switch Display Mode"), QKeySequence(), [this]() { ui->menuDisplayStatus->setCurrentIndex((ui->menuDisplayStatus->currentIndex() + 1) % ui->menuDisplayStatus->count()); });
+  viewMenu->addSeparator();
+  createAction(viewMenu, tr("Switch Display Mode"), QKeySequence(), [this]() { ui->menuDisplayStatus->setCurrentIndex((ui->menuDisplayStatus->currentIndex() + 1) % ui->menuDisplayStatus->count()); });
 
   // ABOUT MENU
   QMenu *aboutMenu = menuBar()->addMenu(tr("&About"));
@@ -276,7 +293,7 @@ void MainWindow::setupMenus() {
     window->show();
   });
 
-  createAction(aboutMenu, tr("Credits"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_V), [this]() {
+  createAction(aboutMenu, tr("Credits"), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::ALT | Qt::Key_V), []() {
     const QString GES = "Vladimir Januš";
     const QString projectUrl = "https://github.com/VladimirJanus/Motorola-M68XX-Microprocessor-Emulator";
 
@@ -958,4 +975,9 @@ void MainWindow::disableCellChangedHandler() {
 }
 void MainWindow::enableCellChangedHandler() {
   connect(ui->tableWidgetMemory, &QTableWidget::cellChanged, this, &MainWindow::tableMemory_cellChanged);
+}
+void MainWindow::SetMainDisplayVisibility(
+  bool visible) {
+  ui->plainTextDisplay->setEnabled(visible);
+  ui->plainTextDisplay->setVisible(visible);
 }

@@ -99,6 +99,7 @@ private:
   void drawProcessor();
   void processDisplayInputs(QPlainTextEdit *display);
   QString getDisplayText(std::array<uint8_t, 0x10000> &memory);
+  void SetMainDisplayVisibility(bool visible);
 
   // Selection System
   void drawTextSelections();
