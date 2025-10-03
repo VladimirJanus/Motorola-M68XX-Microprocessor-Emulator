@@ -145,6 +145,7 @@ private:
     inline static const QString labelStartsWithIllegalDigit(const QChar &character) { return "Label may not start with a digit: '" + QString(character) + "'"; }
     inline static const QString labelStartsWithIllegalCharacter(const QChar &character) { return "Label may not start with character: '" + QString(character) + "'"; }
     inline static const QString labelContainsIllegalCharacter(const QChar &character) { return "Label may not contain character: '" + QString(character) + "'"; }
+    inline static const QString instructionDoesNotSupportLabelForwardDeclaration(const QString &label){return "Instruction may not reference a label that is forward declared:" + label;}
 
     // Parsing Errors
     inline static const QString parsingEmptyNumber() { return "Missing number."; }
