@@ -1,6 +1,8 @@
-
+irCount	.byte 0
+temp .byte 0
 	.org $40 ;main program
 	cli ;clear interrupt mask so IRQ works
+	inc irCount
 loop	inca
 	nop
 	nop ;can replace with SWI
@@ -11,25 +13,30 @@ irqProg	.org $80 ;IRQ interrupt program
 	ldaa #7
 	ldab #6
 	aba
-	staa 0
+	staa temp
+	inc irCount
 	rti
 
 swiProg	.org $120 ;SWI interrupt program
 	ldaa #5
 	ldab #4
 	aba
-	staa 0
+	staa temp
+	inc irCount
 	rti
 
 nmiProg	.org $160 ;NMI interrupt program
 	ldaa #3
 	ldab #2
 	aba
-	staa 0
+	staa temp
+	inc irCount
 	rti
 
 	.SETW IRQ_PTR,irqProg
-	.SETW SWI_PTR,$120
+	.SETW SWI_PTR,$120 ;SWI interrupt program
+;was defined at $120
+;SETW can recieve expressions or plain numbers
 	.SETW NMI_PTR,nmiProg
 
 	.SETW RST_PTR,$40 ;the reset pointer
