@@ -65,29 +65,24 @@ updateLoop	jsr checkCell
 		jsr cpy
 		rts
 
-
-cpyXBUF		.word 0
+cpySrcBUF	.word 0
+cpyDestBUF	.word 0
 cpyVALBUF	.byte 0
 cpy		ldx #$f000
-cpyLoop		ldaa ,x
-		staa cpyVALBUF
-		stx cpyXBUF
-		ldd cpyXBUF
-		addd #$b00
-		std cpyXBUF
-		ldx cpyXBUF
-		ldaa cpyVALBUF
-		staa ,x
-		stx cpyXBUF
-		ldd cpyXBUF
-		subd #$b00
-		std cpyXBUF
-		ldx cpyXBUF
+		stx cpySrcBuf
+		ldx #$fb00
+		stx cpyDestBuf		
+cpyLoop		ldx cpySrcBuf
+		ldaa ,x
 		inx
-		cpx #$f438
+		stx cpySrcBuf
+		ldx cpyDestBuf
+		staa ,x
+		inx
+		stx cpyDestBuf
+		cpx #$f438+$b00
 		bne cpyLoop
 		rts
-		
 
 ;checkCellSubroutine
 checkCellXBUF	.word 0

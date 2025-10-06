@@ -22,7 +22,6 @@
 int runTimeSelectionAddress = 0;
 
 QVector<int> highlightLineList;
-QVector<int> highlightAddressList;
 
 QBrush brushHighlight(Qt::GlobalColor::green);
 QBrush brushRuntime(Qt::GlobalColor::yellow);
@@ -144,6 +143,8 @@ void MainWindow::toggleHighlight(int line) {
     highlightLineList.removeOne(line);
     if (address >= 0) {
       highlightAddressList.removeOne(address);
+      processor.queueBookmarkData(highlightAddressList);
+      processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
 
       ColorType type = (address == runTimeSelectionAddress) ? ColorType::RUNTIME : ColorType::NONE;
       colorMemory(address, type);
@@ -153,6 +154,8 @@ void MainWindow::toggleHighlight(int line) {
     if (address >= 0) {
       if (highlightAddressList.count(address) == 0) {
         highlightAddressList.append(address);
+        processor.queueBookmarkData(highlightAddressList);
+        processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
       }
       ColorType type = (address == runTimeSelectionAddress) ? ColorType::HIGHLIGHT_RUNTIME : ColorType::HIGHLIGHT;
       colorMemory(address, type);
@@ -217,6 +220,9 @@ void MainWindow::clearSelections() {
   }
   highlightLineList.clear();
   highlightAddressList.clear();
+  processor.queueBookmarkData(highlightAddressList);
+  processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
+
   runTimeSelectionAddress = 0;
   ui->plainTextLines->setExtraSelections({});
   ui->plainTextCode->setExtraSelections({});

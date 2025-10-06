@@ -109,7 +109,7 @@ void MainWindow::on_buttonRunStop_clicked() {
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(OPS, assemblyMap);
+      processor.startExecution(OPS, assemblyMap, highlightAddressList);
       ui->buttonRunStop->setStyleSheet(greenButton);
     }
   }
@@ -551,4 +551,10 @@ void MainWindow::on_plainTextCode_textChanged() {
     if (assembled)
       setAssemblyStatus(false);
   }
+
+
+}
+void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked)
+{
+    processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
 }

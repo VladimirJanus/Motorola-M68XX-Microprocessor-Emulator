@@ -66,6 +66,10 @@ void Processor::handleActions() {
     handleAction(action);
   }
 }
+QVector<int> newBookmarkedAddresses;
+void Processor::queueBookmarkData(QVector<int> data){
+    newBookmarkedAddresses = data;
+}
 /**
  * @brief Handles a single action based on its type.
  *
@@ -85,6 +89,12 @@ void Processor::handleAction(const Action &action) {
   case ActionType::SETBREAKIS:
     breakIsValue = action.parameter;
     break;
+  case ActionType::SETBOOKMARKBREAKPOINTS:
+      bookmarkBreakpointsEnabled = action.parameter;
+      break;
+  case ActionType::UPDATEBOOKMARKS:
+      bookmarkedAddresses = newBookmarkedAddresses;
+      break;
   case ActionType::SETRST:
     if (pendingInterrupt == Interrupt::NONE)
       pendingInterrupt = Interrupt::RST;
@@ -136,7 +146,7 @@ void Processor::handleAction(const Action &action) {
 void Processor::checkBreak() {
   switch (breakWhenIndex) {
   case 0:
-    return;
+    break;
   case 1:
     if (assemblyMap.getObjectByAddress(PC).lineNumber == breakIsValue)
       running = false;
@@ -190,6 +200,11 @@ void Processor::checkBreak() {
       running = false;
     break;
   }
+  if(bookmarkBreakpointsEnabled)  {
+    if(bookmarkedAddresses.contains(PC)){
+      running = false;
+    }
+  }
 }
 /**
  * @brief Pushes the current processor state onto the memory stack.
@@ -241,7 +256,7 @@ inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
 void Processor::setUIUpdateData() {
   std::array<uint8_t, 0x10000> memoryCopy;
   std::copy(Memory.begin(), Memory.end(), memoryCopy.begin());
-  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles);
+  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles, opertaionsSinceStart);
 }
 
 /**
@@ -404,11 +419,14 @@ void Processor::executeStep() {
  * @param OPS The number of operations per second.
  * @param list The assembly mapping used for debugging breakpoints.
  */
-void Processor::startExecution(float OPS, AssemblyMap list) {
+void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddresses) {
   assemblyMap = list;
+  this->bookmarkedAddresses=bookmarkedAddresses;
   running = true;
   curCycle = 1;
   cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
+  opertaionsSinceStart = 0;
+
 
   int nanoDelay = 1000000000 / OPS;
   int uiUpdateSpeed = 250;
@@ -436,6 +454,7 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
         if (useCycles) {
           if (curCycle < cycleCount) {
             curCycle++;
+            opertaionsSinceStart++;
             if (i + 1 == batchSize) {
               setUIUpdateData();
             }
@@ -443,6 +462,7 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
             interruptCheckCPS();
             checkBreak();
             curCycle = 1;
+            opertaionsSinceStart++;
             if (i + 1 == batchSize) {
               setUIUpdateData();
             }
@@ -450,6 +470,7 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
         } else {
           interruptCheckIPS();
           checkBreak();
+          opertaionsSinceStart++;
           if (i + 1 == batchSize) {
             setUIUpdateData();
           }
@@ -468,10 +489,8 @@ void Processor::startExecution(float OPS, AssemblyMap list) {
  */
 void Processor::stopExecution() {
   curCycle = 1;
-  if (running == true) {
-    running = false;
-    futureWatcher.waitForFinished();
-  }
+  running = false;
+  futureWatcher.waitForFinished();
 }
 /**
  * @brief Stops execution and resets the processor's internals and registers.

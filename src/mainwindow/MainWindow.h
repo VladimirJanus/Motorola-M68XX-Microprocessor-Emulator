@@ -102,6 +102,7 @@ private:
   void SetMainDisplayVisibility(bool visible);
 
   // Selection System
+  QVector<int> highlightAddressList;
   void drawTextSelections();
   void drawMemorySelections();
   void clearSelections();
@@ -167,7 +168,7 @@ private:
 private slots:
 
   // Processor Event Handlers
-  void drawProcessorRunning(std::array<uint8_t, 0x10000>, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
+  void drawProcessorRunning(std::array<uint8_t, 0x10000>, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles, uint64_t opertaionsSinceStart);
   void onExecutionStopped();
 
   // Scroll Handlers
@@ -226,6 +227,7 @@ private slots:
   // Misc
   void on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item);
   void on_plainTextCode_textChanged();
+  void on_checkBoxBookmarkBreakpoints_clicked(bool checked);
 };
 
 #endif // MAINWINDOW_H

@@ -44,6 +44,7 @@ private:
   typedef void (Processor::*funcPtr)();
   ActionQueue actionQueue;
   AssemblyMap assemblyMap;
+  QVector<int> bookmarkedAddresses;
   QFutureWatcher<void> futureWatcher;
   funcPtr executeInstruction;
   ProcessorVersion processorVersion = ProcessorVersion::M6800;
@@ -55,6 +56,7 @@ private:
   uint16_t breakWhenIndex = 0;
   uint16_t breakIsValue = 0;
   uint16_t breakAtValue = 0;
+  bool bookmarkBreakpointsEnabled = false;
 
 public:
   Processor(ProcessorVersion version);
@@ -71,7 +73,7 @@ public:
   int curCycle = 1;
   int cycleCount = 0;
   Interrupt pendingInterrupt = Interrupt::NONE;
-
+  uint64_t opertaionsSinceStart = 0;
   //runtime settings
   volatile bool running = false;
   bool useCycles = false;
@@ -79,10 +81,11 @@ public:
   //methods
   void switchVersion(ProcessorVersion version);
   void addAction(const Action &action);
+  void queueBookmarkData(QVector<int> data);
 
   void reset();
   void executeStep();
-  void startExecution(float OPS, AssemblyMap list);
+  void startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddresses);
   void stopExecution();
 
 private:
@@ -106,7 +109,7 @@ private:
   void interruptCheckIPS();
 
 signals:
-  void uiUpdateData(std::array<uint8_t, 0x10000> memoryCopy, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles);
+  void uiUpdateData(std::array<uint8_t, 0x10000> memoryCopy, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles, uint64_t opertaionsSinceStart);
   void executionStopped();
 
 private:

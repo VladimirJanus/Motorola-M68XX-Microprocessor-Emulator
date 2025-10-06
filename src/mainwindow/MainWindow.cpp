@@ -772,6 +772,8 @@ void MainWindow::drawProcessor() {
   if (processor.useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(processor.curCycle));
   }
+  ui->lineEditTotalOpNum->setText(QString::number(processor.opertaionsSinceStart));
+
   int lineNum = assemblyMap.getObjectByAddress(processor.PC).lineNumber;
   if (ui->checkAutoScroll->isChecked()) {
     if (lineNum >= 0) {
@@ -812,7 +814,7 @@ void MainWindow::processDisplayInputs(
   processor.Memory[0xFFF3] = static_cast<uint8_t>(y);
 }
 void MainWindow::drawProcessorRunning(
-  std::array<uint8_t, 0x10000> memory, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles) {
+  std::array<uint8_t, 0x10000> memory, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles, uint64_t opertaionsSinceStart) {
   ui->lineEditHValue->setText(QString::number(bit(flags, 5)));
   ui->lineEditIValue->setText(QString::number(bit(flags, 4)));
   ui->lineEditNValue->setText(QString::number(bit(flags, 3)));
@@ -835,6 +837,7 @@ void MainWindow::drawProcessorRunning(
   if (useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(curCycle));
   }
+  ui->lineEditTotalOpNum->setText(QString::number(opertaionsSinceStart));
   if (ui->checkAutoScroll->isChecked()) {
     int lineNum = assemblyMap.getObjectByAddress(PC).lineNumber;
     if (lineNum >= 0) {
@@ -889,6 +892,7 @@ void MainWindow::onExecutionStopped() {
   drawProcessor();
   ui->labelRunningIndicatior->setVisible(false);
   ui->labelRunningCycleNum->setVisible(false);
+
 }
 bool MainWindow::startAssembly() {
   processor.stopExecution();
@@ -981,3 +985,6 @@ void MainWindow::SetMainDisplayVisibility(
   ui->plainTextDisplay->setEnabled(visible);
   ui->plainTextDisplay->setVisible(visible);
 }
+
+
+
