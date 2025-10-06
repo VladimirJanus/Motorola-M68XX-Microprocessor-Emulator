@@ -1,3 +1,7 @@
+;press P to pause or unpause the simulation
+;when paused you can draw on the screen by
+;clicking on cells
+
 LIVE		.equ '#'
 DEAD		.equ 0
 DISPLAYWIDTH	.equ 54
@@ -12,9 +16,36 @@ DISPLAYLASTY	.equ 19
 
 
 		.org $100
-mainLoop	jsr update
+mainLoop	ldaa #'P'
+		cmpa $FFF0
+		beq inputModeB
+		jsr update
+		jmp mainLoop
+inputModeB	clr $FFF0
+		jsr inputMode
 		jmp mainLoop
 
+inputMode	ldaa #'P'
+		cmpa $FFF0
+		bne checkInputBuf
+		clr $FFF0
+		rts
+checkInputBuf	tst $FFF1
+		beq inputMode
+		clr $FFF1
+		ldaa $FFF2
+		staa coordToXX
+		ldaa $FFF3
+		staa coordToXY
+		jsr coordToX
+		tst ,x
+		bne chkInpBSetDead
+		ldaa #LIVE
+		staa 0,x
+		jmp checkInputBuf
+chkInpBSetDead	ldaa #DEAD
+		staa 0,x
+		jmp checkInputBuf
 
 clrDis		ldx #$fb00
 		clra
@@ -23,6 +54,8 @@ clrLoop		staa ,x
 		cpx #$ff38
 		bne clrLoop
 		rts
+
+
 
 update		ldx #$fb00
 updateLoop	jsr checkCell
@@ -230,9 +263,9 @@ countNfinish	ldx countNXBUF
 		
 
 ;coordToX subroutine X: loc
-coordToXXWord	.byte 0
-coordToXX	.byte 0
-coordToXY	.byte 0
+coordToXXWord	.byte 0 ;use only if X is word
+coordToXX	.byte 0	;X input
+coordToXY	.byte 0 ;Y input
 coordToXXBUF	.word 0
 coordToXABUF	.byte 0
 coordToXBBUF	.byte 0
