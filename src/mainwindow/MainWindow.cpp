@@ -768,7 +768,7 @@ void MainWindow::drawProcessor() {
   if (processor.useCycles) {
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(processor.curCycle));
   }
-  ui->lineEditTotalOpNum->setText(QString::number(processor.opertaionsSinceStart));
+  ui->lineEditTotalOpNum->setText(QString::number(processor.operationsSinceStart));
 
   int lineNum = assemblyMap.getObjectByAddress(processor.PC).lineNumber;
   if (ui->checkAutoScroll->isChecked()) {

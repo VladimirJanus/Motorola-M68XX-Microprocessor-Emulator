@@ -119,7 +119,7 @@ namespace Core {
     SETMEMORY,
     SETUSECYCLES,
     SETIRQONKEYPRESS,
-    SETINCONUNKNOWN,
+    SETINCONINVALIDINSTR,
   };
   struct Action {
     ActionType type;
@@ -127,15 +127,16 @@ namespace Core {
   };
 
   enum class Interrupt : int {
-    NONE = -1,
-    RST = 0,
-    NMI = 1,
-    IRQ = 2,
-    RSTCYCLESERVICE = 3,
-    NMICYCLESERVICE = 4,
-    IRQCYCLESERVICE = 5,
-    // SWI GETS HANDLED AS INSTRUCTION
+      NONE = -1,
+      RST = 0, // Value used as an offset from FFFF to locate the interrupt vector
+      NMI = 1, // Value used as an offset from FFFF to locate the interrupt vector
+      IRQ = 2, // Value used as an offset from FFFF to locate the interrupt vector
+      RSTCYCLESERVICE = 3,   // Value not used as a vector offset
+      NMICYCLESERVICE = 4,   // Value not used as a vector offset
+      IRQCYCLESERVICE = 5,   // Value not used as a vector offset
+      // SWI is handled as a normal instruction
   };
+
 
   enum Flag : uint8_t {
     HalfCarry = 5,
@@ -176,6 +177,7 @@ namespace Core {
     IND,
     REL,
   } AdrMode;
+
   struct AddressingModeInfo {
     uint8_t size;
     int8_t id;
@@ -895,13 +897,13 @@ namespace Core {
      {0, 0x88, 0x98, 0xA8, 0xB8, 0},
      "--**0-",
      "ACCA <- ACCA XOR M",
-     "Perform logical 'EXCLUSIVE OR' between the contents of ACCA and the contents of M, and place the result in ACCA. (Each bit of ACCA afterthe operation will be the logical 'EXCLUSIVE OR' of the corresponding bit of M and ACCA before the operation.)",
+     "Perform logical 'EXCLUSIVE OR' between the contents of ACCA and the contents of M, and place the result in ACCA. (Each bit of ACCA after the operation will be the logical 'EXCLUSIVE OR' of the corresponding bit of M and ACCA before the operation.)",
      M6800 | M6803},
     {"EORB",
      {0, 0xC8, 0xD8, 0xE8, 0xF8, 0},
      "--**0-",
      "ACCB <- ACCB XOR M",
-     "Perform logical 'EXCLUSIVE OR' between the contents of ACCB and the contents of M, and place the result in ACCB. (Each bit of ACCB afterthe operation will be the logical 'EXCLUSIVE OR' of the corresponding bit of M and ACCB before the operation.)",
+     "Perform logical 'EXCLUSIVE OR' between the contents of ACCB and the contents of M, and place the result in ACCB. (Each bit of ACCB after the operation will be the logical 'EXCLUSIVE OR' of the corresponding bit of M and ACCB before the operation.)",
      M6800 | M6803},
     {"INC", {0, 0, 0, 0x6C, 0x7C, 0}, "--***-", "M <- M + 1", "Add one to the contents of M.", M6800 | M6803},
     {"INCA", {0x4C, 0, 0, 0, 0, 0}, "--***-", "ACCA <- ACCA + 1", "Add one to the contents of ACCA.", M6800 | M6803},
@@ -943,13 +945,13 @@ namespace Core {
      {0, 0x8A, 0x9A, 0xAA, 0xBA, 0},
      "--**0-",
      "ACCA <- ACCA ∨ M",
-     "Perform logical 'OR' between the contents of ACCA and the contents of M and places the result in ACCA. (Each bit of ACCA afterthe operation will be the logical 'OR' of the corresponding bits of M and of ACCA before the operation).",
+     "Perform logical 'OR' between the contents of ACCA and the contents of M and places the result in ACCA. (Each bit of ACCA after the operation will be the logical 'OR' of the corresponding bits of M and of ACCA before the operation).",
      M6800 | M6803},
     {"ORAB",
      {0, 0xCA, 0xDA, 0xEA, 0xFA, 0},
      "--**0-",
      "ACCB <- ACCB ∨ M",
-     "Perform logical 'OR' between the contents of ACCB and the contents of M and places the result in ACCB. (Each bit of ACCB afterthe operation will be the logical 'OR' of the corresponding bits of M and of ACCB before the operation).",
+     "Perform logical 'OR' between the contents of ACCB and the contents of M and places the result in ACCB. (Each bit of ACCB after the operation will be the logical 'OR' of the corresponding bits of M and of ACCB before the operation).",
      M6800 | M6803},
     {"PSHA", {0x36, 0, 0, 0, 0, 0}, "------", "Push ACCA", "The contents of ACCA is stored in the stack at the address contained in the stack pointer. The stack pointer is then decremented.", M6800 | M6803},
     {"PSHB", {0x37, 0, 0, 0, 0, 0}, "------", "Push ACCB", "The contents of ACCB is stored in the stack at the address contained in the stack pointer. The stack pointer is then decremented.", M6800 | M6803},
@@ -972,7 +974,7 @@ namespace Core {
      {0x3B, 0, 0, 0, 0, 0},
      "******",
      "Return from interrupt",
-     "The condition codes, accumulators B and A, the index register, and the program counter, will be restored to a state pulled from the stack. Note that the interrupt mask bit will be reset if and only ifthe corresponding bit stored in the stack is zero.",
+     "The condition codes, accumulators B and A, the index register, and the program counter, will be restored to a state pulled from the stack. Note that the interrupt mask bit will be reset if and only if the corresponding bit stored in the stack is zero.",
      M6800 | M6803},
     {"RTS",
      {0x39, 0, 0, 0, 0, 0},
@@ -1003,7 +1005,7 @@ namespace Core {
      "Stores the more significant byte of the index register in memory at the address specified by the program, and stores the less significant byte of the index register at the next location in memory, at one plus the address specified by the program.",
      M6800 | M6803},
     {"SUBA", {0, 0x80, 0x90, 0xA0, 0xB0, 0}, "--****", "ACCA <- ACCA - M", "Subtracts the contents of M from the contents of ACCA and places the result in ACCA.", M6800 | M6803},
-    {"SUBB", {0, 0xC0, 0xD0, 0xE0, 0xF0, 0}, "--****", "ACCB <- ACCB - M", "Subtracts the contents of M from the contents of ACCA:ACCB and places the result in ACCA:ACCB.", M6800 | M6803},
+    {"SUBB", {0, 0xC0, 0xD0, 0xE0, 0xF0, 0}, "--****", "ACCB <- ACCB - M", "Subtracts the contents of M from the contents of ACCB and places the result in ACCB.", M6800 | M6803},
     {"SUBD", {0, 0x83, 0x93, 0xA3, 0xB3, 0}, "--****", "ACCA:ACCB <- ACCA:ACCB - M:(M+1)", "Subtracts the contents of M:(M+1) from the contents of ACCA:ACCB and places the result in ACCA:ACCB.", M6803},
     {"SWI",
      {0x3F, 0, 0, 0, 0, 0},

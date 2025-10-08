@@ -17,7 +17,7 @@
 #include "src/processor/Processor.h"
 
 void Processor::ZERO() {
-  if (running) {
+  if (running && !incrementPCOnMissingInstruction) {
     running = false;
   } else {
     PC++;

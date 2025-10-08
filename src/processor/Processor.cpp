@@ -21,12 +21,12 @@ Processor::Processor(ProcessorVersion version) {
 }
 
 /**
- * @brief Switches the processor to the specified version.
+ * @brief Configures the processor to operate as the specified version.
  *
- * Updates the processor version and assigns the corresponding
- * execute function to the function pointer.
+ * Sets the internal processor version field and assigns the appropriate
+ * instruction execution function pointer based on the target architecture.
  *
- * @param version The processor version to switch to.
+ * @param version The target processor architecture (M6800 or M6803).
  */
 void Processor::switchVersion(ProcessorVersion version) {
   processorVersion = version;
@@ -39,13 +39,14 @@ void Processor::switchVersion(ProcessorVersion version) {
     break;
   }
 }
+
 /**
- * @brief Adds an action to the processor's action queue.
+ * @brief Enqueues an action for deferred processing by the processor.
  *
- * The provided action is added to the queue. If the processor is not
- * currently running, it immediately handles the actions.
+ * Adds the specified action to the internal action queue. If the processor
+ * is idle (not running), all pending actions are processed immediately.
  *
- * @param action The action to add.
+ * @param action The action to enqueue.
  */
 void Processor::addAction(const Action &action) {
   actionQueue.addAction(action);
@@ -54,10 +55,10 @@ void Processor::addAction(const Action &action) {
 }
 
 /**
- * @brief Processes all pending actions in the queue.
+ * @brief Processes all pending actions from the action queue.
  *
- * Continues retrieving and handling actions until there are no more actions
- * left in the queue.
+ * Iteratively retrieves and handles each action in the queue until
+ * no actions remain.
  */
 void Processor::handleActions() {
   while (actionQueue.hasActions()) {
@@ -65,17 +66,29 @@ void Processor::handleActions() {
     handleAction(action);
   }
 }
+
 QVector<int> newBookmarkedAddresses;
+
+/**
+ * @brief Stages bookmark data for the next update cycle.
+ *
+ * Stores the provided bookmark addresses temporarily. The data is applied
+ * to the active bookmarked addresses when an UPDATEBOOKMARKS action is processed.
+ *
+ * @param data Vector of memory addresses to be bookmarked.
+ */
 void Processor::queueBookmarkData(QVector<int> data){
     newBookmarkedAddresses = data;
 }
+
 /**
- * @brief Handles a single action based on its type.
+ * @brief Dispatches an action to its corresponding handler based on action type.
  *
- * This function inspects the type of the action and updates the processor's
- * state accordingly.
+ * Examines the action type and modifies the processor state accordingly.
+ * Handles breakpoint configuration, interrupt requests, memory updates,
+ * input events, and various processor settings.
  *
- * @param action The action to handle.
+ * @param action The action to process.
  */
 void Processor::handleAction(const Action &action) {
   switch (action.type) {
@@ -129,18 +142,22 @@ void Processor::handleAction(const Action &action) {
   case ActionType::SETIRQONKEYPRESS:
     IRQOnKeyPressed = action.parameter;
     break;
-  case ActionType::SETINCONUNKNOWN:
+  case ActionType::SETINCONINVALIDINSTR:
     incrementPCOnMissingInstruction = action.parameter;
     break;
   }
 }
 
 /**
- * @brief Checks if a breakpoint condition is met.
+ * @brief Evaluates configured breakpoint conditions and halts execution if met.
  *
- * Depending on the breakWhenIndex and breakIsValue, various processor states
- * (e.g. PC, SP, register values, flag bits, or memory contents) are checked.
- * If the condition is satisfied, the processor execution is halted.
+ * Tests the current processor state against the configured breakpoint criteria
+ * (determined by breakWhenIndex, breakAtValue, and breakIsValue). Supported
+ * conditions include source line number, program counter, stack pointer,
+ * register values, processor flags, and memory contents. Additionally checks
+ * bookmark-based breakpoints if enabled.
+ *
+ * If any condition is satisfied, execution is halted by setting running to false.
  */
 void Processor::checkBreak() {
   switch (breakWhenIndex) {
@@ -205,10 +222,14 @@ void Processor::checkBreak() {
     }
   }
 }
+
 /**
- * @brief Pushes the current processor state onto the memory stack.
+ * @brief Saves the complete processor context to the memory stack.
  *
- * The state includes the program counter, index register, accumulators, and flags.
+ * Pushes the program counter (PC), index register (X), accumulator A,
+ * accumulator B, and condition code register (flags) onto the stack
+ * in descending order. The stack pointer is decremented after each push.
+ * This operation is typically performed during interrupt servicing.
  */
 void Processor::pushStateToMemory() {
   Memory[SP--] = PC & 0xFF;
@@ -219,63 +240,82 @@ void Processor::pushStateToMemory() {
   Memory[SP--] = bReg;
   Memory[SP--] = flags;
 }
+
 /**
- * @brief Updates a specific flag in the processor's flag register.
+ * @brief Modifies a specific bit in the processor's condition code register.
  *
- * Sets or clears the given flag based on the provided value.
+ * Sets or clears the specified flag bit while preserving all other flags.
  *
- * @param flag The flag to update.
- * @param value The boolean value to set for the flag (true for set, false for clear).
+ * @param flag The flag bit to modify (e.g., Carry, Zero, Negative).
+ * @param value True to set the flag, false to clear it.
  */
 void Processor::updateFlag(Flag flag, bool value) {
   flags = (flags & ~(1 << flag)) | (value << flag);
 }
+
 /**
- * @brief Retrieves the interrupt vector location for a given interrupt.
+ * @brief Retrieves the interrupt vector address for the specified interrupt type.
  *
- * This inline function computes the interrupt address from memory based on the
- * interrupt type and predefined interrupt locations.
+ * Reads the 16-bit interrupt vector from the appropriate location in memory
+ * based on the interrupt type. The vector address is constructed from two
+ * consecutive bytes in big-endian format.
  *
- * @param interrupt The interrupt type for which to get the location.
- * @return The 16-bit interrupt vector address.
+ * @param interrupt The interrupt type (RST, NMI, or IRQ).
+ * @return The 16-bit address of the interrupt service routine.
+ * @throws std::invalid_argument If an invalid interrupt type is provided.
  */
 inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
   if (interrupt != Interrupt::IRQ && interrupt != Interrupt::NMI && interrupt != Interrupt::RST) {
     throw std::invalid_argument("Somehow an invalid interrupt was passed to getInterruptLocation() id: " + std::to_string(static_cast<int>(interrupt)));
   }
-  return (Memory[(interruptLocations - static_cast<int>(interrupt) * 2 - 1)] << 8) + Memory[(interruptLocations - static_cast<int>(interrupt) * 2)];
+  int address = interruptLocations - static_cast<int>(interrupt) * 2;
+  return (Memory[address - 1] << 8) + Memory[address];
 }
 
 /**
- * @brief Prepares and emits UI update data.
+ * @brief Captures the current processor state and emits it to the UI layer.
  *
- * Copies the entire memory and sends the current processor state (cycle count,
- * flags, registers, etc.) to the UI via the uiUpdateData signal.
+ * Creates a complete copy of the processor's memory and packages it with
+ * register values, flags, cycle counters, and operation count. This data
+ * is transmitted via the uiUpdateData signal for display purposes.
  */
 void Processor::setUIUpdateData() {
   std::array<uint8_t, 0x10000> memoryCopy;
   std::copy(Memory.begin(), Memory.end(), memoryCopy.begin());
-  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles, opertaionsSinceStart);
+  emit uiUpdateData(memoryCopy, curCycle, flags, PC, SP, aReg, bReg, xReg, useCycles, operationsSinceStart);
 }
 
 /**
- * @brief Executes the current instruction using the M6800 function pointer table.
+ * @brief Executes the current instruction using the M6800 instruction set.
+ *
+ * Invokes the appropriate instruction handler from the M6800 function pointer
+ * table based on the opcode at the current program counter.
  */
 void Processor::executeM6800() {
   (this->*M6800Table[Memory[PC]])();
 }
+
 /**
- * @brief Executes the current instruction using the M6803 function pointer table.
+ * @brief Executes the current instruction using the M6803 instruction set.
+ *
+ * Invokes the appropriate instruction handler from the M6803 function pointer
+ * table based on the opcode at the current program counter.
  */
 void Processor::executeM6803() {
   (this->*M6803Table[Memory[PC]])();
 }
 
 /**
- * @brief Checks and handles pending interrupts in cycle-per-step (CPS) mode.
+ * @brief Manages interrupt processing in cycle-accurate cycle-per-step(CPS) execution mode.
  *
- * Depending on the pending interrupt state, this function either executes the
- * instruction normally or handles the interrupt service routine.
+ * Evaluates the pending interrupt state and either executes the next instruction
+ * or services the pending interrupt. Handles interrupt latency by transitioning
+ * through intermediate servicing states (e.g., RSTCYCLESERVICE, NMICYCLESERVICE,
+ * IRQCYCLESERVICE) to accurately simulate cycle timing.
+ *
+ * Special handling is provided for WAI (Wait for Interrupt) status, which
+ * modifies cycle counts and stack operations. The InterruptMask flag determines
+ * whether IRQ interrupts are honored.
  */
 void Processor::interruptCheckCPS() {
   switch (pendingInterrupt) {
@@ -350,11 +390,20 @@ void Processor::interruptCheckCPS() {
     break;
   }
 }
+
 /**
- * @brief Checks and handles pending interrupts in instruction-per-step (IPS) mode.
+ * @brief Manages interrupt processing in instruction-per-step execution mode.
  *
- * This function processes pending interrupts and executes the corresponding
- * interrupt service routines or normal instructions.
+ * Evaluates pending interrupts and immediately services them or executes the
+ * next instruction. Unlike cycle-accurate mode, this function completes interrupt
+ * servicing in a single step without intermediate states.
+ *
+ * RST interrupts are always serviced immediately. NMI interrupts are non-maskable
+ * and service immediately. IRQ interrupts respect the InterruptMask flag and are
+ * only serviced when interrupts are enabled.
+ *
+ * @throws std::invalid_argument If a CYCLESERVICE interrupt state is encountered,
+ *         which should only exist in cycle-accurate mode.
  */
 void Processor::interruptCheckIPS() {
   switch (pendingInterrupt) {
@@ -400,23 +449,31 @@ void Processor::interruptCheckIPS() {
 }
 
 /**
- * @brief Executes a single instruction.
- * 
- * This function processes a single step by checking for interrupts and then
- * executing the corresponding instruction.
+ * @brief Executes a single instruction step in non-cycle-accurate mode.
+ *
+ * Processes pending interrupts and executes one instruction using the
+ * instruction-per-step interrupt handling logic. Used for step-by-step
+ * debugging or simplified timing simulation.
  */
 void Processor::executeStep() {
   interruptCheckIPS();
 }
+
 /**
- * @brief Starts the processor execution in a separate thread.
+ * @brief Initiates asynchronous processor execution in a dedicated thread.
  *
- * This function sets up the execution parameters based on the provided
- * operations per second (OPS) and assembly mapping, then starts a concurrent
- * execution loop that processes instructions and updates the UI.
+ * Configures execution parameters based on the specified operations per second,
+ * initializes timing and cycle counters, and launches a concurrent execution loop.
+ * The loop processes instructions in batches to balance execution speed with UI
+ * responsiveness, updating the interface at approximately 250 Hz regardless of
+ * the execution rate.
  *
- * @param OPS The number of operations per second.
- * @param list The assembly mapping used for debugging breakpoints.
+ * Execution continues until halted by a breakpoint condition or external stop request.
+ * Actions are processed both at loop entry and between instruction batches.
+ *
+ * @param OPS Target operations per second (determines execution speed).
+ * @param list Assembly source mapping for line-number-based breakpoints.
+ * @param bookmarkedAddresses Memory addresses configured as breakpoints.
  */
 void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddresses) {
   assemblyMap = list;
@@ -424,7 +481,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
   running = true;
   curCycle = 1;
   cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
-  opertaionsSinceStart = 0;
+  operationsSinceStart = 0;
 
 
   int nanoDelay = 1000000000 / OPS;
@@ -454,7 +511,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
         if (useCycles) {
           if (curCycle < cycleCount) {
             curCycle++;
-            opertaionsSinceStart++;
+            operationsSinceStart++;
             if (i + 1 == batchSize) {
               setUIUpdateData();
             }
@@ -462,7 +519,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
             interruptCheckCPS();
             checkBreak();
             curCycle = 1;
-            opertaionsSinceStart++;
+            operationsSinceStart++;
             if (i + 1 == batchSize) {
               setUIUpdateData();
             }
@@ -470,7 +527,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
         } else {
           interruptCheckIPS();
           checkBreak();
-          opertaionsSinceStart++;
+          operationsSinceStart++;
           if (i + 1 == batchSize) {
             setUIUpdateData();
           }
@@ -481,19 +538,28 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
     emit executionStopped();
   }));
 }
+
 /**
- * @brief Stops the processor execution.
+ * @brief Halts processor execution and waits for thread termination.
  *
- * This function halts the execution loop and waits for the execution thread
- * to finish its current processing.
+ * Sets the running flag to false, signaling the execution loop to terminate,
+ * then blocks until the execution thread completes its current batch and exits.
+ * Resets the cycle counter to its initial state.
  */
 void Processor::stopExecution() {
   curCycle = 1;
   running = false;
   futureWatcher.waitForFinished();
 }
+
 /**
- * @brief Stops execution and resets the processor's internals and registers.
+ * @brief Performs a complete processor reset to initial power-on state.
+ *
+ * Halts any ongoing execution, restores memory from the backup copy, clears
+ * all interrupt states, and reinitializes all registers to their default values.
+ * The program counter is set to the reset vector address read from memory,
+ * and the condition code register is set to 0xD0 (interrupt mask and reserved
+ * bits set).
  */
 void Processor::reset() {
   stopExecution();

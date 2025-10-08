@@ -145,7 +145,7 @@ void MainWindow::on_checkUseCycles_clicked(bool checked) {
   processor.cycleCount = 0;
 }
 void MainWindow::on_checkIncrementPC_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETINCONUNKNOWN, checked});
+  processor.addAction(Action{ActionType::SETINCONINVALIDINSTR, checked});
 }
 void MainWindow::on_checkIRQOnKeyPress_clicked(bool checked) {
   processor.addAction(Action{ActionType::SETIRQONKEYPRESS, checked});

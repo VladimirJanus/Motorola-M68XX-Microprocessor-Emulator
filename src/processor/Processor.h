@@ -74,11 +74,11 @@ public:
   int curCycle = 1;
   int cycleCount = 0;
   Interrupt pendingInterrupt = Interrupt::NONE;
-  uint64_t opertaionsSinceStart = 0;
+  uint64_t operationsSinceStart = 0;
   //runtime settings
   volatile bool running = false;
   bool useCycles = false;
-  std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> startTime;
+  std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> startTime = std::chrono::steady_clock::now();
 
   //methods
   void switchVersion(ProcessorVersion version);
