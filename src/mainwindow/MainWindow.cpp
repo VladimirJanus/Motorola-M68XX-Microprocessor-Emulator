@@ -504,11 +504,8 @@ QString MainWindow::getDisplayText(std::array<uint8_t, 0x10000> &memory) {
   QString text;
   for (uint16_t i = 0; i < 20 * 54; ++i) {
     uint8_t val = memory[i + 0xFB00];
-    if (val <= 32 || val >= 127) {
-      text.append(" ");
-    } else {
-      text.append(QChar(val));
-    }
+    QChar c = Core::numToChar(val);
+    text.append(c.isNull() ? ' ' : c);
     if ((i + 1) % 54 == 0)
       text.append("\n");
   }
@@ -697,10 +694,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   } else if (obj == plainTextDisplay || obj == ui->plainTextDisplay) {
     if (event->type() == QEvent::KeyPress) {
       QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-      if (keyEvent->key() <= Qt::Key_AsciiTilde) {
-        uint8_t asciiValue = static_cast<uint8_t>(keyEvent->key());
-        processor.addAction(Action{ActionType::SETKEY, asciiValue});
-      }
+      uint8_t asciiValue = keyEvent->key() > 127 ? 0 : static_cast<uint8_t>(keyEvent->key());
+      processor.addAction(Action{ActionType::SETKEY, asciiValue});
+
 
       return true;
     } else if (event->type() == QMouseEvent::MouseButtonPress || event->type() == QMouseEvent::MouseButtonDblClick) {
@@ -838,6 +834,7 @@ void MainWindow::drawProcessorRunning(
     ui->labelRunningCycleNum->setText("Instruction cycle: " + QString::number(curCycle));
   }
   ui->lineEditTotalOpNum->setText(QString::number(opertaionsSinceStart));
+  ui->lineEditTimeSinceStart->setText(QString::number((std::chrono::steady_clock::now()-processor.startTime).count() / 1000000000.0,10,3));
   if (ui->checkAutoScroll->isChecked()) {
     int lineNum = assemblyMap.getObjectByAddress(PC).lineNumber;
     if (lineNum >= 0) {
@@ -985,6 +982,8 @@ void MainWindow::SetMainDisplayVisibility(
   ui->plainTextDisplay->setEnabled(visible);
   ui->plainTextDisplay->setVisible(visible);
 }
+
+
 
 
 

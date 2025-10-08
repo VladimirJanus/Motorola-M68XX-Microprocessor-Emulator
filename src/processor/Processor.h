@@ -22,6 +22,7 @@
 #include "src/utils/ActionQueue.h"
 #include <cstdint>
 #include <qfuturewatcher.h>
+#include <QtConcurrent/qtconcurrentrun.h>
 
 using Core::AssemblyMap;
 using Core::bit;
@@ -77,6 +78,7 @@ public:
   //runtime settings
   volatile bool running = false;
   bool useCycles = false;
+  std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> startTime;
 
   //methods
   void switchVersion(ProcessorVersion version);

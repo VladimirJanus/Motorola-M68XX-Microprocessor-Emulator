@@ -83,6 +83,17 @@ namespace Core {
     std::vector<MappedInstr> instructions;
   };
 
+  inline QChar numToChar(uint8_t val){
+    if (val < 32 || val >= 127) {
+      return '\0';
+    } else {
+      return QChar(val);
+    }
+  }
+  inline uint8_t charToVal(QChar c){
+    return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : c.unicode();
+  }
+
   enum class ColorType {
     HIGHLIGHT,
     RUNTIME,

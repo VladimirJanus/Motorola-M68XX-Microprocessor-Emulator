@@ -558,3 +558,23 @@ void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked)
 {
     processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
 }
+
+void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1)
+{
+
+  ui->lineASCIIconvChar->blockSignals(true);
+  QChar c = Core::numToChar(arg1);
+  ui->lineASCIIconvChar->setText(c.isNull() ? QStringLiteral("") : c);
+  ui->lineASCIIconvChar->blockSignals(false);
+}
+
+void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1)
+{
+  ui->lineASCIIconvNum->blockSignals(true);
+  ui->lineASCIIconvNum->setValue(arg1.length() == 0 ? 0 : Core::charToVal(arg1[0]));
+  ui->lineASCIIconvNum->blockSignals(false);
+}
+
+
+
+

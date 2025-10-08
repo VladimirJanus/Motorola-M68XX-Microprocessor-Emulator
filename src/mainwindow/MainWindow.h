@@ -228,6 +228,8 @@ private slots:
   void on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item);
   void on_plainTextCode_textChanged();
   void on_checkBoxBookmarkBreakpoints_clicked(bool checked);
+  void on_lineASCIIconvNum_valueChanged(int arg1);
+  void on_lineASCIIconvChar_textChanged(const QString &arg1);
 };
 
 #endif // MAINWINDOW_H

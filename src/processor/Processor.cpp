@@ -15,8 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "src/processor/Processor.h"
-#include <QtConcurrent/qtconcurrentrun.h>
-#include <stdexcept>
+
 Processor::Processor(ProcessorVersion version) {
   switchVersion(version);
 }
@@ -436,6 +435,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
   } else {
     batchSize = 1;
   }
+  startTime = std::chrono::steady_clock::now();
   futureWatcher.setFuture(QtConcurrent::run([this, nanoDelay, batchSize]() {
     auto next = std::chrono::steady_clock::now() + std::chrono::nanoseconds(nanoDelay * batchSize);
     while (running) {
