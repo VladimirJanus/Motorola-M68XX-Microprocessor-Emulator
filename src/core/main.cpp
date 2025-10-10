@@ -172,11 +172,11 @@ void writeCrashReport(const std::string& message) {
     HANDLE process = GetCurrentProcess();
     SymInitialize(process, nullptr, TRUE);
     WORD frames = CaptureStackBackTrace(0, 128, callstack, nullptr);
-    SYMBOL_INFO* symbol = (SYMBOL_INFO*) calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    SYMBOL_INFO* symbol = static_cast<SYMBOL_INFO*>(calloc(1, sizeof(SYMBOL_INFO) + 256 * sizeof(char)));
     symbol->MaxNameLen = 255;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
     for (WORD i = 0; i < frames; ++i) {
-      SymFromAddr(process, (DWORD64) (callstack[i]), 0, symbol);
+      SymFromAddr(process, reinterpret_cast<DWORD64>(callstack[i]), nullptr, symbol);
       crashFile << symbol->Name << "\n";
     }
     free(symbol);

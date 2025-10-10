@@ -43,16 +43,17 @@ public:
 private:
   struct NumParseResult {
     bool ok;
-    int32_t value;
+    uint16_t value;
     QString message;
 
-    static NumParseResult success(const int value) { return {true, value, ""}; }
+    static NumParseResult success(const uint16_t value) { return {true, value, ""}; }
     static NumParseResult failure(const QString &msg) { return {false, 0, msg}; }
   };
   struct NumParseRelativeResult {
     bool ok;
     uint8_t value;
     QString message;
+    static NumParseRelativeResult success(uint8_t value){return{true,value, ""};}
     static NumParseRelativeResult fromParseResult(const NumParseResult &result) { return {result.ok, static_cast<uint8_t>(result.value), result.message}; }
     static NumParseRelativeResult failure(const QString &msg) { return {false, 0, msg}; }
   };
@@ -65,10 +66,10 @@ private:
   struct ExpressionEvaluationResult {
     bool ok;
     bool undefined;
-    int32_t value;
+    uint16_t value;
     QString message;
 
-    static ExpressionEvaluationResult success(const int value) { return {true, false, value, ""}; }
+    static ExpressionEvaluationResult success(const uint16_t value) { return {true, false, value, ""}; }
     static ExpressionEvaluationResult setUndefined(const QString msg, bool ok) { return {ok, true, 0, msg}; }
     static ExpressionEvaluationResult failure(const QString msg) { return {false, false, 0, msg}; }
   };
@@ -79,7 +80,8 @@ private:
     QString s_op;
   };
 
-  static NumParseResult parseDec(const QString &input, bool allowNeg);
+  static NumParseResult parseDec(const QString &input);
+  static NumParseRelativeResult parseDecRelative(const QString &input);
   static NumParseResult parseHex(const QString &input);
   static NumParseResult parseBin(const QString &input);
   static NumParseResult parseASCII(const QString &input);

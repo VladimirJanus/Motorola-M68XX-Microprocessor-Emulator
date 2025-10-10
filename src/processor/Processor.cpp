@@ -475,9 +475,9 @@ void Processor::executeStep() {
  * @param list Assembly source mapping for line-number-based breakpoints.
  * @param bookmarkedAddresses Memory addresses configured as breakpoints.
  */
-void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddresses) {
+void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddressesVector) {
   assemblyMap = list;
-  this->bookmarkedAddresses=bookmarkedAddresses;
+  this->bookmarkedAddresses = bookmarkedAddressesVector;
   running = true;
   curCycle = 1;
   cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);

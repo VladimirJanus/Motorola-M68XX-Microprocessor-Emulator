@@ -55,10 +55,9 @@ void ExternalDisplay::handleDisplayScrollVertical() {
   ui->plainTextDisplay->verticalScrollBar()->setValue(0);
 }
 
-int GetFontSizePerCharSize(
-  int w, int h) {
-  const static float WidthRatio = QFontMetricsF(QFont("Courier New", 11, QFont::Bold)).averageCharWidth() / 11.0f;
-  const static float HeightRatio = QFontMetricsF(QFont("Courier New", 11, QFont::Bold)).height() / 11.0f;
+inline int GetFontSizePerCharSize ( int w, int h) {
+  const static float WidthRatio = QFontMetricsF(QFont("Courier New", 11, QFont::Bold)).averageCharWidth() / 11.0;
+  const static float HeightRatio = QFontMetricsF(QFont("Courier New", 11, QFont::Bold)).height() / 11.0;
   int optimalByWidth = w / WidthRatio;
   int optimalByHeight = h / HeightRatio;
   return qMax(11, qMin(optimalByWidth, optimalByHeight));
@@ -94,6 +93,8 @@ bool ExternalDisplay::eventFilter(
     ui->plainTextDisplay->resize(displayWidth, displayHeight);
     // -2 for widget borders
     ui->plainTextDisplay->move((availableSize.width() - displayWidth - 2) / 2 + 10, (availableSize.height() - displayHeight - 2) / 2 + 10);
+
+
   }
 
   return QDialog::eventFilter(obj, event);

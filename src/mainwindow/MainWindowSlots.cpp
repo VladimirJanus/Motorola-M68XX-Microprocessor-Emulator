@@ -109,7 +109,7 @@ void MainWindow::on_buttonRunStop_clicked() {
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(OPS, assemblyMap, highlightAddressList);
+      processor.startExecution(OPS, assemblyMap, markedAddressList);
       ui->buttonRunStop->setStyleSheet(greenButton);
     }
   }
@@ -164,7 +164,7 @@ void MainWindow::on_checkAdvancedInfo_clicked(bool checked) {
   }
 
   updateLinesBox(true);
-  drawTextSelections();
+  drawTextMarkers();
 }
 void MainWindow::on_checkSimpleMemory_clicked(bool checked) {
   simpleMemory = checked;
@@ -180,7 +180,7 @@ void MainWindow::on_checkSimpleMemory_clicked(bool checked) {
     ui->groupSimpleMemory->setEnabled(false);
   }
   updateMemoryTab();
-  drawMemorySelections();
+  drawMemoryMarkers();
 }
 void MainWindow::on_checkMemoryWrite_clicked(bool checked) {
   setAllowWritingModeSwitch(checked);
@@ -253,7 +253,7 @@ void MainWindow::on_buttonTidyUp_clicked() {
         }
       }
 
-      float labelEnd = charNum;
+      int labelEnd = charNum;
       charNum++;
       for (; charNum < line.length(); ++charNum) {
         if (line[charNum] != ' ' && line[charNum] != '\t') {
@@ -261,7 +261,7 @@ void MainWindow::on_buttonTidyUp_clicked() {
         }
       }
 
-      line = line.mid(0, labelEnd) + QString(tabCount - floor(labelEnd / ui->spinBoxTabWidth->value()), '\t') + line.mid(charNum);
+      line = line.mid(0, labelEnd) + QString(tabCount - static_cast<int>(floor(labelEnd / ui->spinBoxTabWidth->value())), '\t') + line.mid(charNum);
     }
   }
 
@@ -435,14 +435,15 @@ void MainWindow::on_menuBreakIs_valueChanged(int arg1) {
 }
 
 void MainWindow::on_line2COMIN_valueChanged(int i) {
-  if (i <= 0xFF && i >= 0) {
-    uint8_t byte = static_cast<uint8_t>(i);
-    byte = 0xFF - byte + 1;
+    if (i < 0 || i > 0xFF) {
+        ui->line2COMOUT->setText("X");
+        return;
+    }
+
+    uint8_t byte = static_cast<uint8_t>(0xFF - i + 1);
     ui->line2COMOUT->setText("$" + QString::number(byte, 16).toUpper());
-  } else {
-    ui->line2COMOUT->setText("X");
-  }
 }
+
 
 // Memory Interaction Handlers
 void MainWindow::on_memoryAddressSpinBox_valueChanged(int arg1) {
@@ -454,10 +455,10 @@ void MainWindow::on_memoryAddressSpinBox_valueChanged(int arg1) {
   auto targetItem = ui->tableWidgetMemory->item(row, column);
   ui->tableWidgetMemory->setCurrentItem(targetItem);
 }
-void MainWindow::on_simpleMemoryAddressSpinBox_valueChanged(int arg1) {
-  currentSMScroll = arg1;
+void MainWindow::on_simpleMemoryAddressSpinBox_valueChanged(int arg1) { //this spinBox should be capped to [0,0xFFFF]
+  currentSMScroll = static_cast<uint16_t>(arg1);
   updateMemoryTab();
-  drawMemorySelections();
+  drawMemoryMarkers();
 }
 
 void MainWindow::tableMemory_cellChanged(int row, int column) {
@@ -545,7 +546,7 @@ void MainWindow::on_plainTextCode_textChanged() {
 
   updateLinesBox(false);
   if (errorDisplayed) {
-    clearSelections();
+    clearCodeMarkers();
   }
   if (writingMode == WritingMode::CODE) {
     if (assembled)
@@ -556,14 +557,14 @@ void MainWindow::on_plainTextCode_textChanged() {
 }
 void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked)
 {
-    processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
+  processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
 }
 
-void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1)
+void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1) //this lineEdit should be capped to [0,255]
 {
 
   ui->lineASCIIconvChar->blockSignals(true);
-  QChar c = Core::numToChar(arg1);
+  QChar c = Core::numToChar(static_cast<uint8_t>(arg1));
   ui->lineASCIIconvChar->setText(c.isNull() ? QStringLiteral("") : c);
   ui->lineASCIIconvChar->blockSignals(false);
 }
@@ -574,6 +575,8 @@ void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1)
   ui->lineASCIIconvNum->setValue(arg1.length() == 0 ? 0 : Core::charToVal(arg1[0]));
   ui->lineASCIIconvNum->blockSignals(false);
 }
+
+
 
 
 

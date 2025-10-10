@@ -4,9 +4,12 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
 
 
-#QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wold-style-cast -Woverloaded-virtual -Wfloat-equal -Wundef -Wnon-virtual-dtor -Wformat=2 -Wredundant-decls -Wmissing-declarations -Wcast-align -Wzero-as-null-pointer-constant -Wdouble-promotion -Wstrict-overflow=5
-#QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
-
+QMAKE_CXXFLAGS += -Wall -Wextra -Wpedantic -Wshadow -Wold-style-cast -Woverloaded-virtual -Wfloat-equal -Wundef -Wnon-virtual-dtor -Wformat=2 -Wredundant-decls  -Wcast-align -Wzero-as-null-pointer-constant -Wdouble-promotion
+#QMAKE_CXXFLAGS += -Wmissing-declarations  -Wstrict-overflow=5
+#QMAKE_CXXFLAGS += -Wsign-conversion
+#QMAKE_CXXFLAGS += -Wconversion
+QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
+QMAKE_CXXFLAGS += -O2
 win32: LIBS += -ldbghelp
 
 
@@ -18,7 +21,6 @@ win32: LIBS += -ldbghelp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
@@ -46,11 +48,11 @@ SOURCES += \
     src/assembler/Disassembler.cpp \
     src/core/Core.cpp \
     src/core/main.cpp \
+    src/mainwindow/CodeMarkingSys.cpp \
     src/processor/InstructionFunctions.cpp \
     src/processor/Processor.cpp \
     src/dialogs/ExternalDisplay.cpp \
     src/dialogs/InstructionInfoDialog.cpp \
     src/mainwindow/FileManager.cpp \
     src/mainwindow/MainWindow.cpp \
-    src/mainwindow/MainWindowSlots.cpp \
-    src/mainwindow/SelectionSys.cpp
+    src/mainwindow/MainWindowSlots.cpp

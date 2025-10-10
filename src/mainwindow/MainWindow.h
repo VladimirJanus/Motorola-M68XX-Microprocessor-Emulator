@@ -88,8 +88,8 @@ private:
   bool startDisassembly();
   void updateMemoryTab();
   void colorMemory(int address, ColorType colorType);
-  void setSelectionRuntime(int address);
-  void setSelectionAssemblyError(int charNum, int lineNum);
+  void setCurrentInstructionMarker(int address);
+  void setAssemblyErrorMarker(int charNum, int lineNum);
   int inputNextAddress(int curAdr, QString err);
   void disableCellChangedHandler();
   void enableCellChangedHandler();
@@ -101,13 +101,13 @@ private:
   QString getDisplayText(std::array<uint8_t, 0x10000> &memory);
   void SetMainDisplayVisibility(bool visible);
 
-  // Selection System
-  QVector<int> highlightAddressList;
-  void drawTextSelections();
-  void drawMemorySelections();
-  void clearSelections();
-  void clearHighlights();
-  void toggleHighlight(int line);
+  // Code Marker System
+  QVector<int> markedAddressList;
+  void drawTextMarkers();
+  void drawMemoryMarkers();
+  void clearCodeMarkers();
+  void clearMarkers();
+  void toggleCodeMarker(int line);
   void updateLinesBox(bool redraw);
 
   // File Operations

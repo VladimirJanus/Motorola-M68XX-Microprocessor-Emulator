@@ -115,6 +115,9 @@ signals:
   void executionStopped();
 
 private:
+  inline uint8_t getByteOperand() const;
+  inline uint16_t getWordOperand() const;
+
   void ZERO();
   void INVALID();
   void INHNOP();

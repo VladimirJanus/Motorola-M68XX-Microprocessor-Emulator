@@ -19,25 +19,25 @@
 #include <qscrollbar.h>
 #include <qtextobject.h>
 
-int runTimeSelectionAddress = 0;
+int runtimeMarkerAddress = 0;
 
-QVector<int> highlightLineList;
+QVector<int> markedLineList;
 
-QBrush brushHighlight(Qt::GlobalColor::green);
+QBrush brushMarked(Qt::GlobalColor::green);
 QBrush brushRuntime(Qt::GlobalColor::yellow);
-QBrush brushHighlightRuntime(Qt::GlobalColor::cyan);
+QBrush brushMarkedRuntime(Qt::GlobalColor::cyan);
 QBrush brushError(Qt::GlobalColor::darkYellow);
 QBrush brushErrorChar(Qt::GlobalColor::darkGreen);
 QBrush brushNone(QColor(230, 230, 255));
 
 QBrush &getBrushForType(ColorType colorType) {
   switch (colorType) {
-  case ColorType::HIGHLIGHT:
-    return brushHighlight;
-  case ColorType::RUNTIME:
+  case ColorType::MARKED:
+    return brushMarked;
+  case ColorType::CURRENTINSTRUCTION:
     return brushRuntime;
-  case ColorType::HIGHLIGHT_RUNTIME:
-    return brushHighlightRuntime;
+  case ColorType::MARKED_CURRENTINSTRUCTION:
+    return brushMarkedRuntime;
   case ColorType::ERROR:
     return brushError;
   case ColorType::ERRORCHAR:
@@ -67,47 +67,48 @@ void MainWindow::colorMemory(int address, ColorType colorType) {
     }
   }
 }
-QTextEdit::ExtraSelection getSelectionByLine(QPlainTextEdit *textEdit, int line, ColorType colorType) {
-  QTextEdit::ExtraSelection lineSelection;
-  lineSelection.format.setBackground(getBrushForType(colorType));
+
+QTextEdit::ExtraSelection getLineMarker(QPlainTextEdit *textEdit, int line, ColorType colorType) {
+  QTextEdit::ExtraSelection lineMarker;
+  lineMarker.format.setBackground(getBrushForType(colorType));
   QTextBlock block = textEdit->document()->findBlockByLineNumber(line);
   QTextCursor cursor(textEdit->document());
   cursor.setPosition(block.position());
   cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-  lineSelection.cursor = cursor;
-  return lineSelection;
+  lineMarker.cursor = cursor;
+  return lineMarker;
 }
 
-void MainWindow::drawTextSelections() {
+void MainWindow::drawTextMarkers() {
   errorDisplayed = false;
-  QList<QTextEdit::ExtraSelection> lineSelections;
-  QList<QTextEdit::ExtraSelection> codeSelections;
+  QList<QTextEdit::ExtraSelection> lineMarkers;
+  QList<QTextEdit::ExtraSelection> codeMarkers;
 
-  int runtimeLine = assemblyMap.getObjectByAddress(runTimeSelectionAddress).lineNumber;
+  int runtimeLine = assemblyMap.getObjectByAddress(runtimeMarkerAddress).lineNumber;
 
-  for (int line : highlightLineList) {
-    ColorType type = line == runtimeLine ? ColorType::HIGHLIGHT_RUNTIME : ColorType::HIGHLIGHT;
-    lineSelections.append(getSelectionByLine(ui->plainTextLines, line, type));
-    codeSelections.append(getSelectionByLine(ui->plainTextCode, line, type));
+  for (int line : markedLineList) {
+    ColorType type = line == runtimeLine ? ColorType::MARKED_CURRENTINSTRUCTION : ColorType::MARKED;
+    lineMarkers.append(getLineMarker(ui->plainTextLines, line, type));
+    codeMarkers.append(getLineMarker(ui->plainTextCode, line, type));
   }
 
-  if (runtimeLine != -1 && !highlightLineList.contains(runtimeLine)) {
-    lineSelections.append(getSelectionByLine(ui->plainTextLines, runtimeLine, ColorType::RUNTIME));
-    codeSelections.append(getSelectionByLine(ui->plainTextCode, runtimeLine, ColorType::RUNTIME));
+  if (runtimeLine != -1 && !markedLineList.contains(runtimeLine)) {
+    lineMarkers.append(getLineMarker(ui->plainTextLines, runtimeLine, ColorType::CURRENTINSTRUCTION));
+    codeMarkers.append(getLineMarker(ui->plainTextCode, runtimeLine, ColorType::CURRENTINSTRUCTION));
   }
 
-  ui->plainTextLines->setExtraSelections(lineSelections);
-  ui->plainTextCode->setExtraSelections(codeSelections);
+  ui->plainTextLines->setExtraSelections(lineMarkers);
+  ui->plainTextCode->setExtraSelections(codeMarkers);
 }
 
-void MainWindow::drawMemorySelections() {
+void MainWindow::drawMemoryMarkers() {
   if (simpleMemory) {
     for (int row = 0; row < ui->tableWidgetSM->rowCount(); ++row) {
       int adr = row + currentSMScroll;
-      if (highlightAddressList.contains(adr)) {
-        ui->tableWidgetSM->item(row, 0)->setBackground(getBrushForType(ColorType::HIGHLIGHT));
-        ui->tableWidgetSM->item(row, 1)->setBackground(getBrushForType(ColorType::HIGHLIGHT));
-        ui->tableWidgetSM->item(row, 2)->setBackground(getBrushForType(ColorType::HIGHLIGHT));
+      if (markedAddressList.contains(adr)) {
+        ui->tableWidgetSM->item(row, 0)->setBackground(getBrushForType(ColorType::MARKED));
+        ui->tableWidgetSM->item(row, 1)->setBackground(getBrushForType(ColorType::MARKED));
+        ui->tableWidgetSM->item(row, 2)->setBackground(getBrushForType(ColorType::MARKED));
       } else {
         ui->tableWidgetSM->item(row, 0)->setBackground(QBrush(Core::SMMemoryCellColor));
         ui->tableWidgetSM->item(row, 1)->setBackground(QBrush(Core::SMMemoryCellColor2));
@@ -119,8 +120,8 @@ void MainWindow::drawMemorySelections() {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
         uint16_t address = static_cast<uint16_t>(row * 16 + col);
 
-        if (highlightAddressList.contains(address)) {
-          colorMemory(address, ColorType::HIGHLIGHT);
+        if (markedAddressList.contains(address)) {
+          colorMemory(address, ColorType::MARKED);
         } else {
           colorMemory(address, ColorType::NONE);
         }
@@ -128,73 +129,75 @@ void MainWindow::drawMemorySelections() {
     }
   }
 
-  if (highlightAddressList.contains(runTimeSelectionAddress)) {
-    colorMemory(runTimeSelectionAddress, ColorType::HIGHLIGHT_RUNTIME);
+  if (markedAddressList.contains(runtimeMarkerAddress)) {
+    colorMemory(runtimeMarkerAddress, ColorType::MARKED_CURRENTINSTRUCTION);
   } else {
-    colorMemory(runTimeSelectionAddress, ColorType::RUNTIME);
+    colorMemory(runtimeMarkerAddress, ColorType::CURRENTINSTRUCTION);
   }
 }
 
-void MainWindow::toggleHighlight(int line) {
+void MainWindow::toggleCodeMarker(int line) {
   if (line == -1)
     return;
   int address = assemblyMap.getObjectByLine(line).address;
-  if (highlightLineList.contains(line)) {
-    highlightLineList.removeOne(line);
+  if (markedLineList.contains(line)) {
+    markedLineList.removeOne(line);
     if (address >= 0) {
-      highlightAddressList.removeOne(address);
-      processor.queueBookmarkData(highlightAddressList);
+      markedAddressList.removeOne(address);
+      processor.queueBookmarkData(markedAddressList);
       processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
 
-      ColorType type = (address == runTimeSelectionAddress) ? ColorType::RUNTIME : ColorType::NONE;
+      ColorType type = (address == runtimeMarkerAddress) ? ColorType::CURRENTINSTRUCTION : ColorType::NONE;
       colorMemory(address, type);
     }
   } else {
-    highlightLineList.append(line);
+    markedLineList.append(line);
     if (address >= 0) {
-      if (highlightAddressList.count(address) == 0) {
-        highlightAddressList.append(address);
-        processor.queueBookmarkData(highlightAddressList);
+      if (markedAddressList.count(address) == 0) {
+        markedAddressList.append(address);
+        processor.queueBookmarkData(markedAddressList);
         processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
       }
-      ColorType type = (address == runTimeSelectionAddress) ? ColorType::HIGHLIGHT_RUNTIME : ColorType::HIGHLIGHT;
+      ColorType type = (address == runtimeMarkerAddress) ? ColorType::MARKED_CURRENTINSTRUCTION : ColorType::MARKED;
       colorMemory(address, type);
     }
   }
-  drawTextSelections();
+  drawTextMarkers();
 }
-void MainWindow::setSelectionRuntime(int address) {
-  ColorType type = highlightAddressList.contains(address) ? ColorType::HIGHLIGHT_RUNTIME : ColorType::RUNTIME;
+
+void MainWindow::setCurrentInstructionMarker(int address) {
+  ColorType type = markedAddressList.contains(address) ? ColorType::MARKED_CURRENTINSTRUCTION : ColorType::CURRENTINSTRUCTION;
   colorMemory(address, type);
 
-  if (address != runTimeSelectionAddress) {
-    if (highlightAddressList.contains(runTimeSelectionAddress)) {
-      colorMemory(runTimeSelectionAddress, ColorType::HIGHLIGHT);
+  if (address != runtimeMarkerAddress) {
+    if (markedAddressList.contains(runtimeMarkerAddress)) {
+      colorMemory(runtimeMarkerAddress, ColorType::MARKED);
     } else {
-      colorMemory(runTimeSelectionAddress, ColorType::NONE);
+      colorMemory(runtimeMarkerAddress, ColorType::NONE);
     }
   }
-  runTimeSelectionAddress = address;
+  runtimeMarkerAddress = address;
 
-  drawTextSelections();
+  drawTextMarkers();
 }
-void MainWindow::setSelectionAssemblyError(int charNum, int lineNum) {
+
+void MainWindow::setAssemblyErrorMarker(int charNum, int lineNum) {
   if (lineNum == -1) {
     return;
   }
   errorDisplayed = true;
-  QList<QTextEdit::ExtraSelection> selections;
-  selections.append(getSelectionByLine(ui->plainTextCode, lineNum, ColorType::ERROR));
+  QList<QTextEdit::ExtraSelection> markers;
+  markers.append(getLineMarker(ui->plainTextCode, lineNum, ColorType::ERROR));
   if (charNum != -1) {
-    QTextEdit::ExtraSelection charSelection;
-    charSelection.cursor = QTextCursor(ui->plainTextCode->document()->findBlockByLineNumber(lineNum));
-    charSelection.cursor.setPosition(charSelection.cursor.position() + charNum);
-    charSelection.cursor.setPosition(charSelection.cursor.position() + 1, QTextCursor::KeepAnchor);
-    charSelection.format.setBackground(getBrushForType(ColorType::ERRORCHAR));
+    QTextEdit::ExtraSelection charMarker;
+    charMarker.cursor = QTextCursor(ui->plainTextCode->document()->findBlockByLineNumber(lineNum));
+    charMarker.cursor.setPosition(charMarker.cursor.position() + charNum);
+    charMarker.cursor.setPosition(charMarker.cursor.position() + 1, QTextCursor::KeepAnchor);
+    charMarker.format.setBackground(getBrushForType(ColorType::ERRORCHAR));
 
-    selections.append(charSelection);
+    markers.append(charMarker);
   }
-  ui->plainTextCode->setExtraSelections(selections);
+  ui->plainTextCode->setExtraSelections(markers);
 
   int scrollValue = ui->plainTextCode->verticalScrollBar()->value();
   int scrollAdjustment = (lineNum > scrollValue + autoScrollUpLimit) ? autoScrollUpLimit : autoScrollDownLimit;
@@ -203,13 +206,13 @@ void MainWindow::setSelectionAssemblyError(int charNum, int lineNum) {
   ui->plainTextCode->verticalScrollBar()->setValue(lineNum - scrollAdjustment);
 }
 
-void MainWindow::clearSelections() {
+void MainWindow::clearCodeMarkers() {
   errorDisplayed = false;
-  colorMemory(runTimeSelectionAddress, ColorType::NONE);
+  colorMemory(runtimeMarkerAddress, ColorType::NONE);
   if (!simpleMemory) {
-    colorMemory(runTimeSelectionAddress, ColorType::NONE);
-    for (int i = 0; i < highlightAddressList.length(); ++i) {
-      colorMemory(highlightAddressList[i], ColorType::NONE);
+    colorMemory(runtimeMarkerAddress, ColorType::NONE);
+    for (int i = 0; i < markedAddressList.length(); ++i) {
+      colorMemory(markedAddressList[i], ColorType::NONE);
     }
   } else {
     for (int i = 0; i < 20; ++i) {
@@ -218,17 +221,18 @@ void MainWindow::clearSelections() {
       ui->tableWidgetSM->item(i, 2)->setBackground(QBrush(Core::SMMemoryCellColor));
     }
   }
-  highlightLineList.clear();
-  highlightAddressList.clear();
-  processor.queueBookmarkData(highlightAddressList);
+  markedLineList.clear();
+  markedAddressList.clear();
+  processor.queueBookmarkData(markedAddressList);
   processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
 
-  runTimeSelectionAddress = 0;
+  runtimeMarkerAddress = 0;
   ui->plainTextLines->setExtraSelections({});
   ui->plainTextCode->setExtraSelections({});
-  drawMemorySelections();
+  drawMemoryMarkers();
 }
-void MainWindow::clearHighlights() {
-  clearSelections();
-  setSelectionRuntime(processor.PC);
+
+void MainWindow::clearMarkers() {
+  clearCodeMarkers();
+  setCurrentInstructionMarker(processor.PC);
 }

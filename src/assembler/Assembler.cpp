@@ -29,25 +29,29 @@
  * @note The function returns an error if the input string is empty, contains invalid characters,
  *       or if the parsed number is out of the corresponding range.
  */
-Assembler::NumParseResult Assembler::parseDec(const QString &input, bool allowNeg) {
+Assembler::NumParseResult Assembler::parseDec(const QString &input) {
   bool ok;
   int32_t number = input.toInt(&ok);
-  if (allowNeg) {
-    if (!ok) {
-      return NumParseResult::failure(Err::invalidRelDecOrRange(input));
-    } else if (number > 127 || number < -128) {
-      return NumParseResult::failure(Err::numOutOfRelRange(number));
-    }
-  } else {
-    if (!ok) {
-      return NumParseResult::failure(Err::invalidDecOrRange(input));
-    } else if (number > 0xFFFF || number < 0) {
-      return NumParseResult::failure(Err::Err::numOutOfRange(number, 0xFFFF));
-    }
-  }
-  return NumParseResult::success(number);
-}
 
+  if (!ok) {
+    return NumParseResult::failure(Err::invalidDecOrRange(input));
+  } else if (number > 0xFFFF || number < 0) {
+    return NumParseResult::failure(Err::Err::numOutOfRange(number, 0xFFFF));
+  }
+
+  return NumParseResult::success(static_cast<uint16_t>(number));
+}
+Assembler::NumParseRelativeResult Assembler::parseDecRelative(const QString &input) {
+  bool ok;
+  int32_t number = input.toInt(&ok);
+    if (!ok) {
+      return NumParseRelativeResult::failure(Err::invalidRelDecOrRange(input));
+    } else if (number > 127 || number < -128) {
+      return NumParseRelativeResult::failure(Err::numOutOfRelRange(number));
+    }
+
+  return NumParseRelativeResult::success(static_cast<uint8_t>(number));
+}
 /**
  * @brief Parses a hexadecimal string (format: $FF).
  * 
@@ -72,7 +76,7 @@ Assembler::NumParseResult Assembler::parseHex(const QString &input) {
   } else if (number > 0xFFFF || number < 0) {
     return NumParseResult::failure(Err::numOutOfRange(number, 0xFFFF));
   }
-  return NumParseResult::success(number);
+  return NumParseResult::success(static_cast<uint16_t>(number));
 }
 /**
  * @brief Parses binary string (format: %1010)
@@ -98,7 +102,7 @@ Assembler::NumParseResult Assembler::parseBin(const QString &input) {
   } else if (number > 0xFFFF || number < 0) {
     return NumParseResult::failure(Err::numOutOfRange(number, 0xFFFF));
   }
-  return NumParseResult::success(number);
+  return NumParseResult::success(static_cast<uint16_t>(number));
 }
 /**
  * @brief Parses ASCII character literal (format: 'A').
@@ -138,7 +142,7 @@ Assembler::NumParseResult Assembler::parseNumber(const QString &input) {
   } else if (input.startsWith('%')) {
     return parseBin(input);
   } else {
-    return parseDec(input, false);
+    return parseDec(input);
   }
 }
 /**
@@ -166,16 +170,17 @@ Assembler::NumParseRelativeResult Assembler::parseNumberRelative(const QString &
     }
     return NumParseRelativeResult::fromParseResult(result);
   } else {
-    NumParseResult result = parseDec(input, true);
+    NumParseRelativeResult result = parseDecRelative(input);
     if (!result.ok) {
-      return NumParseRelativeResult::fromParseResult(result);
+      return NumParseRelativeResult::failure(result.message);
     }
-    if (result.value < 0)
-      result.value -= 2;
-    if (result.value > 127 || result.value < -128) {
-      return NumParseRelativeResult::failure(Err::numOutOfRelRange(result.value));
+    int value = result.value;
+    if (value < 0)
+      value -= 2;
+    if (value > 127 || value < -128) {
+      return NumParseRelativeResult::failure(Err::numOutOfRelRange(value));
     }
-    return NumParseRelativeResult::fromParseResult(result);
+    return NumParseRelativeResult::success(static_cast<uint8_t>(value));
   }
 }
 
@@ -264,7 +269,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString exp
     return ExpressionEvaluationResult::failure(Err::exprMissingValue());
   }
   if (value > 0xFFFF || value < 0) {
-    return ExpressionEvaluationResult::failure(Err::exprOutOfRange(value));
+    return ExpressionEvaluationResult::failure(Err::exprOutOfRange(value)); //should be kept because ExpressionEvaluationResult::success converts int to uint16_t and returns that.
   }
 
   return ExpressionEvaluationResult::success(value);
@@ -611,9 +616,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
   uint16_t assemblerAddress = 0;
 
   std::map<QString, int> labelValMap;
-  std::map<int, QString> callLabelMap;
-  std::map<int, QString> callLabelRelMap;
-  std::map<int, QString> callLabelExtMap;
+  std::map<uint16_t, QString> callLabelMap;
+  std::map<uint16_t, QString> callLabelRelMap;
+  std::map<uint16_t, QString> callLabelExtMap;
 
   QList<Msg> messages;
   AssemblyError assemblyError = AssemblyError::none();
@@ -693,7 +698,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
             throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int value = result.value;
+          uint16_t value = result.value;
 
           assignLabelValue(label, value, labelValMap, assemblerLine);
         } else if (s_in == ".ORG") {
@@ -703,9 +708,9 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
             throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int value = result.value;
+          uint16_t value = result.value;
 
-          Memory[interruptLocations - 1] = (value & 0xFF00) >> 8;
+          Memory[interruptLocations - 1] = value >> 8;
           Memory[interruptLocations] = value & 0xFF;
           assemblerAddress = value;
 
@@ -725,7 +730,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
             }
-            int value = result.value;
+            uint16_t value = result.value;
 
             operand1 = (value >> 8) & 0xFF;
             operand2 = value & 0xFF;
@@ -760,7 +765,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int adr = result.value;
+          uint16_t adr = result.value;
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
             throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
@@ -770,7 +775,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
             throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int val = result.value;
+          uint16_t val = result.value;
 
           operand1 = (val >> 8) & 0xFF;
           operand2 = val & 0xFF;
@@ -792,7 +797,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int adr = result.value;
+          uint16_t adr = result.value;
           QString valOp = s_op.split(",")[1];
           if (valOp.isEmpty()) {
               throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
@@ -802,7 +807,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
           }
-          int val = result.value;
+          uint16_t val = result.value;
 
           validateValueRange(val, 0xFF, assemblerLine);
           Memory[adr] = val;
@@ -944,7 +949,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
             }
           } else { // DIR/EXT
             bool skipDir = false;
-            int value = 0;
+            uint16_t value = 0;
             if (isLabelOrExpression(s_op)) {
               auto result = expressionEvaluator(s_op, labelValMap, false);
               if (!result.ok) {
@@ -1010,7 +1015,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
     }
     // second pass/passes to resolve undefined expr or labels
     for (const auto &entry : callLabelMap) {
-      int location = entry.first;
+      uint16_t location = entry.first;
       QString expr = entry.second;
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
@@ -1025,7 +1030,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       instruction.byte2 = result.value;
     }
     for (const auto &entry : callLabelExtMap) {
-      int location = entry.first;
+      uint16_t location = entry.first;
       QString expr = entry.second;
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
@@ -1040,7 +1045,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       instruction.byte3 = Memory[(location + 1) & 0xFFFF];
     }
     for (const auto &entry : callLabelRelMap) {
-      int location = entry.first;
+      uint16_t location = entry.first;
       QString label = entry.second;
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
@@ -1051,13 +1056,13 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           throw AssemblyError::failure(Err::labelUndefined(label), assemblerLine, -1);
         }
       } else {
-        int location2 = labelValMap[label];
+        uint16_t location2 = labelValMap[label];
         int value;
         value = location2 - location - 1;
         if (value > 127 || value < -128) {
           throw AssemblyError::failure(Err::numOutOfRelRange(value), assemblerLine, -1);
         }
-        qint8 signedValue = static_cast<qint8>(value);
+        int8_t signedValue = static_cast<int8_t>(value);
         value = signedValue & 0xFF;
         Memory[location] = value;
         instruction.byte2 = value;

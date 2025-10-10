@@ -520,14 +520,14 @@ void MainWindow::setAssemblyStatus(bool isAssembled) {
     assembled = false;
     ui->buttonAssemble->setStyleSheet(redButton);
     assemblyMap.clear();
-    clearSelections();
+    clearMarkers();
     ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
   }
   updateLinesBox(true);
   updateMemoryTab();
-  drawMemorySelections();
-  drawTextSelections();
-  setSelectionRuntime(processor.PC);
+  drawMemoryMarkers();
+  drawTextMarkers();
+  setCurrentInstructionMarker(processor.PC);
 }
 
 void MainWindow::updateLinesBox(bool redraw) {
@@ -680,11 +680,11 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
               int lineNumber = cursor.blockNumber();
               int totalLines = ui->plainTextLines->document()->blockCount();
               if (lineNumber >= 0 && lineNumber < totalLines) {
-                toggleHighlight(lineNumber);
+                toggleCodeMarker(lineNumber);
               }
             }
           } else if (mouseEvent->button() == Qt::RightButton) {
-            clearHighlights();
+            clearCodeMarkers();
           }
         }
       }
@@ -694,10 +694,35 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   } else if (obj == plainTextDisplay || obj == ui->plainTextDisplay) {
     if (event->type() == QEvent::KeyPress) {
       QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-      uint8_t asciiValue = keyEvent->key() > 127 ? 0 : static_cast<uint8_t>(keyEvent->key());
+      int key = keyEvent->key();
+      uint8_t asciiValue = 0;
+
+      if (key >= 0x20 && key <= 0x7E) {
+          asciiValue = static_cast<uint8_t>(key);
+      } else {
+          switch (key) {
+              case Qt::Key_Return:
+              case Qt::Key_Enter:
+                  asciiValue = 13;
+                  break;
+              case Qt::Key_Backspace:
+                  asciiValue = 8;
+                  break;
+              case Qt::Key_Tab:
+                  asciiValue = 9;
+                  break;
+              case Qt::Key_Escape:
+                  asciiValue = 27;
+                  break;
+              case Qt::Key_Space:
+                  asciiValue = 32;
+                  break;
+              default:
+                  asciiValue = 0;
+                  break;
+          }
+      }
       processor.addAction(Action{ActionType::SETKEY, asciiValue});
-
-
       return true;
     } else if (event->type() == QMouseEvent::MouseButtonPress || event->type() == QMouseEvent::MouseButtonDblClick) {
       QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
@@ -791,7 +816,7 @@ void MainWindow::drawProcessor() {
     plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
   }
   updateMemoryTab();
-  setSelectionRuntime(processor.PC);
+  setCurrentInstructionMarker(processor.PC);
 }
 void MainWindow::processDisplayInputs(
   QPlainTextEdit *display) {
@@ -881,7 +906,7 @@ void MainWindow::drawProcessorRunning(
       processDisplayInputs(plainTextDisplay);
     }
   }
-  setSelectionRuntime(PC);
+  setCurrentInstructionMarker(PC);
 }
 
 void MainWindow::onExecutionStopped() {
@@ -924,7 +949,7 @@ bool MainWindow::startAssembly() {
 
     setAssemblyStatus(false);
     resetEmulator();
-    setSelectionAssemblyError(assResult.error.errorCharNum, assResult.error.errorLineNum);
+    setAssemblyErrorMarker(assResult.error.errorCharNum, assResult.error.errorLineNum);
     ui->tabWidget->setCurrentIndex(0);
 
     return false;
@@ -951,9 +976,9 @@ bool MainWindow::startDisassembly() {
     PrintConsole("Invalid address", MsgType::ERROR);
     return false;
   }
-  bool ORGNUMOK;
-  int number = text.toInt(&ORGNUMOK);
-  if (!ORGNUMOK || number < 0 || number > 0xFFFF) {
+  bool ORGNumOk;
+  uint16_t number = text.toUShort(&ORGNumOk);
+  if (!ORGNumOk) {
     PrintConsole("Invalid address", MsgType::ERROR);
     return false;
   }

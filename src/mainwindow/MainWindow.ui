@@ -5058,7 +5058,7 @@ Created by Vladimir Januš</string>
                     <item>
                      <widget class="QCheckBox" name="checkBoxBookmarkBreakpoints">
                       <property name="text">
-                       <string>Code bookmarks act as breakpoints</string>
+                       <string>Code markers act as breakpoints</string>
                       </property>
                      </widget>
                     </item>

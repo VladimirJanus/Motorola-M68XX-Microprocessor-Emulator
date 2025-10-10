@@ -22,7 +22,7 @@
 #include <QMap>
 #include <QString>
 namespace Core {
-  inline const QString softwareVersion = QStringLiteral("1.10.2");
+  inline const QString softwareVersion = QStringLiteral("1.11.0");
   inline const QString programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
 
 #ifdef __linux__
@@ -91,13 +91,13 @@ namespace Core {
     }
   }
   inline uint8_t charToVal(QChar c){
-    return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : c.unicode();
+    return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : static_cast<uint8_t>(c.unicode());
   }
 
   enum class ColorType {
-    HIGHLIGHT,
-    RUNTIME,
-    HIGHLIGHT_RUNTIME,
+    MARKED,
+    CURRENTINSTRUCTION,
+    MARKED_CURRENTINSTRUCTION,
     ERROR,
     ERRORCHAR,
     NONE,
