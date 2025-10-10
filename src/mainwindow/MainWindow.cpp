@@ -41,6 +41,7 @@ MainWindow::MainWindow(
   setupExternalDisplay();
   setupMemoryTable();
   setupSimpleMemory();
+  ui->menuMemoryDisplayMode->setCurrentIndex(2);
   setupOPCTree();
   setupIndicators();
   setupScrollbarConnections();
@@ -580,7 +581,7 @@ void MainWindow::updateLinesBox(bool redraw) {
   ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
 }
 void MainWindow::updateMemoryTab() {
-  if (simpleMemory) {
+  if (memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
     for (int i = 0; i < 20; ++i) {
       ui->tableWidgetSM->item(i, 2)->setText("");
     }
@@ -613,7 +614,7 @@ void MainWindow::updateMemoryTab() {
         }
       }
     }
-  } else {
+  } else if(memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
     disableCellChangedHandler();
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
@@ -874,7 +875,7 @@ void MainWindow::drawProcessorRunning(
       }
     }
   }
-  if (!simpleMemory) {
+  if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
     int firstVisibleRow = ui->tableWidgetMemory->rowAt(0);
     int lastVisibleRow = std::ceil(ui->tableWidgetMemory->rowAt(ui->tableWidgetMemory->viewport()->height() - 1));
     disableCellChangedHandler();
@@ -888,7 +889,7 @@ void MainWindow::drawProcessorRunning(
       }
     }
     enableCellChangedHandler();
-  } else {
+  } else if(memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
     for (int i = 0; i < 20; ++i) {
       ui->tableWidgetSM->item(i, 0)->setText(QString("%1").arg(currentSMScroll + i, 4, 16, QChar('0')).toUpper());
 
@@ -1007,8 +1008,5 @@ void MainWindow::SetMainDisplayVisibility(
   ui->plainTextDisplay->setEnabled(visible);
   ui->plainTextDisplay->setVisible(visible);
 }
-
-
-
 
 

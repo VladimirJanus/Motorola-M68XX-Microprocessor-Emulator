@@ -135,7 +135,7 @@ private:
   // State Variables
   bool errorDisplayed = false;
   bool assembled = false;
-  bool simpleMemory = false;
+  Core::MemoryDisplayMode memoryDisplayMode = Core::MemoryDisplayMode::FULL;
   WritingMode writingMode = WritingMode::CODE;
   bool hexReg = true;
   bool assembleOnRun = true;
@@ -194,7 +194,6 @@ private slots:
   void on_checkIRQOnKeyPress_clicked(bool checked);
   void on_checkAssembleOnRun_clicked(bool checked);
   void on_checkAdvancedInfo_clicked(bool checked);
-  void on_checkSimpleMemory_clicked(bool checked);
   void on_checkMemoryWrite_clicked(bool checked);
   void on_checkShowHex_clicked(bool checked);
   void on_menuScrollLow_valueChanged(int arg1);
@@ -230,6 +229,7 @@ private slots:
   void on_checkBoxBookmarkBreakpoints_clicked(bool checked);
   void on_lineASCIIconvNum_valueChanged(int arg1);
   void on_lineASCIIconvChar_textChanged(const QString &arg1);
+  void on_menuMemoryDisplayMode_currentIndexChanged(int index);
 };
 
 #endif // MAINWINDOW_H

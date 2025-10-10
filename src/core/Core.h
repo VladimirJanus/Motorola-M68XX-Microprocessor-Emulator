@@ -94,6 +94,12 @@ namespace Core {
     return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : static_cast<uint8_t>(c.unicode());
   }
 
+  enum class MemoryDisplayMode : int{
+    NONE = 0,
+    SIMPLE = 1,
+    FULL = 2,
+  };
+
   enum class ColorType {
     MARKED,
     CURRENTINSTRUCTION,

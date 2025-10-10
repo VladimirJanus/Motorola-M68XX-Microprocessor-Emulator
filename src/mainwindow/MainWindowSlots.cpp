@@ -166,22 +166,7 @@ void MainWindow::on_checkAdvancedInfo_clicked(bool checked) {
   updateLinesBox(true);
   drawTextMarkers();
 }
-void MainWindow::on_checkSimpleMemory_clicked(bool checked) {
-  simpleMemory = checked;
-  if (checked) {
-    ui->groupSimpleMemory->setVisible(true);
-    ui->groupSimpleMemory->setEnabled(true);
-    ui->groupMemory->setVisible(false);
-    ui->groupMemory->setEnabled(false);
-  } else {
-    ui->groupMemory->setVisible(true);
-    ui->groupMemory->setEnabled(true);
-    ui->groupSimpleMemory->setVisible(false);
-    ui->groupSimpleMemory->setEnabled(false);
-  }
-  updateMemoryTab();
-  drawMemoryMarkers();
-}
+
 void MainWindow::on_checkMemoryWrite_clicked(bool checked) {
   setAllowWritingModeSwitch(checked);
 }
@@ -577,6 +562,33 @@ void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1)
 }
 
 
+
+
+
+
+
+void MainWindow::on_menuMemoryDisplayMode_currentIndexChanged(int index)
+{
+  memoryDisplayMode = static_cast<Core::MemoryDisplayMode>(index);
+  if (memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
+    ui->groupSimpleMemory->setVisible(true);
+    ui->groupSimpleMemory->setEnabled(true);
+    ui->groupMemory->setVisible(false);
+    ui->groupMemory->setEnabled(false);
+  } else if(memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+    ui->groupMemory->setVisible(true);
+    ui->groupMemory->setEnabled(true);
+    ui->groupSimpleMemory->setVisible(false);
+    ui->groupSimpleMemory->setEnabled(false);
+  }else{
+    ui->groupMemory->setVisible(false);
+    ui->groupMemory->setEnabled(false);
+    ui->groupSimpleMemory->setVisible(false);
+    ui->groupSimpleMemory->setEnabled(false);
+  }
+  updateMemoryTab();
+  drawMemoryMarkers();
+}
 
 
 
