@@ -1,7 +1,9 @@
-M6800 Emulator Project
+Motorola M68XX Emulator
 ======================
 
 A modern C++17-based emulator for the M6800 processor, built using Qt. Runs on Windows 10+ without requiring additional software.
+
+Currently supports M6800 and M68ß3
 
 Note: The source code history is incomplete due to multiple project relocations. Some historical changes are lost.
 
