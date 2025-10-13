@@ -24,6 +24,7 @@
 #include "ui_MainWindow.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
+#include <QMovie>
 
 MainWindow::MainWindow(
   QWidget *parent)
@@ -298,21 +299,64 @@ void MainWindow::setupMenus() {
     const QString GES = "Vladimir Januš";
     const QString projectUrl = "https://github.com/VladimirJanus/Motorola-M68XX-Microprocessor-Emulator";
 
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("About " + Core::programName);
-    msgBox.setIcon(QMessageBox::Information);
-    msgBox.setWindowIcon(QIcon(":/images/info_icon.png"));
+    QDialog* dialog = new QDialog;
+    dialog->setWindowTitle("About " + Core::programName);
+    dialog->setWindowIcon(QIcon(":/info_icon.png"));
+    dialog->setMinimumWidth(500);
+    dialog->setMinimumHeight(400);
 
-    QString message = QString("<b>Made by: </b>%1<br><br>"
-                              "<b>Project Location: </b><a href='%2'>%2</a><br><br>"
-                              "<b>Software Version: </b>%3")
-                        .arg(GES, projectUrl, Core::softwareVersion);
+    QVBoxLayout* mainLayout = new QVBoxLayout(dialog);
+    mainLayout->setSpacing(20);
+    mainLayout->setContentsMargins(30, 30, 30, 30);
 
-    msgBox.setText(message);
-    msgBox.setTextFormat(Qt::RichText);
-    msgBox.setDefaultButton(QMessageBox::Ok);
+    QWidget* gifContainer = new QWidget;
+    QHBoxLayout* gifLayout = new QHBoxLayout(gifContainer);
+    gifLayout->setContentsMargins(0, 0, 0, 0);
 
-    msgBox.exec();
+    QLabel* gifLabel = new QLabel;
+    QMovie* movie = new QMovie(":/spin.gif");
+    gifLabel->setMovie(movie);
+    gifLabel->setAlignment(Qt::AlignCenter);
+    gifLabel->setMinimumSize(150, 150);
+    gifLabel->setScaledContents(true);
+    movie->start();
+
+    gifLayout->addWidget(gifLabel);
+    mainLayout->addWidget(gifContainer);
+
+    QLabel* titleLabel = new QLabel("<h2>" + Core::programName + "</h2>");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(titleLabel);
+
+    QLabel* infoLabel = new QLabel;
+    QString infoText = QString("<p style='line-height: 1.6;'>"
+                               "<b>Made by:</b> %1<br>"
+                               "<b>Version:</b> %2<br>"
+                               "<b>Project:</b> <a href='%3'>GitHub Repository</a>"
+                               "</p>")
+                         .arg(GES, Core::softwareVersion, projectUrl);
+    infoLabel->setText(infoText);
+    infoLabel->setTextFormat(Qt::RichText);
+    infoLabel->setOpenExternalLinks(true);
+    infoLabel->setWordWrap(true);
+    infoLabel->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(infoLabel);
+
+    mainLayout->addStretch();
+
+    QPushButton* okButton = new QPushButton("OK");
+    okButton->setDefault(true);
+    okButton->setMinimumWidth(100);
+    QHBoxLayout* buttonLayout = new QHBoxLayout;
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(okButton);
+    buttonLayout->addStretch();
+    mainLayout->addLayout(buttonLayout);
+
+    QObject::connect(okButton, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    dialog->exec();
+    dialog->deleteLater();
   });
 }
 void MainWindow::applyInitialSettings() {

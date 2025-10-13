@@ -24,7 +24,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    res/resources.qrc
+    res/resources.qrc \
 
 RC_ICONS = res/M6800.ico
 

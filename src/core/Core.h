@@ -22,7 +22,7 @@
 #include <QMap>
 #include <QString>
 namespace Core {
-  inline const QString softwareVersion = QStringLiteral("1.11.0");
+  inline const QString softwareVersion = QStringLiteral("1.11.1");
   inline const QString programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
 
 #ifdef __linux__
