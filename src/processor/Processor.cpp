@@ -49,9 +49,14 @@ void Processor::switchVersion(ProcessorVersion version) {
  * @param action The action to enqueue.
  */
 void Processor::addAction(const Action &action) {
-  actionQueue.addAction(action);
+  Core::ActionExecutionTiming timing = Core::actionTypeInfo.find(action.type).value().timing;
+  if (timing == Core::ActionExecutionTiming::WHEN_READY) {
+    actionQueueWhenReady.addAction(action);
+  } else if (timing == Core::ActionExecutionTiming::BEFORE_INSTRUCTION) {
+    actionQueueBeforeInstruction.addAction(action);
+  }
   if (!running)
-    handleActions();
+    handleActions(Core::ActionExecutionTiming::WHEN_NOT_RUNNING);
 }
 
 /**
@@ -60,10 +65,17 @@ void Processor::addAction(const Action &action) {
  * Iteratively retrieves and handles each action in the queue until
  * no actions remain.
  */
-void Processor::handleActions() {
-  while (actionQueue.hasActions()) {
-    Action action = actionQueue.getNextAction();
+void Processor::handleActions(Core::ActionExecutionTiming timing) {
+  while (actionQueueWhenReady.hasActions()) {
+    Action action = actionQueueWhenReady.getNextAction();
     handleAction(action);
+  }
+  if (timing == Core::ActionExecutionTiming::BEFORE_INSTRUCTION || timing == Core::ActionExecutionTiming::WHEN_NOT_RUNNING) {
+
+    while (actionQueueBeforeInstruction.hasActions()) {
+      Action action = actionQueueBeforeInstruction.getNextAction();
+      handleAction(action);
+    }
   }
 }
 
@@ -79,6 +91,16 @@ QVector<int> newBookmarkedAddresses;
  */
 void Processor::queueBookmarkData(QVector<int> data){
     newBookmarkedAddresses = data;
+}
+
+struct MemUpdateData {
+  QVector<uint16_t> addresses;
+  uint8_t value;
+};
+
+QList<MemUpdateData> memUpdateList;
+void Processor::setMemoryUpdate(QVector<uint16_t> addresses, uint8_t value) {
+  memUpdateList.append({addresses, value});
 }
 
 /**
@@ -122,6 +144,14 @@ void Processor::handleAction(const Action &action) {
   case ActionType::SETMEMORY:
     Memory[action.parameter & 0xFFFF] = (action.parameter >> 16) & 0xFF;
     break;
+  case ActionType::SETMEMORYBULK:
+    for (MemUpdateData data : memUpdateList) {
+      for (uint16_t adr : data.addresses) {
+        Memory[adr] = data.value;
+      }
+    }
+    memUpdateList.clear();
+    break;
   case ActionType::SETKEY:
     Memory[0xFFF0] = action.parameter & 0xFF;
     if (IRQOnKeyPressed || WAIStatus) {
@@ -136,14 +166,15 @@ void Processor::handleAction(const Action &action) {
     break;
   case ActionType::SETMOUSEY:
     break;
-  case ActionType::SETUSECYCLES:
-    useCycles = action.parameter;
-    break;
+
   case ActionType::SETIRQONKEYPRESS:
     IRQOnKeyPressed = action.parameter;
     break;
   case ActionType::SETINCONINVALIDINSTR:
     incrementPCOnMissingInstruction = action.parameter;
+    break;
+  case ActionType::UPDATEPROCESSORSPEED:
+    updateSpeedParams(action.parameter);
     break;
   }
 }
@@ -459,6 +490,20 @@ void Processor::executeStep() {
   interruptCheckIPS();
 }
 
+
+void Processor::updateSpeedParams(uint32_t newNanoDelay){
+
+  double OPS = 1000000000 / newNanoDelay;
+  nanoDelay = newNanoDelay;
+  uiUpdateSpeed = 250;
+  if (OPS > uiUpdateSpeed) {
+    batchSize = OPS / uiUpdateSpeed;
+  } else {
+    batchSize = 1;
+  }
+}
+
+
 /**
  * @brief Initiates asynchronous processor execution in a dedicated thread.
  *
@@ -475,7 +520,7 @@ void Processor::executeStep() {
  * @param list Assembly source mapping for line-number-based breakpoints.
  * @param bookmarkedAddresses Memory addresses configured as breakpoints.
  */
-void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddressesVector) {
+void Processor::startExecution(uint32_t nanoSecondDelay, AssemblyMap list, QVector<int> bookmarkedAddressesVector) {
   assemblyMap = list;
   this->bookmarkedAddresses = bookmarkedAddressesVector;
   running = true;
@@ -483,27 +528,21 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
   cycleCount = getInstructionCycleCount(processorVersion, Memory[PC]);
   operationsSinceStart = 0;
 
+  updateSpeedParams(nanoSecondDelay);
 
-  int nanoDelay = 1000000000 / OPS;
-  int uiUpdateSpeed = 250;
-  int batchSize;
-  if (OPS > uiUpdateSpeed) {
-    batchSize = OPS / uiUpdateSpeed;
-  } else {
-    batchSize = 1;
-  }
   startTime = std::chrono::steady_clock::now();
-  futureWatcher.setFuture(QtConcurrent::run([this, nanoDelay, batchSize]() {
+  futureWatcher.setFuture(QtConcurrent::run([this]() {
     auto next = std::chrono::steady_clock::now() + std::chrono::nanoseconds(nanoDelay * batchSize);
     while (running) {
-      while (std::chrono::steady_clock::now() < next)
+      while (std::chrono::steady_clock::now() < next) {
         if (!running) {
           break;
-        };
+        }
+        handleActions(Core::ActionExecutionTiming::WHEN_READY);
+      }
 
+      handleActions(Core::ActionExecutionTiming::BEFORE_INSTRUCTION);
       next = next + std::chrono::nanoseconds(nanoDelay * batchSize);
-
-      handleActions();
       for (int i = 0; i < batchSize; i++) {
         if (!running) {
           break;
@@ -534,7 +573,7 @@ void Processor::startExecution(float OPS, AssemblyMap list, QVector<int> bookmar
         }
       }
     }
-    handleActions();
+    handleActions(Core::ActionExecutionTiming::WHEN_NOT_RUNNING);
     emit executionStopped();
   }));
 }

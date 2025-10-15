@@ -15,16 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "src/mainwindow/MainWindow.h"
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QScrollBar>
-#include <QTimer>
-#include <QMessageBox>
-#include "src/dialogs/InstructionInfoDialog.h"
-#include "ui_MainWindow.h"
 #include "src/assembler/Assembler.h"
 #include "src/assembler/Disassembler.h"
+#include "src/dialogs/FocusAwareLineEdit.h"
+#include "src/dialogs/InstructionInfoDialog.h"
+#include "ui_MainWindow.h"
+#include <QFileDialog>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QMovie>
+#include <QScrollBar>
+#include <QTimer>
 
 MainWindow::MainWindow(
   QWidget *parent)
@@ -244,7 +245,7 @@ void MainWindow::setupMenus() {
   saveMemoryAction->setEnabled(writingMode == WritingMode::MEMORY);
 
   emulationMenu->addSeparator();
-  createAction(emulationMenu, tr("Switch Writing Mode"), QKeySequence(), [this]() {
+  createAction(emulationMenu, tr("Switch Writing Mode"), QKeySequence(Qt::CTRL | Qt::Key_M), [this]() {
     if (writingMode == WritingMode::MEMORY) {
       setWritingMode(WritingMode::CODE);
     } else {
@@ -415,7 +416,7 @@ void MainWindow::setWritingMode(WritingMode mode) {
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); row++) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); col++) {
         QTableWidgetItem *item = ui->tableWidgetMemory->item(row, col);
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        // item->setFlags(item->flags() | Qt::ItemIsEditable);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
       }
     }
@@ -712,6 +713,54 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     }
   }
 }
+
+void MainWindow::showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTableWidgetItem *> &selectedItems, const QString &initialText, bool selectAll) {
+  QRect cellRect = ui->tableWidgetMemory->visualItemRect(firstItem);
+  FocusAwareLineEdit *editor = new FocusAwareLineEdit(ui->tableWidgetMemory->viewport(), ui->tableWidgetMemory);
+  editor->setGeometry(cellRect);
+  editor->setFrame(false);
+  editor->setAlignment(Qt::AlignCenter);
+  editor->show();
+  editor->setFocus();
+  if (!initialText.isEmpty()) {
+    editor->setText(initialText);
+  }
+  if (selectAll)
+    editor->selectAll();
+  connect(editor, &FocusAwareLineEdit::EscapePressed, this, [=]() {
+    editor->setText(initialText);
+    editor->close();
+  });
+  connect(editor, &QLineEdit::editingFinished, this, [=]() {
+    QString input = editor->text();
+    if (!input.isEmpty()) {
+      bool ok;
+      uint32_t valueTemp = hexReg ? input.toUInt(&ok, 16) : input.toUInt(&ok, 10);
+      if (ok && valueTemp <= 255) {
+        uint8_t value = valueTemp;
+        if (selectedItems.size() == 1) {
+
+          uint16_t adr = static_cast<uint16_t>(firstItem->row() * 16 + firstItem->column());
+          processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(adr | value << 16)});
+        } else {
+          QVector<uint16_t> addresses;
+          for (QTableWidgetItem *item : selectedItems) {
+            uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
+            addresses.append(adr);
+          }
+          processor.setMemoryUpdate(addresses, value);
+          processor.addAction(Action{ActionType::SETMEMORYBULK, 0});
+        }
+        updateMemoryTab();
+        if (displayStatusIndex == 1) {
+          ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+        } else if (displayStatusIndex == 2) {
+          plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+        }
+      }
+    }
+  });
+}
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
   if (obj == ui->plainTextLines) {
     if (event->type() == QEvent::MouseButtonPress) {
@@ -788,9 +837,18 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         if (keyEvent->key() == Qt::Key_Delete) {
           auto selectedItems = ui->tableWidgetMemory->selectedItems();
           if (!selectedItems.isEmpty()) {
-            for (QTableWidgetItem *item : selectedItems) {
+            if (selectedItems.size() == 1) {
+              QTableWidgetItem *item = selectedItems.first();
               uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
-              processor.Memory[adr] = 0x00;
+              processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(adr)});
+            } else {
+              QVector<uint16_t> addresses;
+              for (QTableWidgetItem *item : selectedItems) {
+                uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
+                addresses.append(adr);
+              }
+              processor.setMemoryUpdate(addresses, 0x00);
+              processor.addAction(Action{ActionType::SETMEMORYBULK, 0});
             }
             updateMemoryTab();
             if (displayStatusIndex == 1) {
@@ -799,14 +857,27 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
               plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
             }
           }
+          return true;
+        } else if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
+          auto selectedItems = ui->tableWidgetMemory->selectedItems();
+          if (!selectedItems.isEmpty()) {
+            showMemoryEditor(selectedItems.last(), selectedItems, selectedItems.last()->text(), true);
+          }
+          return true;
+        } else if ((keyEvent->key() >= '0' && keyEvent->key() <= '9') ||
+                   (keyEvent->key() >= 'A' && keyEvent->key() <= 'F') ||
+                   (keyEvent->key() >= 'a' && keyEvent->key() <= 'f')) {
+          auto selectedItems = ui->tableWidgetMemory->selectedItems();
+          if (!selectedItems.isEmpty()) {
+            showMemoryEditor(selectedItems.first(), selectedItems, keyEvent->text(), false);
+            return true;
+          }
         }
       }
     }
   }
-
   return QMainWindow::eventFilter(obj, event);
 }
-
 
 void MainWindow::resetEmulator() {
   processor.reset();
@@ -1052,5 +1123,3 @@ void MainWindow::SetMainDisplayVisibility(
   ui->plainTextDisplay->setEnabled(visible);
   ui->plainTextDisplay->setVisible(visible);
 }
-
-

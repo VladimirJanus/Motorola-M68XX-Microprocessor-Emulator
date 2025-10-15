@@ -51,10 +51,14 @@ private:
   };
   struct NumParseRelativeResult {
     bool ok;
-    uint8_t value;
+    int8_t value;
     QString message;
-    static NumParseRelativeResult success(uint8_t value){return{true,value, ""};}
-    static NumParseRelativeResult fromParseResult(const NumParseResult &result) { return {result.ok, static_cast<uint8_t>(result.value), result.message}; }
+    static NumParseRelativeResult success(int8_t value) {
+      return {true, value, ""};
+    }
+    static NumParseRelativeResult fromParseResult(const NumParseResult &result) {
+      return {result.ok, static_cast<int8_t>(result.value), result.message};
+    }
     static NumParseRelativeResult failure(const QString &msg) { return {false, 0, msg}; }
   };
 

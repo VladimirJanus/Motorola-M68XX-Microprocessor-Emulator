@@ -50,7 +50,7 @@ Assembler::NumParseRelativeResult Assembler::parseDecRelative(const QString &inp
       return NumParseRelativeResult::failure(Err::numOutOfRelRange(number));
     }
 
-  return NumParseRelativeResult::success(static_cast<uint8_t>(number));
+    return NumParseRelativeResult::success(static_cast<int8_t>(number));
 }
 /**
  * @brief Parses a hexadecimal string (format: $FF).
@@ -180,7 +180,7 @@ Assembler::NumParseRelativeResult Assembler::parseNumberRelative(const QString &
     if (value > 127 || value < -128) {
       return NumParseRelativeResult::failure(Err::numOutOfRelRange(value));
     }
-    return NumParseRelativeResult::success(static_cast<uint8_t>(value));
+    return NumParseRelativeResult::success(static_cast<int8_t>(value));
   }
 }
 

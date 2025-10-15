@@ -154,6 +154,9 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
     }
 
     assemblyMap.addInstruction(address, line++, opCode, operand1, operand2, in, "");
+    if (static_cast<uint32_t>(address + inSize) >= 65536) {
+      break;
+    }
     address += inSize;
   }
   return DisassemblyResult{messages, code, assemblyMap};

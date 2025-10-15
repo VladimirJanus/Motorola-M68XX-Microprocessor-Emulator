@@ -43,7 +43,8 @@ class Processor : public QObject {
   Q_OBJECT
 private:
   typedef void (Processor::*funcPtr)();
-  ActionQueue actionQueue;
+  ActionQueue actionQueueWhenReady;
+  ActionQueue actionQueueBeforeInstruction;
   AssemblyMap assemblyMap;
   QVector<int> bookmarkedAddresses;
   QFutureWatcher<void> futureWatcher;
@@ -58,6 +59,10 @@ private:
   uint16_t breakIsValue = 0;
   uint16_t breakAtValue = 0;
   bool bookmarkBreakpointsEnabled = false;
+
+  int nanoDelay = 0;
+  int uiUpdateSpeed = 250;
+  int batchSize = 0;
 
 public:
   Processor(ProcessorVersion version);
@@ -83,17 +88,19 @@ public:
   //methods
   void switchVersion(ProcessorVersion version);
   void addAction(const Action &action);
+
   void queueBookmarkData(QVector<int> data);
+  void setMemoryUpdate(QVector<uint16_t> addresses, uint8_t value);
 
   void reset();
   void executeStep();
-  void startExecution(float OPS, AssemblyMap list, QVector<int> bookmarkedAddresses);
+  void startExecution(uint32_t nanoSecondDelay, AssemblyMap list, QVector<int> bookmarkedAddresses);
   void stopExecution();
 
 private:
   //action handling
   void handleAction(const Action &action);
-  void handleActions();
+  void handleActions(Core::ActionExecutionTiming timing);
 
   //helper funcs
   void checkBreak();
@@ -110,6 +117,7 @@ private:
   void interruptCheckCPS();
   void interruptCheckIPS();
 
+  void updateSpeedParams(uint32_t newNanoDelay);
 signals:
   void uiUpdateData(std::array<uint8_t, 0x10000> memoryCopy, int curCycle, uint8_t flags, uint16_t PC, uint16_t SP, uint8_t aReg, uint8_t bReg, uint16_t xReg, bool useCycles, uint64_t opertaionsSinceStart);
   void executionStopped();

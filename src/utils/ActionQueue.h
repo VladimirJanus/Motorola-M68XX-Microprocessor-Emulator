@@ -14,39 +14,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#ifndef ACTIONQUEUE_H
+#define ACTIONQUEUE_H
 
 #include "src/core/Core.h"
+#include <deque>
 #include <mutex>
-#include <vector>
 using Core::Action;
 using Core::ActionType;
 class ActionQueue {
 public:
-  void addAction(const Action& action) {
+  void addAction(const Action &action) {
     std::lock_guard<std::mutex> lock(mutex_);
-
-    auto it = std::remove_if(queue_.begin(), queue_.end(), [&action](const Action& existingAction) { return existingAction.type == action.type; });
-    queue_.erase(it, queue_.end());
-
+    const auto &info = Core::actionTypeInfo[action.type];
+    if (info.canCoalesce) {
+      auto it = std::remove_if(queue_.begin(), queue_.end(), [&action](const Action &existingAction) { return existingAction.type == action.type; });
+      queue_.erase(it, queue_.end());
+    }
     queue_.push_back(action);
   }
-
   bool hasActions() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return !queue_.empty();
   }
-
   Action getNextAction() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (queue_.empty()) {
       throw std::out_of_range("No actions in the queue");
     }
     Action action = queue_.front();
-    queue_.erase(queue_.begin());
+    queue_.pop_front();
     return action;
   }
 
 private:
-  std::vector<Action> queue_;
+  std::deque<Action> queue_;
   mutable std::mutex mutex_;
 };
+
+#endif // ACTIONQUEUE_H

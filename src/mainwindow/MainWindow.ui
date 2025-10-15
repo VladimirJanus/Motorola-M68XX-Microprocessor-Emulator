@@ -4233,7 +4233,7 @@ QPushButton:pressed{
              <enum>QTabWidget::TabShape::Rounded</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>3</number>
             </property>
             <property name="elideMode">
              <enum>Qt::TextElideMode::ElideNone</enum>
@@ -6479,8 +6479,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:2px; margin-bottom:2px; margin-left:12px; margin-right:12px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;ASCII Converter:&lt;/span&gt; Convert between numerical values and ASCII characters&lt;/li&gt;
 &lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:2px; margin-bottom:2px; margin-left:12px; margin-right:12px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Breakpoint System:&lt;/span&gt; Set conditions to pause execution:  
 &lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 2;&quot;&gt;
-&lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:4px; margin-bottom:2px; margin-left:60px; margin-right:60px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;Break when Line/PC/SP/X/A/B/Flags/Memory reaches specified value  &lt;/li&gt;
-&lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:2px; margin-bottom:4px; margin-left:60px; margin-right:60px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;Option to treat code markers as breakpoints  &lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
+&lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:4px; margin-bottom:2px; margin-left:96px; margin-right:96px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;Break when Line/PC/SP/X/A/B/Flags/Memory reaches specified value  &lt;/li&gt;
+&lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:2px; margin-bottom:4px; margin-left:96px; margin-right:96px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;Option to treat code markers as breakpoints  &lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;
 &lt;li style=&quot; font-family:'Consolas','monospace';&quot; style=&quot; margin-top:2px; margin-bottom:4px; margin-left:12px; margin-right:12px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Statistics:&lt;/span&gt; View total operations since start and elapsed time&lt;/li&gt;&lt;/ul&gt;
 &lt;h3 style=&quot; margin-top:8px; margin-bottom:4px; margin-left:12px; margin-right:12px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;&lt;span style=&quot; font-family:'Consolas','monospace'; font-size:11pt; font-weight:700;&quot;&gt;Settings Tab:&lt;/span&gt;&lt;/h3&gt;
 &lt;p style=&quot; margin-top:4px; margin-bottom:4px; margin-left:12px; margin-right:12px; -qt-block-indent:0; text-indent:0px; line-height:140%;&quot;&gt;&lt;span style=&quot; font-family:'Consolas','monospace';&quot;&gt;Configure emulator behavior and display options:&lt;/span&gt;&lt;/p&gt;
@@ -7151,7 +7151,7 @@ QPushButton:pressed{
            <string notr="true"/>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>0</number>
           </property>
           <property name="maxVisibleItems">
            <number>8</number>
@@ -7264,6 +7264,11 @@ QPushButton:pressed{
           <item>
            <property name="text">
             <string>1000000</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2000000</string>
            </property>
           </item>
          </widget>

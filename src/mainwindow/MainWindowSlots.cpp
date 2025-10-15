@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#include "src/mainwindow/MainWindow.h"
-#include <QDir>
-#include <QTimer>
-#include <QScrollBar>
 #include "src/dialogs/InstructionInfoDialog.h"
+#include "src/mainwindow/MainWindow.h"
 #include "ui_MainWindow.h"
+#include <QDir>
+#include <QScrollBar>
+#include <QTimer>
 
 // Scroll Handlers
 void MainWindow::handleCodeVerticalScrollBarValueChanged(int value) {
@@ -29,15 +29,15 @@ void MainWindow::handleLinesScroll() {
   ui->plainTextLines->verticalScrollBar()->setValue(ui->plainTextCode->verticalScrollBar()->value());
 }
 void MainWindow::handleDisplayScrollVertical() {
-  //ui->plainTextDisplay->verticalScrollBar()->setValue(0);
+  // ui->plainTextDisplay->verticalScrollBar()->setValue(0);
 }
 void MainWindow::handleDisplayScrollHorizontal() {
-  //ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
+  // ui->plainTextDisplay->horizontalScrollBar()->setValue(0);
 }
 
 // Button bar Handlers
 bool MainWindow::on_buttonAssemble_clicked() {
-  //ui->plainTextConsole->clear();
+  // ui->plainTextConsole->clear();
   if (writingMode == WritingMode::CODE) {
     return startAssembly();
   } else {
@@ -109,16 +109,16 @@ void MainWindow::on_buttonRunStop_clicked() {
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(OPS, assemblyMap, markedAddressList);
+      processor.startExecution(executionNanoDelay, assemblyMap, markedAddressList);
       ui->buttonRunStop->setStyleSheet(greenButton);
     }
   }
 }
 void MainWindow::on_menuSpeedSelector_activated() {
-  processor.stopExecution();
-
-  OPS = ui->menuSpeedSelector->currentText().toFloat();
+  double OPS = ui->menuSpeedSelector->currentText().toDouble();
+  executionNanoDelay = 1000000000 / OPS;
   ui->labelRunningIndicatior->setText("Operation/second: " + QString::number(OPS, 'f', OPS < 1 ? 1 : 0));
+  processor.addAction(Action{ActionType::UPDATEPROCESSORSPEED, executionNanoDelay});
 }
 
 void MainWindow::on_buttonSwitchWrite_clicked() {
@@ -133,7 +133,7 @@ void MainWindow::on_buttonSwitchWrite_clicked() {
 void MainWindow::on_checkUseCycles_clicked(bool checked) {
   processor.stopExecution();
 
-  processor.addAction(Action{ActionType::SETUSECYCLES, checked});
+  processor.useCycles = checked;
 
   if (!checked) {
     ui->labelRunningCycleNum->setVisible(false);
@@ -185,7 +185,7 @@ void MainWindow::on_checkShowHex_clicked(bool checked) {
     ui->menuBreakIs->setDisplayIntegerBase(10);
     ui->memoryAddressSpinBox->setDisplayIntegerBase(10);
   }
-  drawProcessor(); //SLABO KER DE MED RUNNINGON ACCESSO ONEJE --------------------------------------------------------------------------------------------------------------------------------------------
+  drawProcessor(); // SLABO KER DE MED RUNNINGON ACCESSO ONEJE --------------------------------------------------------------------------------------------------------------------------------------------
 }
 
 void MainWindow::on_menuScrollLow_valueChanged(int arg1) {
@@ -253,7 +253,8 @@ void MainWindow::on_buttonTidyUp_clicked() {
   QString modifiedCode = lines.join("\n");
   ui->plainTextCode->setPlainText(modifiedCode);
 }
-void MainWindow::on_menuDisplayStatus_currentIndexChanged(int index) {
+void MainWindow::on_menuDisplayStatus_currentIndexChanged(
+    int index) {
   if (index == 0) {
     externalDisplay->hide();
     SetMainDisplayVisibility(false);
@@ -290,7 +291,8 @@ void MainWindow::on_pushButtonIRQ_clicked() {
 }
 
 // Debug Tools Handlers
-void MainWindow::on_lineEditBin_textChanged(const QString &arg1) {
+void MainWindow::on_lineEditBin_textChanged(
+    const QString &arg1) {
   QString arg = arg1;
   if (arg.startsWith('%')) {
     arg = arg.mid(1);
@@ -311,7 +313,8 @@ void MainWindow::on_lineEditBin_textChanged(const QString &arg1) {
     }
   }
 }
-void MainWindow::on_lineEditHex_textChanged(const QString &arg1) {
+void MainWindow::on_lineEditHex_textChanged(
+    const QString &arg1) {
   QString arg = arg1;
   if (arg.startsWith('$')) {
     arg = arg.mid(1);
@@ -332,7 +335,8 @@ void MainWindow::on_lineEditHex_textChanged(const QString &arg1) {
     }
   }
 }
-void MainWindow::on_lineEditDec_textChanged(const QString &arg1) {
+void MainWindow::on_lineEditDec_textChanged(
+    const QString &arg1) {
   if (arg1 != "X") {
     bool ok;
     int number = arg1.toInt(&ok);
@@ -350,7 +354,8 @@ void MainWindow::on_lineEditDec_textChanged(const QString &arg1) {
   }
 }
 
-void MainWindow::on_menuBreakWhen_currentIndexChanged(int index) {
+void MainWindow::on_menuBreakWhen_currentIndexChanged(
+    int index) {
   ui->menuBreakAt->setValue(0);
   ui->menuBreakIs->setValue(0);
   processor.addAction(Action{ActionType::SETBREAKWHEN, static_cast<uint32_t>(index)});
@@ -412,23 +417,25 @@ void MainWindow::on_menuBreakWhen_currentIndexChanged(int index) {
     break;
   }
 }
-void MainWindow::on_menuBreakAt_valueChanged(int arg1) {
+void MainWindow::on_menuBreakAt_valueChanged(
+    int arg1) {
   processor.addAction(Action{ActionType::SETBREAKAT, static_cast<uint32_t>(arg1)});
 }
-void MainWindow::on_menuBreakIs_valueChanged(int arg1) {
+void MainWindow::on_menuBreakIs_valueChanged(
+    int arg1) {
   processor.addAction(Action{ActionType::SETBREAKIS, static_cast<uint32_t>(arg1)});
 }
 
-void MainWindow::on_line2COMIN_valueChanged(int i) {
-    if (i < 0 || i > 0xFF) {
-        ui->line2COMOUT->setText("X");
-        return;
-    }
+void MainWindow::on_line2COMIN_valueChanged(
+    int i) {
+  if (i < 0 || i > 0xFF) {
+    ui->line2COMOUT->setText("X");
+    return;
+  }
 
-    uint8_t byte = static_cast<uint8_t>(0xFF - i + 1);
-    ui->line2COMOUT->setText("$" + QString::number(byte, 16).toUpper());
+  uint8_t byte = static_cast<uint8_t>(0xFF - i + 1);
+  ui->line2COMOUT->setText("$" + QString::number(byte, 16).toUpper());
 }
-
 
 // Memory Interaction Handlers
 void MainWindow::on_memoryAddressSpinBox_valueChanged(int arg1) {
@@ -440,55 +447,79 @@ void MainWindow::on_memoryAddressSpinBox_valueChanged(int arg1) {
   auto targetItem = ui->tableWidgetMemory->item(row, column);
   ui->tableWidgetMemory->setCurrentItem(targetItem);
 }
-void MainWindow::on_simpleMemoryAddressSpinBox_valueChanged(int arg1) { //this spinBox should be capped to [0,0xFFFF]
+void MainWindow::on_simpleMemoryAddressSpinBox_valueChanged(int arg1) { // this spinBox should be capped to [0,0xFFFF]
   currentSMScroll = static_cast<uint16_t>(arg1);
   updateMemoryTab();
   drawMemoryMarkers();
 }
 
 void MainWindow::tableMemory_cellChanged(int row, int column) {
+  return;
   ui->tableWidgetMemory->blockSignals(true);
-  QTableWidgetItem *item = ui->tableWidgetMemory->item(row, column);
-  if (item == ui->tableWidgetMemory->currentItem() && ui->tableWidgetMemory->isPersistentEditorOpen(item)) {
-    QString newText = item->text();
-    bool ok;
-    int value;
+
+  QTableWidgetItem *itemChanged = ui->tableWidgetMemory->item(row, column);
+  if (!itemChanged || itemChanged != ui->tableWidgetMemory->currentItem() || !ui->tableWidgetMemory->isPersistentEditorOpen(itemChanged)) {
+    ui->tableWidgetMemory->blockSignals(false);
+    return;
+  }
+
+  QString newText = itemChanged->text();
+  bool ok;
+  int value = hexReg ? newText.toInt(&ok, 16) : newText.toInt(&ok, 10);
+  uint16_t address = static_cast<uint16_t>(row * 16 + column);
+
+  if (!ok || value < 0 || value > 0xFF) {
+    uint8_t memValue = processor.Memory[address];
     if (hexReg) {
-      value = newText.toInt(&ok, 16);
+      itemChanged->setText(QString("%1").arg(memValue, 2, 16, QChar('0')).toUpper());
     } else {
-      value = newText.toInt(&ok, 10);
+      itemChanged->setText(QString::number(memValue));
     }
-    uint16_t adr = static_cast<uint16_t>(row * 16 + column);
-    if (!ok || value < 0 || value > 0xFF) {
-      if (hexReg) {
-        item->setText(QString("%1").arg(processor.Memory[adr], 2, 16, QChar('0')).toUpper());
-      } else {
-        item->setText(QString("%1").arg(processor.Memory[adr]));
-      }
+    ui->tableWidgetMemory->blockSignals(false);
+    return;
+  }
+
+  auto selectedItems = ui->tableWidgetMemory->selectedItems();
+
+  if (processor.running || selectedItems.isEmpty()) {
+    if (selectedItems.count() > 1) {
+      PrintConsole("Memory bulk editing is not allowed while processor is running.");
+    }
+
+    if (hexReg) {
+      itemChanged->setText(QString("%1").arg(value, 2, 16, QChar('0')).toUpper());
     } else {
+      itemChanged->setText(QString::number(value));
+    }
+
+    processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(address | (value << 16))});
+  } else {
+    for (QTableWidgetItem *item : selectedItems) {
       if (hexReg) {
         item->setText(QString("%1").arg(value, 2, 16, QChar('0')).toUpper());
       } else {
-        item->setText(QString("%1").arg(value));
+        item->setText(QString::number(value));
       }
-      if (!processor.running) {
-        processor.Memory[adr] = value;
-        if (adr >= 0xFB00 && adr <= 0xFF37) {
-          if (displayStatusIndex == 1) {
-            ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-          } else if (displayStatusIndex == 2) {
-            plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
-          }
+
+      uint16_t adr = static_cast<uint16_t>(item->row() * 16 + item->column());
+      processor.Memory[adr] = value;
+
+      if (adr >= 0xFB00 && adr <= 0xFF37) {
+        if (displayStatusIndex == 1) {
+          ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+        } else if (displayStatusIndex == 2) {
+          plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
         }
-        if (assembled) {
-          setAssemblyStatus(false);
-        }
-        std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
-      } else {
-        processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(adr | (value << 16))});
       }
     }
+
+    if (assembled) {
+      setAssemblyStatus(false);
+    }
+
+    std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
   }
+
   ui->tableWidgetMemory->blockSignals(false);
 }
 
@@ -497,14 +528,15 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item) {
   InstructionInfoDialog dialog(*item, this);
   dialog.exec();
 }
+#define CODE_MAX_LINE_COUNT 100000
 void MainWindow::on_plainTextCode_textChanged() {
   static QTimer backupTimer;
 
   // Limit line count
   QString text = ui->plainTextCode->toPlainText();
-  if (text.count('\n') > 65535) {
+  if (text.count('\n') > CODE_MAX_LINE_COUNT) {
     QStringList lines = text.split('\n', Qt::SkipEmptyParts);
-    text = lines.mid(0, 65536).join('\n');
+    text = lines.mid(0, CODE_MAX_LINE_COUNT + 1).join('\n');
     ui->plainTextCode->setPlainText(text);
   }
 
@@ -537,50 +569,38 @@ void MainWindow::on_plainTextCode_textChanged() {
     if (assembled)
       setAssemblyStatus(false);
   }
-
-
 }
-void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked)
-{
+void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked) {
   processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
 }
 
-void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1) //this lineEdit should be capped to [0,255]
+void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1) // this lineEdit should be capped to [0,255]
 {
-
   ui->lineASCIIconvChar->blockSignals(true);
   QChar c = Core::numToChar(static_cast<uint8_t>(arg1));
   ui->lineASCIIconvChar->setText(c.isNull() ? QStringLiteral("") : c);
   ui->lineASCIIconvChar->blockSignals(false);
 }
 
-void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1)
-{
+void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1) {
   ui->lineASCIIconvNum->blockSignals(true);
   ui->lineASCIIconvNum->setValue(arg1.length() == 0 ? 0 : Core::charToVal(arg1[0]));
   ui->lineASCIIconvNum->blockSignals(false);
 }
 
-
-
-
-
-
-
-void MainWindow::on_menuMemoryDisplayMode_currentIndexChanged(int index)
-{
+void MainWindow::on_menuMemoryDisplayMode_currentIndexChanged(int index) {
   memoryDisplayMode = static_cast<Core::MemoryDisplayMode>(index);
   if (memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
     ui->groupSimpleMemory->setVisible(true);
     ui->groupSimpleMemory->setEnabled(true);
     ui->groupMemory->setVisible(false);
     ui->groupMemory->setEnabled(false);
-  } else if(memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+  } else if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
     ui->groupMemory->setVisible(true);
     ui->groupMemory->setEnabled(true);
     ui->groupSimpleMemory->setVisible(false);
     ui->groupSimpleMemory->setEnabled(false);
-  }else{
+  } else {
     ui->groupMemory->setVisible(false);
     ui->groupMemory->setEnabled(false);
     ui->groupSimpleMemory->setVisible(false);
@@ -589,7 +609,3 @@ void MainWindow::on_menuMemoryDisplayMode_currentIndexChanged(int index)
   updateMemoryTab();
   drawMemoryMarkers();
 }
-
-
-
-

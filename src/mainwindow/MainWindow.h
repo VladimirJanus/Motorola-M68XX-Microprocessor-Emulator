@@ -19,9 +19,10 @@
 #define MAINWINDOW_H
 
 // Qt includes
+#include <QFutureWatcher>
 #include <QLineEdit>
 #include <QMainWindow>
-#include <QFutureWatcher>
+#include <QTableWidget>
 #include <QTreeWidget>
 
 // Project includes
@@ -131,6 +132,7 @@ private:
   void setAllowWritingModeSwitch(bool allow);
   void setAssemblyStatus(bool isAssembled);
   void resetEmulator();
+  void showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTableWidgetItem *> &selectedItems, const QString &initialText = "", bool selectAll = false);
 
   // State Variables
   bool errorDisplayed = false;
@@ -143,7 +145,7 @@ private:
   int displayStatusIndex;
   bool displayPossible = false;
 
-  float OPS = 1;
+  uint32_t executionNanoDelay = 1000000000;
   uint16_t currentSMScroll = 0;
   int autoScrollUpLimit = 20;
   int autoScrollDownLimit = 5;

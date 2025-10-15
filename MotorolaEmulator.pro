@@ -37,6 +37,7 @@ HEADERS += \
     src/assembler/Assembler.h \
     src/assembler/Disassembler.h \
     src/core/Core.h \
+    src/dialogs/FocusAwareLineEdit.h \
     src/processor/Processor.h \
     src/dialogs/ExternalDisplay.h \
     src/dialogs/InstructionInfoDialog.h \
