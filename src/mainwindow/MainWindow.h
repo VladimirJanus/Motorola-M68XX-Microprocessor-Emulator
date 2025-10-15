@@ -92,8 +92,6 @@ private:
   void setCurrentInstructionMarker(int address);
   void setAssemblyErrorMarker(int charNum, int lineNum);
   int inputNextAddress(int curAdr, QString err);
-  void disableCellChangedHandler();
-  void enableCellChangedHandler();
 
   // Display and Drawing
   void drawOPC();
@@ -132,7 +130,7 @@ private:
   void setAllowWritingModeSwitch(bool allow);
   void setAssemblyStatus(bool isAssembled);
   void resetEmulator();
-  void showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTableWidgetItem *> &selectedItems, const QString &initialText = "", bool selectAll = false);
+  void showMemoryEditor(const QList<QTableWidgetItem *> &selectedItems, const QString &initialText = "", bool selectAll = false);
 
   // State Variables
   bool errorDisplayed = false;
@@ -222,7 +220,6 @@ private slots:
   // Memory Interaction Handlers
   void on_memoryAddressSpinBox_valueChanged(int arg1);
   void on_simpleMemoryAddressSpinBox_valueChanged(int arg1);
-  void tableMemory_cellChanged(int row, int column);
   void on_line2COMIN_valueChanged(int i);
 
   // Misc

@@ -11,14 +11,14 @@ public:
   FocusAwareLineEdit(QWidget *parent, QWidget *focusTarget)
       : QLineEdit(parent), m_focusTarget(focusTarget) {
     setAttribute(Qt::WA_DeleteOnClose);
-    this->installEventFilter(this);
+    installEventFilter(this);
   }
   bool eventFilter(QObject *obj, QEvent *event) override {
     if (obj == this) {
       if (event->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (keyEvent->key() == Qt::Key::Key_Escape) {
-          emit EscapePressed();
+          emit escapePressed();
           return true;
         }
       }
@@ -26,13 +26,14 @@ public:
     return QLineEdit::eventFilter(obj, event);
   }
 signals:
-  void EscapePressed();
+  void escapePressed();
 
 protected:
   void closeEvent(QCloseEvent *event) override {
     if (m_focusTarget) {
       m_focusTarget->setFocus();
     }
+    QLineEdit::closeEvent(event);
   }
   void focusOutEvent(QFocusEvent *event) override {
     QLineEdit::focusOutEvent(event);

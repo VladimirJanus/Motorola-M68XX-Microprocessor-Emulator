@@ -367,7 +367,6 @@ void MainWindow::applyInitialSettings() {
   on_menuVersionSelector_currentIndexChanged(ui->menuVersionSelector->currentIndex());
   on_checkAdvancedInfo_clicked(ui->checkAdvancedInfo->isChecked());
   on_menuBreakWhen_currentIndexChanged(ui->menuBreakWhen->currentIndex());
-  enableCellChangedHandler();
   setAllowWritingModeSwitch(false);
   ui->tabWidget->setCurrentIndex(0);
 }
@@ -660,7 +659,6 @@ void MainWindow::updateMemoryTab() {
       }
     }
   } else if(memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
-    disableCellChangedHandler();
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
         uint16_t adr = static_cast<uint16_t>(row * 16 + col);
@@ -673,7 +671,6 @@ void MainWindow::updateMemoryTab() {
         }
       }
     }
-    enableCellChangedHandler();
   }
 }
 
@@ -714,8 +711,10 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
   }
 }
 
-void MainWindow::showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTableWidgetItem *> &selectedItems, const QString &initialText, bool selectAll) {
-  QRect cellRect = ui->tableWidgetMemory->visualItemRect(firstItem);
+void MainWindow::showMemoryEditor(const QList<QTableWidgetItem *> &selectedItems, const QString &initialText, bool selectAll) {
+  QTableWidgetItem *mainItem = selectedItems.last();
+  const QString &originalText = mainItem->text();
+  QRect cellRect = ui->tableWidgetMemory->visualItemRect(mainItem);
   FocusAwareLineEdit *editor = new FocusAwareLineEdit(ui->tableWidgetMemory->viewport(), ui->tableWidgetMemory);
   editor->setGeometry(cellRect);
   editor->setFrame(false);
@@ -724,11 +723,13 @@ void MainWindow::showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTabl
   editor->setFocus();
   if (!initialText.isEmpty()) {
     editor->setText(initialText);
+  } else {
+    editor->setText(originalText);
   }
   if (selectAll)
     editor->selectAll();
-  connect(editor, &FocusAwareLineEdit::EscapePressed, this, [=]() {
-    editor->setText(initialText);
+  connect(editor, &FocusAwareLineEdit::escapePressed, this, [=]() {
+    editor->setText(originalText);
     editor->close();
   });
   connect(editor, &QLineEdit::editingFinished, this, [=]() {
@@ -740,7 +741,7 @@ void MainWindow::showMemoryEditor(QTableWidgetItem *firstItem, const QList<QTabl
         uint8_t value = valueTemp;
         if (selectedItems.size() == 1) {
 
-          uint16_t adr = static_cast<uint16_t>(firstItem->row() * 16 + firstItem->column());
+          uint16_t adr = static_cast<uint16_t>(mainItem->row() * 16 + mainItem->column());
           processor.addAction(Action{ActionType::SETMEMORY, static_cast<uint32_t>(adr | value << 16)});
         } else {
           QVector<uint16_t> addresses;
@@ -861,7 +862,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
         } else if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
           auto selectedItems = ui->tableWidgetMemory->selectedItems();
           if (!selectedItems.isEmpty()) {
-            showMemoryEditor(selectedItems.last(), selectedItems, selectedItems.last()->text(), true);
+            showMemoryEditor(selectedItems, "", true);
           }
           return true;
         } else if ((keyEvent->key() >= '0' && keyEvent->key() <= '9') ||
@@ -869,7 +870,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
                    (keyEvent->key() >= 'a' && keyEvent->key() <= 'f')) {
           auto selectedItems = ui->tableWidgetMemory->selectedItems();
           if (!selectedItems.isEmpty()) {
-            showMemoryEditor(selectedItems.first(), selectedItems, keyEvent->text(), false);
+            showMemoryEditor(selectedItems, keyEvent->text(), false);
             return true;
           }
         }
@@ -993,7 +994,6 @@ void MainWindow::drawProcessorRunning(
   if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
     int firstVisibleRow = ui->tableWidgetMemory->rowAt(0);
     int lastVisibleRow = std::ceil(ui->tableWidgetMemory->rowAt(ui->tableWidgetMemory->viewport()->height() - 1));
-    disableCellChangedHandler();
     for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
         if (hexReg) {
@@ -1003,7 +1003,6 @@ void MainWindow::drawProcessorRunning(
         }
       }
     }
-    enableCellChangedHandler();
   } else if(memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
     for (int i = 0; i < 20; ++i) {
       ui->tableWidgetSM->item(i, 0)->setText(QString("%1").arg(currentSMScroll + i, 4, 16, QChar('0')).toUpper());
@@ -1112,12 +1111,6 @@ bool MainWindow::startDisassembly() {
   return true;
 }
 
-void MainWindow::disableCellChangedHandler() {
-  disconnect(ui->tableWidgetMemory, &QTableWidget::cellChanged, this, &MainWindow::tableMemory_cellChanged);
-}
-void MainWindow::enableCellChangedHandler() {
-  connect(ui->tableWidgetMemory, &QTableWidget::cellChanged, this, &MainWindow::tableMemory_cellChanged);
-}
 void MainWindow::SetMainDisplayVisibility(
   bool visible) {
   ui->plainTextDisplay->setEnabled(visible);
