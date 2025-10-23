@@ -20,15 +20,14 @@
 #include "src/core/Core.h"
 #include <deque>
 #include <mutex>
-using Core::Action;
-using Core::ActionType;
+
 class ActionQueue {
 public:
-  void addAction(const Action &action) {
+  void addAction(const Core::Action &action) {
     std::lock_guard<std::mutex> lock(mutex_);
     const auto &info = Core::actionTypeInfo[action.type];
     if (info.canCoalesce) {
-      auto it = std::remove_if(queue_.begin(), queue_.end(), [&action](const Action &existingAction) { return existingAction.type == action.type; });
+      auto it = std::remove_if(queue_.begin(), queue_.end(), [&action](const Core::Action &existingAction) { return existingAction.type == action.type; });
       queue_.erase(it, queue_.end());
     }
     queue_.push_back(action);
@@ -37,18 +36,18 @@ public:
     std::lock_guard<std::mutex> lock(mutex_);
     return !queue_.empty();
   }
-  Action getNextAction() {
+  Core::Action getNextAction() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (queue_.empty()) {
       throw std::out_of_range("No actions in the queue");
     }
-    Action action = queue_.front();
+    Core::Action action = queue_.front();
     queue_.pop_front();
     return action;
   }
 
 private:
-  std::deque<Action> queue_;
+  std::deque<Core::Action> queue_;
   mutable std::mutex mutex_;
 };
 

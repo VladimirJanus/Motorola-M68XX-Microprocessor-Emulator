@@ -71,5 +71,5 @@ Core::MnemonicInfo Core::getInfoByOpCode(ProcessorVersion version, uint8_t opCod
 }
 
 bool Core::isMnemonic(QString s) {
-  return (getInfoByMnemonic(allProcessorVersionsMask, s).mnemonic != "INVALID") || alliasMap.contains(s);
+  return (getInfoByMnemonic(ALL, s).mnemonic != "INVALID") || alliasMap.contains(s);
 }

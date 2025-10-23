@@ -14,13 +14,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "qscrollbar.h"
 #include "src/mainwindow/MainWindow.h"
+#include "src/processor/Processor.h"
 #include "ui_MainWindow.h"
-#include <qscrollbar.h>
-#include <qtextobject.h>
+#include <QTextBlock>
+
+using Core::Action;
+using Core::ActionType;
+using Core::ColorType;
+using Core::MemoryDisplayMode;
 
 int runtimeMarkerAddress = 0;
-
 QVector<int> markedLineList;
 
 QBrush brushMarked(Qt::GlobalColor::green);
@@ -49,9 +54,9 @@ QBrush &getBrushForType(ColorType colorType) {
 }
 
 void MainWindow::colorMemory(int address, ColorType colorType) {
-  if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+  if (memoryDisplayMode == MemoryDisplayMode::FULL) {
     ui->tableWidgetMemory->item(address / 16, address % 16)->setBackground(getBrushForType(colorType));
-  } else if(memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
+  } else if (memoryDisplayMode == MemoryDisplayMode::SIMPLE) {
     int row = address - currentSMScroll;
     if (row >= 0 && row < 20) {
       QBrush brush = getBrushForType(colorType);
@@ -102,7 +107,7 @@ void MainWindow::drawTextMarkers() {
 }
 
 void MainWindow::drawMemoryMarkers() {
-  if (memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
+  if (memoryDisplayMode == MemoryDisplayMode::SIMPLE) {
     for (int row = 0; row < ui->tableWidgetSM->rowCount(); ++row) {
       int adr = row + currentSMScroll;
       if (markedAddressList.contains(adr)) {
@@ -115,7 +120,7 @@ void MainWindow::drawMemoryMarkers() {
         ui->tableWidgetSM->item(row, 2)->setBackground(QBrush(Core::SMMemoryCellColor));
       }
     }
-  } else if(memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+  } else if (memoryDisplayMode == MemoryDisplayMode::FULL) {
     for (int row = 0; row < ui->tableWidgetMemory->rowCount(); ++row) {
       for (int col = 0; col < ui->tableWidgetMemory->columnCount(); ++col) {
         uint16_t address = static_cast<uint16_t>(row * 16 + col);
@@ -144,8 +149,8 @@ void MainWindow::toggleCodeMarker(int line) {
     markedLineList.removeOne(line);
     if (address >= 0) {
       markedAddressList.removeOne(address);
-      processor.queueBookmarkData(markedAddressList);
-      processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
+      processor->queueBookmarkData(markedAddressList);
+      processor->addAction(Action{ActionType::UPDATEBOOKMARKS, 0});
 
       ColorType type = (address == runtimeMarkerAddress) ? ColorType::CURRENTINSTRUCTION : ColorType::NONE;
       colorMemory(address, type);
@@ -155,8 +160,8 @@ void MainWindow::toggleCodeMarker(int line) {
     if (address >= 0) {
       if (markedAddressList.count(address) == 0) {
         markedAddressList.append(address);
-        processor.queueBookmarkData(markedAddressList);
-        processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
+        processor->queueBookmarkData(markedAddressList);
+        processor->addAction(Action{ActionType::UPDATEBOOKMARKS, 0});
       }
       ColorType type = (address == runtimeMarkerAddress) ? ColorType::MARKED_CURRENTINSTRUCTION : ColorType::MARKED;
       colorMemory(address, type);
@@ -209,12 +214,12 @@ void MainWindow::setAssemblyErrorMarker(int charNum, int lineNum) {
 void MainWindow::clearCodeMarkers() {
   errorDisplayed = false;
   colorMemory(runtimeMarkerAddress, ColorType::NONE);
-  if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+  if (memoryDisplayMode == MemoryDisplayMode::FULL) {
     colorMemory(runtimeMarkerAddress, ColorType::NONE);
     for (int i = 0; i < markedAddressList.length(); ++i) {
       colorMemory(markedAddressList[i], ColorType::NONE);
     }
-  } else if(memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE){
+  } else if (memoryDisplayMode == MemoryDisplayMode::SIMPLE) {
     for (int i = 0; i < 20; ++i) {
       ui->tableWidgetSM->item(i, 0)->setBackground(QBrush(Core::SMMemoryCellColor));
       ui->tableWidgetSM->item(i, 1)->setBackground(QBrush(Core::SMMemoryCellColor2));
@@ -223,8 +228,8 @@ void MainWindow::clearCodeMarkers() {
   }
   markedLineList.clear();
   markedAddressList.clear();
-  processor.queueBookmarkData(markedAddressList);
-  processor.addAction(Action{ActionType::UPDATEBOOKMARKS,0});
+  processor->queueBookmarkData(markedAddressList);
+  processor->addAction(Action{ActionType::UPDATEBOOKMARKS, 0});
 
   runtimeMarkerAddress = 0;
   ui->plainTextLines->setExtraSelections({});
@@ -234,5 +239,5 @@ void MainWindow::clearCodeMarkers() {
 
 void MainWindow::clearMarkers() {
   clearCodeMarkers();
-  setCurrentInstructionMarker(processor.PC);
+  setCurrentInstructionMarker(processor->PC);
 }

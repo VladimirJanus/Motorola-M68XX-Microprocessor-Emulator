@@ -16,6 +16,15 @@
  */
 #include "src/processor/Processor.h"
 
+using Core::bit;
+using Core::interruptLocations;
+using Core::Flag::Carry;
+using Core::Flag::HalfCarry;
+using Core::Flag::InterruptMask;
+using Core::Flag::Negative;
+using Core::Flag::Overflow;
+using Core::Flag::Zero;
+
 inline uint8_t Processor::getByteOperand() const {
   return Memory[(PC + 1) & 0xFFFF];
 }

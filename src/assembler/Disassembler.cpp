@@ -15,6 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "src/assembler/Disassembler.h"
+using Core::AddressingMode;
+using Core::AssemblyMap;
+using Core::DisassemblyResult;
+using Core::MnemonicInfo;
+using Core::Msg;
+using Core::MsgType;
+using Core::ProcessorVersion;
 
 DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory) {
   QString code;
@@ -67,7 +74,7 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
   for (uint16_t address = begLoc; address <= lastNonZero;) {
     uint8_t opCode = Memory[address];
 
-    Core::MnemonicInfo mnemonicInfo = Core::getInfoByOpCode(ver, opCode);
+    MnemonicInfo mnemonicInfo = getInfoByOpCode(ver, opCode);
 
     QString in = mnemonicInfo.mnemonic;
     uint8_t inSize = getInstructionLength(ver, opCode);
@@ -149,7 +156,7 @@ DisassemblyResult Disassembler::disassemble(ProcessorVersion ver, uint16_t begLo
         code.append("\t" + in + " $" + QString::number(operand1, 16).toUpper() + "\n");
       }
       break;
-    case Core::AddressingMode::INVALID: //this will never happen because of continue in previous check
+    case AddressingMode::INVALID: // this will never happen because of continue in previous check
       break;
     }
 

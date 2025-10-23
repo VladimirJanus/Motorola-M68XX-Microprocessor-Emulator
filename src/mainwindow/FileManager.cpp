@@ -15,14 +15,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "src/mainwindow/MainWindow.h"
-#include <QDir>
-#include <QMessageBox>
-#include <QFileDialog>
+#include "src/processor/Processor.h"
 #include "ui_MainWindow.h"
+#include <QDir>
+#include <QFileDialog>
+#include <QMessageBox>
+
+using Core::MsgType;
 
 void MainWindow::saveMemory() {
-  processor.stopExecution();
-  QByteArray byteArray(reinterpret_cast<const char *>(processor.Memory.data()), processor.Memory.size());
+  processor->stopExecution();
+  QByteArray byteArray(reinterpret_cast<const char *>(processor->Memory.data()), processor->Memory.size());
   QString filePath = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Binary Files (*.bin);;All Files (*)"));
 
   if (!filePath.isEmpty()) {
@@ -42,10 +45,10 @@ void MainWindow::loadMemory() {
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly)) {
       QByteArray byteArray = file.readAll();
-      if (byteArray.size() == sizeof(processor.Memory)) {
-        processor.stopExecution();
-        std::memcpy(processor.Memory.data(), byteArray.constData(), sizeof(processor.Memory));
-        std::memcpy(processor.backupMemory.data(), processor.Memory.data(), processor.Memory.size() * sizeof(uint8_t));
+      if (byteArray.size() == sizeof(processor->Memory)) {
+        processor->stopExecution();
+        std::memcpy(processor->Memory.data(), byteArray.constData(), sizeof(processor->Memory));
+        std::memcpy(processor->backupMemory.data(), processor->Memory.data(), processor->Memory.size() * sizeof(uint8_t));
         setAssemblyStatus(false);
 
       } else {

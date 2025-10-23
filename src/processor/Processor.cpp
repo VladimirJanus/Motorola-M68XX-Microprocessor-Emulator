@@ -15,8 +15,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "src/processor/Processor.h"
+#include "src/utils/ActionQueue.h"
+#include <QtConcurrent/QtConcurrent>
+using Core::Action;
+using Core::ActionType;
+using Core::AssemblyMap;
+using Core::Flag;
+using Core::Interrupt;
+using Core::ProcessorVersion;
 
 Processor::Processor(ProcessorVersion version) {
+  actionQueueWhenReady = new ActionQueue();
+  actionQueueBeforeInstruction = new ActionQueue();
   switchVersion(version);
 }
 
@@ -37,6 +47,10 @@ void Processor::switchVersion(ProcessorVersion version) {
   case ProcessorVersion::M6803:
     executeInstruction = &Processor::executeM6803;
     break;
+  case Core::NONE:
+  case Core::ALL:
+    throw std::invalid_argument("");
+    break;
   }
 }
 
@@ -51,9 +65,9 @@ void Processor::switchVersion(ProcessorVersion version) {
 void Processor::addAction(const Action &action) {
   Core::ActionExecutionTiming timing = Core::actionTypeInfo.find(action.type).value().timing;
   if (timing == Core::ActionExecutionTiming::WHEN_READY) {
-    actionQueueWhenReady.addAction(action);
+    actionQueueWhenReady->addAction(action);
   } else if (timing == Core::ActionExecutionTiming::BEFORE_INSTRUCTION) {
-    actionQueueBeforeInstruction.addAction(action);
+    actionQueueBeforeInstruction->addAction(action);
   }
   if (!running)
     handleActions(Core::ActionExecutionTiming::WHEN_NOT_RUNNING);
@@ -66,14 +80,14 @@ void Processor::addAction(const Action &action) {
  * no actions remain.
  */
 void Processor::handleActions(Core::ActionExecutionTiming timing) {
-  while (actionQueueWhenReady.hasActions()) {
-    Action action = actionQueueWhenReady.getNextAction();
+  while (actionQueueWhenReady->hasActions()) {
+    Action action = actionQueueWhenReady->getNextAction();
     handleAction(action);
   }
   if (timing == Core::ActionExecutionTiming::BEFORE_INSTRUCTION || timing == Core::ActionExecutionTiming::WHEN_NOT_RUNNING) {
 
-    while (actionQueueBeforeInstruction.hasActions()) {
-      Action action = actionQueueBeforeInstruction.getNextAction();
+    while (actionQueueBeforeInstruction->hasActions()) {
+      Action action = actionQueueBeforeInstruction->getNextAction();
       handleAction(action);
     }
   }
@@ -219,27 +233,27 @@ void Processor::checkBreak() {
       running = false;
     break;
   case 7:
-    if (bit(flags, HalfCarry) == breakIsValue)
+    if (bit(flags, Flag::HalfCarry) == breakIsValue)
       running = false;
     break;
   case 8:
-    if (bit(flags, InterruptMask) == breakIsValue)
+    if (bit(flags, Flag::InterruptMask) == breakIsValue)
       running = false;
     break;
   case 9:
-    if (bit(flags, Negative) == breakIsValue)
+    if (bit(flags, Flag::Negative) == breakIsValue)
       running = false;
     break;
   case 10:
-    if (bit(flags, Zero) == breakIsValue)
+    if (bit(flags, Flag::Zero) == breakIsValue)
       running = false;
     break;
   case 11:
-    if (bit(flags, Overflow) == breakIsValue)
+    if (bit(flags, Flag::Overflow) == breakIsValue)
       running = false;
     break;
   case 12:
-    if (bit(flags, Carry) == breakIsValue)
+    if (bit(flags, Flag::Carry) == breakIsValue)
       running = false;
     break;
   case 13:
@@ -299,7 +313,7 @@ inline uint16_t Processor::getInterruptLocation(Interrupt interrupt) {
   if (interrupt != Interrupt::IRQ && interrupt != Interrupt::NMI && interrupt != Interrupt::RST) {
     throw std::invalid_argument("Somehow an invalid interrupt was passed to getInterruptLocation() id: " + std::to_string(static_cast<int>(interrupt)));
   }
-  int address = interruptLocations - static_cast<int>(interrupt) * 2;
+  int address = Core::interruptLocations - static_cast<int>(interrupt) * 2;
   return (Memory[address - 1] << 8) + Memory[address];
 }
 
@@ -374,7 +388,7 @@ void Processor::interruptCheckCPS() {
     break;
   case Interrupt::IRQ:
     (this->*executeInstruction)();
-    if (!bit(flags, InterruptMask)) {
+    if (!bit(flags, Flag::InterruptMask)) {
       if (WAIStatus) {
         cycleCount = 5;
       } else {
@@ -457,7 +471,7 @@ void Processor::interruptCheckIPS() {
     WAIStatus = false;
     break;
   case Interrupt::IRQ:
-    if (!bit(flags, InterruptMask)) {
+    if (!bit(flags, Flag::InterruptMask)) {
       if (!WAIStatus) {
         pushStateToMemory();
       }
@@ -614,6 +628,6 @@ void Processor::reset() {
   bReg = 0;
   xReg = 0;
   SP = 0x00FF;
-  PC = static_cast<uint16_t>(Memory[interruptLocations - 1] << 8) + Memory[interruptLocations];
+  PC = static_cast<uint16_t>(Memory[Core::interruptLocations - 1] << 8) + Memory[Core::interruptLocations];
   flags = 0xD0;
 }

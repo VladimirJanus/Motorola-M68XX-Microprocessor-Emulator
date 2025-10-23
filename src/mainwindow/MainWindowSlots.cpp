@@ -14,13 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include "src/dialogs/ExternalDisplay.h"
 #include "src/dialogs/InstructionInfoDialog.h"
 #include "src/mainwindow/MainWindow.h"
+#include "src/processor/Processor.h"
 #include "ui_MainWindow.h"
 #include <QDir>
 #include <QScrollBar>
 #include <QTimer>
 
+using Core::Action;
+using Core::ActionType;
+using Core::MemoryDisplayMode;
+using Core::ProcessorVersion;
 // Scroll Handlers
 void MainWindow::handleCodeVerticalScrollBarValueChanged(int value) {
   ui->plainTextLines->verticalScrollBar()->setValue(value);
@@ -47,13 +53,13 @@ bool MainWindow::on_buttonAssemble_clicked() {
 void MainWindow::on_menuVersionSelector_currentIndexChanged(int index) {
   switch (index) {
   case 0:
-    processorVersion = M6800;
+    processorVersion = ProcessorVersion::M6800;
     break;
   case 1:
-    processorVersion = M6803;
+    processorVersion = ProcessorVersion::M6803;
     break;
   }
-  processor.switchVersion(processorVersion);
+  processor->switchVersion(processorVersion);
   setAssemblyStatus(false);
   resetEmulator();
   drawOPC();
@@ -78,7 +84,7 @@ void MainWindow::on_buttonReset_clicked() {
   resetEmulator();
 }
 void MainWindow::on_buttonStep_clicked() {
-  processor.stopExecution();
+  processor->stopExecution();
 
   bool ok = true;
   if (!assembled && assembleOnRun) {
@@ -86,13 +92,13 @@ void MainWindow::on_buttonStep_clicked() {
   }
 
   if (ok) {
-    processor.executeStep();
+    processor->executeStep();
     drawProcessor();
   }
 }
 void MainWindow::on_buttonRunStop_clicked() {
-  if (processor.running) {
-    processor.stopExecution();
+  if (processor->running) {
+    processor->stopExecution();
   } else {
     bool ok = true;
     if (!assembled && assembleOnRun) {
@@ -101,15 +107,15 @@ void MainWindow::on_buttonRunStop_clicked() {
 
     if (ok) {
       if (ui->checkAutoReset->isChecked()) {
-        if (processor.Memory[processor.PC] == 0) {
+        if (processor->Memory[processor->PC] == 0) {
           resetEmulator();
         }
       }
-      if (processor.useCycles)
+      if (processor->useCycles)
         ui->labelRunningCycleNum->setVisible(true);
 
       ui->labelRunningIndicatior->setVisible(true);
-      processor.startExecution(executionNanoDelay, assemblyMap, markedAddressList);
+      processor->startExecution(executionNanoDelay, assemblyMap, markedAddressList);
       ui->buttonRunStop->setStyleSheet(greenButton);
     }
   }
@@ -118,7 +124,7 @@ void MainWindow::on_menuSpeedSelector_activated() {
   double OPS = ui->menuSpeedSelector->currentText().toDouble();
   executionNanoDelay = 1000000000 / OPS;
   ui->labelRunningIndicatior->setText("Operation/second: " + QString::number(OPS, 'f', OPS < 1 ? 1 : 0));
-  processor.addAction(Action{ActionType::UPDATEPROCESSORSPEED, executionNanoDelay});
+  processor->addAction(Action{ActionType::UPDATEPROCESSORSPEED, executionNanoDelay});
 }
 
 void MainWindow::on_buttonSwitchWrite_clicked() {
@@ -131,24 +137,24 @@ void MainWindow::on_buttonSwitchWrite_clicked() {
 
 // Settings Handlers
 void MainWindow::on_checkUseCycles_clicked(bool checked) {
-  processor.stopExecution();
+  processor->stopExecution();
 
-  processor.useCycles = checked;
+  processor->useCycles = checked;
 
   if (!checked) {
     ui->labelRunningCycleNum->setVisible(false);
-  } else if (processor.running) {
+  } else if (processor->running) {
     ui->labelRunningCycleNum->setVisible(true);
   }
 
-  processor.curCycle = 0;
-  processor.cycleCount = 0;
+  processor->curCycle = 0;
+  processor->cycleCount = 0;
 }
 void MainWindow::on_checkIncrementPC_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETINCONINVALIDINSTR, checked});
+  processor->addAction(Action{ActionType::SETINCONINVALIDINSTR, checked});
 }
 void MainWindow::on_checkIRQOnKeyPress_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETIRQONKEYPRESS, checked});
+  processor->addAction(Action{ActionType::SETIRQONKEYPRESS, checked});
 }
 void MainWindow::on_checkAssembleOnRun_clicked(bool checked) {
   assembleOnRun = checked;
@@ -263,31 +269,31 @@ void MainWindow::on_menuDisplayStatus_currentIndexChanged(
     if (ui->menuDisplayStatus->count() == 3) {
       externalDisplay->hide();
       SetMainDisplayVisibility(true);
-      ui->plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+      ui->plainTextDisplay->setPlainText(getDisplayText(processor->Memory));
       displayStatusIndex = 1;
     } else {
       SetMainDisplayVisibility(false);
       externalDisplay->show();
       displayStatusIndex = 2;
-      plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+      plainTextDisplay->setPlainText(getDisplayText(processor->Memory));
     }
   } else {
     SetMainDisplayVisibility(false);
     externalDisplay->show();
     displayStatusIndex = 2;
-    plainTextDisplay->setPlainText(getDisplayText(processor.Memory));
+    plainTextDisplay->setPlainText(getDisplayText(processor->Memory));
   }
 }
 
 // Call Interrupt Handlers
 void MainWindow::on_buttonRST_clicked() {
-  processor.addAction(Action{ActionType::SETRST, 0});
+  processor->addAction(Action{ActionType::SETRST, 0});
 }
 void MainWindow::on_buttonNMI_clicked() {
-  processor.addAction(Action{ActionType::SETNMI, 0});
+  processor->addAction(Action{ActionType::SETNMI, 0});
 }
 void MainWindow::on_pushButtonIRQ_clicked() {
-  processor.addAction(Action{ActionType::SETIRQ, 0});
+  processor->addAction(Action{ActionType::SETIRQ, 0});
 }
 
 // Debug Tools Handlers
@@ -358,7 +364,7 @@ void MainWindow::on_menuBreakWhen_currentIndexChanged(
     int index) {
   ui->menuBreakAt->setValue(0);
   ui->menuBreakIs->setValue(0);
-  processor.addAction(Action{ActionType::SETBREAKWHEN, static_cast<uint32_t>(index)});
+  processor->addAction(Action{ActionType::SETBREAKWHEN, static_cast<uint32_t>(index)});
 
   ui->menuBreakIs->setDisplayIntegerBase(16);
   ui->menuBreakIs->setPrefix("$");
@@ -419,11 +425,11 @@ void MainWindow::on_menuBreakWhen_currentIndexChanged(
 }
 void MainWindow::on_menuBreakAt_valueChanged(
     int arg1) {
-  processor.addAction(Action{ActionType::SETBREAKAT, static_cast<uint32_t>(arg1)});
+  processor->addAction(Action{ActionType::SETBREAKAT, static_cast<uint32_t>(arg1)});
 }
 void MainWindow::on_menuBreakIs_valueChanged(
     int arg1) {
-  processor.addAction(Action{ActionType::SETBREAKIS, static_cast<uint32_t>(arg1)});
+  processor->addAction(Action{ActionType::SETBREAKIS, static_cast<uint32_t>(arg1)});
 }
 
 void MainWindow::on_line2COMIN_valueChanged(
@@ -502,7 +508,7 @@ void MainWindow::on_plainTextCode_textChanged() {
   }
 }
 void MainWindow::on_checkBoxBookmarkBreakpoints_clicked(bool checked) {
-  processor.addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
+  processor->addAction(Action{ActionType::SETBOOKMARKBREAKPOINTS, static_cast<uint32_t>(checked)});
 }
 
 void MainWindow::on_lineASCIIconvNum_valueChanged(int arg1) // this lineEdit should be capped to [0,255]
@@ -520,13 +526,13 @@ void MainWindow::on_lineASCIIconvChar_textChanged(const QString &arg1) {
 }
 
 void MainWindow::on_menuMemoryDisplayMode_currentIndexChanged(int index) {
-  memoryDisplayMode = static_cast<Core::MemoryDisplayMode>(index);
-  if (memoryDisplayMode == Core::MemoryDisplayMode::SIMPLE) {
+  memoryDisplayMode = static_cast<MemoryDisplayMode>(index);
+  if (memoryDisplayMode == MemoryDisplayMode::SIMPLE) {
     ui->groupSimpleMemory->setVisible(true);
     ui->groupSimpleMemory->setEnabled(true);
     ui->groupMemory->setVisible(false);
     ui->groupMemory->setEnabled(false);
-  } else if (memoryDisplayMode == Core::MemoryDisplayMode::FULL) {
+  } else if (memoryDisplayMode == MemoryDisplayMode::FULL) {
     ui->groupMemory->setVisible(true);
     ui->groupMemory->setEnabled(true);
     ui->groupSimpleMemory->setVisible(false);

@@ -18,28 +18,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-// Qt includes
-#include <QFutureWatcher>
-#include <QLineEdit>
-#include <QMainWindow>
-#include <QTableWidget>
-#include <QTreeWidget>
-
-// Project includes
 #include "src/core/Core.h"
-#include "src/dialogs/ExternalDisplay.h"
-#include "src/processor/Processor.h"
+#include <QMainWindow>
+#include <QPlainTextEdit>
+#include <QTableWidget>
+#include <QTreeWidgetItem>
 
-// Using declarations
-using Core::AddressingMode;
-using Core::bit;
-using Core::ColorType;
-using Core::MnemonicInfo;
-using Core::Msg;
-using Core::MsgType;
-using Core::ProcessorVersion;
-using Core::ProcessorVersion::M6800;
-using Core::ProcessorVersion::M6803;
+class Processor;
+class ExternalDisplay;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -65,9 +51,9 @@ private:
   QPlainTextEdit *plainTextDisplay;
 
   // Core components
-  ProcessorVersion processorVersion = M6800;
-  Processor processor = Processor(processorVersion);
-  AssemblyMap assemblyMap;
+  Core::ProcessorVersion processorVersion = Core::ProcessorVersion::M6800;
+  Processor *processor;
+  Core::AssemblyMap assemblyMap;
   QString sessionId;
 
   // UI Setup Methods
@@ -88,7 +74,7 @@ private:
   bool startAssembly();
   bool startDisassembly();
   void updateMemoryTab();
-  void colorMemory(int address, ColorType colorType);
+  void colorMemory(int address, Core::ColorType colorType);
   void setCurrentInstructionMarker(int address);
   void setAssemblyErrorMarker(int charNum, int lineNum);
   int inputNextAddress(int curAdr, QString err);
@@ -124,7 +110,7 @@ private:
   };
 
   // Utility Methods
-  void PrintConsole(const QString &text, MsgType type = MsgType::NONE);
+  void PrintConsole(const QString &text, Core::MsgType type = Core::MsgType::NONE);
   void Err(const QString &text);
   void setWritingMode(WritingMode mode);
   void setAllowWritingModeSwitch(bool allow);

@@ -16,6 +16,15 @@
  */
 #include "src/assembler/Assembler.h"
 
+using Core::AddressingMode;
+using Core::AssemblyError;
+using Core::AssemblyMap;
+using Core::AssemblyResult;
+using Core::MnemonicInfo;
+using Core::Msg;
+using Core::MsgType;
+using Core::ProcessorVersion;
+
 /**
  * @brief Parses decimal string with optional negative values.
  * 
@@ -387,7 +396,7 @@ void Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, Process
  * @throws AssemblyError if the mnemonic does not support the addressing mode.
  */
 void Assembler::validateMnemonicSupportForAddressingMode(MnemonicInfo &info, AddressingMode mode, int assemblerLine) {
-  if (info.opCodes[addressingModes[mode].id] == 0) {
+  if (info.opCodes[Core::addressingModes[mode].id] == 0) {
     throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(info.mnemonic, mode), assemblerLine, -1);
   }
   return;
@@ -528,7 +537,7 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
       } else if (line[charNum] == '\t' || line[charNum] == ' ') {
         parts.label = line.sliced(0, charNum).toUpper();
 
-        if (isMnemonic(parts.label)) {
+        if (Core::isMnemonic(parts.label)) {
           throw AssemblyError::failure(Err::labelReserved(parts.label), assemblerLine, -1);
         }
 
@@ -657,11 +666,11 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
       QString &s_op = parts.s_op;
 
       //replace with allias mnemonic
-      if (alliasMap.contains(s_in)) {
-        if (!(alliasMap[s_in].supportedVersions & processorVersion)) {
+      if (Core::alliasMap.contains(s_in)) {
+        if (!(Core::alliasMap[s_in].supportedVersions & processorVersion)) {
           throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
         }
-        s_in = alliasMap[s_in].mnemonic;
+        s_in = Core::alliasMap[s_in].mnemonic;
       }
 
       MnemonicInfo mnemonicInfo = getMnemonicInfo(s_in, processorVersion, assemblerLine);
@@ -710,8 +719,8 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
           uint16_t value = result.value;
 
-          Memory[interruptLocations - 1] = value >> 8;
-          Memory[interruptLocations] = value & 0xFF;
+          Memory[Core::interruptLocations - 1] = value >> 8;
+          Memory[Core::interruptLocations] = value & 0xFF;
           assemblerAddress = value;
 
           assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
@@ -834,12 +843,12 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
           }
         }
 
-        bool hasLocation = (directivesWithLocation.contains(s_in));
+        bool hasLocation = (Core::directivesWithLocation.contains(s_in));
         assemblyMap.addInstruction(hasLocation ? instructionAddress : -1, assemblerLine, opCode, operand1, operand2, s_in, s_op);
       } else {
         assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
-        if (uint8_t tempCodeINH = mnemonicInfo.opCodes[addressingModes[AddressingMode::INH].id]; tempCodeINH != 0) { // INH
+        if (uint8_t tempCodeINH = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::INH].id]; tempCodeINH != 0) { // INH
           errorCheckUnexpectedOperand(s_op, assemblerLine);
 
           opCode = tempCodeINH;
@@ -849,7 +858,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
         } else {
           errorCheckMissingOperand(s_op, assemblerLine);
 
-          if (uint8_t tempCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::REL].id]; tempCode != 0) { // REL
+          if (uint8_t tempCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::REL].id]; tempCode != 0) { // REL
             errorCheckOperandContainsIMM(s_in, s_op, assemblerLine);
             errorCheckOperandContainsIND(s_in, s_op, assemblerLine);
 
@@ -873,7 +882,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
             validateMnemonicSupportForAddressingMode(mnemonicInfo, AddressingMode::IND, assemblerLine);
 
-            opCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::IND].id];
+            opCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::IND].id];
             validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (s_op.length() < 2 || s_op.count(',') != 1 || s_op[s_op.length() - 2] != ',') {
@@ -911,7 +920,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
 
             validateMnemonicSupportForAddressingMode(mnemonicInfo, AddressingMode::IMM, assemblerLine);
 
-            opCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::IMM].id];
+            opCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::IMM].id];
             validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
             if (getInstructionMode(processorVersion, opCode) == AddressingMode::IMMEXT) {
@@ -974,15 +983,15 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               skipDir = true;
             }
 
-            if (mnemonicInfo.opCodes[addressingModes[AddressingMode::DIR].id] != 0 && !skipDir) {
-              opCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::DIR].id];
+            if (mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::DIR].id] != 0 && !skipDir) {
+              opCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::DIR].id];
 
               if (getInstructionSupported(processorVersion, opCode)) {
                 operand1 = value;
                 Memory[assemblerAddress++] = opCode;
                 Memory[assemblerAddress++] = operand1;
-              } else if (mnemonicInfo.opCodes[addressingModes[AddressingMode::EXT].id] != 0) {
-                opCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::EXT].id];
+              } else if (mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::EXT].id] != 0) {
+                opCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::EXT].id];
                 validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
                 operand1 = (value >> 8) & 0xFF;
@@ -993,8 +1002,8 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               } else {
                 throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::EXT), assemblerLine, -1);
               }
-            } else if (mnemonicInfo.opCodes[addressingModes[AddressingMode::EXT].id] != 0) {
-              opCode = mnemonicInfo.opCodes[addressingModes[AddressingMode::EXT].id];
+            } else if (mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::EXT].id] != 0) {
+              opCode = mnemonicInfo.opCodes[Core::addressingModes[AddressingMode::EXT].id];
               validateInstructionSupport(s_in, opCode, processorVersion, assemblerLine);
 
               operand1 = (value >> 8) & 0xFF;

@@ -17,28 +17,11 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
-#include <QString>
 #include "src/core/Core.h"
-using Core::AddressingMode;
-using Core::addressingModes;
-using Core::alliasMap;
-using Core::AssemblyError;
-using Core::AssemblyMap;
-using Core::AssemblyResult;
-using Core::directivesWithLocation;
-using Core::getInfoByMnemonic;
-using Core::getInfoByOpCode;
-using Core::interruptLocations;
-using Core::isMnemonic;
-using Core::MnemonicInfo;
-using Core::mnemonics;
-using Core::Msg;
-using Core::MsgType;
-using Core::ProcessorVersion;
 
 class Assembler {
 public:
-  static AssemblyResult assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
+  static Core::AssemblyResult assemble(Core::ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
 
 private:
   struct NumParseResult {
@@ -100,10 +83,10 @@ private:
 
   static void assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine);
 
-  static MnemonicInfo getMnemonicInfo(QString &s_in, ProcessorVersion processorVersion, int assemblerLine);
+  static Core::MnemonicInfo getMnemonicInfo(QString &s_in, Core::ProcessorVersion processorVersion, int assemblerLine);
 
-  static void validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine);
-  static void validateMnemonicSupportForAddressingMode(MnemonicInfo &info, AddressingMode mode, int assemblerLine);
+  static void validateInstructionSupport(QString s_in, uint8_t opCode, Core::ProcessorVersion processorVersion, int assemblerLine);
+  static void validateMnemonicSupportForAddressingMode(Core::MnemonicInfo &info, Core::AddressingMode mode, int assemblerLine);
 
   static void errorCheckUnexpectedOperand(QString s_op, int assemblerLine);
   static void errorCheckMissingOperand(QString s_op, int assemblerLine);
@@ -174,27 +157,27 @@ private:
     inline static const QString invalidINDReg(const QString &reg) { return "Invalid index register: '" + reg + "'"; }
 
     // Addressing Mode Errors
-    inline static const QString mnemonicDoesNotSupportAddressingMode(const QString &s_in, AddressingMode mode) {
+    inline static const QString mnemonicDoesNotSupportAddressingMode(const QString &s_in, Core::AddressingMode mode) {
       QString msg = "Instruction '" + s_in + "' does not support ";
       switch (mode) {
-      case AddressingMode::INH:
+      case Core::AddressingMode::INH:
         msg.append("inherited");
         break;
-      case AddressingMode::IMM:
-      case AddressingMode::IMMEXT:
+      case Core::AddressingMode::IMM:
+      case Core::AddressingMode::IMMEXT:
         msg.append("immediate");
         break;
-      case AddressingMode::IND:
+      case Core::AddressingMode::IND:
         msg.append("indexed");
         break;
-      case AddressingMode::DIR:
-      case AddressingMode::EXT:
+      case Core::AddressingMode::DIR:
+      case Core::AddressingMode::EXT:
         msg.append("direct or extended");
         break;
-      case AddressingMode::REL:
+      case Core::AddressingMode::REL:
         msg.append("relative");
         break;
-      case AddressingMode::INVALID:
+      case Core::AddressingMode::INVALID:
         throw std::invalid_argument("INVALID PASSED FOR CHECKING MNEMONIC SUPPORT");
       }
       msg.append(" addressing.");

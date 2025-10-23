@@ -17,39 +17,23 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
-#include <QObject>
 #include "src/core/Core.h"
-#include "src/utils/ActionQueue.h"
-#include <cstdint>
-#include <qfuturewatcher.h>
-#include <QtConcurrent/qtconcurrentrun.h>
+#include <QFutureWatcher>
 
-using Core::AssemblyMap;
-using Core::bit;
-using Core::Flag;
-using Core::Flag::Carry;
-using Core::Flag::HalfCarry;
-using Core::Flag::InterruptMask;
-using Core::Flag::Negative;
-using Core::Flag::Overflow;
-using Core::Flag::Zero;
-using Core::Interrupt;
-using Core::interruptLocations;
-using Core::M6800InstructionPage;
-using Core::M6803InstructionPage;
-using Core::ProcessorVersion;
+class ActionQueue;
 
 class Processor : public QObject {
   Q_OBJECT
 private:
   typedef void (Processor::*funcPtr)();
-  ActionQueue actionQueueWhenReady;
-  ActionQueue actionQueueBeforeInstruction;
-  AssemblyMap assemblyMap;
+  ActionQueue *actionQueueWhenReady;
+  ActionQueue *actionQueueBeforeInstruction;
+  Core::AssemblyMap assemblyMap;
+
   QVector<int> bookmarkedAddresses;
   QFutureWatcher<void> futureWatcher;
   funcPtr executeInstruction;
-  ProcessorVersion processorVersion = ProcessorVersion::M6800;
+  Core::ProcessorVersion processorVersion = Core::ProcessorVersion::M6800;
 
   //internal settings
   bool WAIStatus = false;
@@ -65,7 +49,7 @@ private:
   int batchSize = 0;
 
 public:
-  Processor(ProcessorVersion version);
+  Processor(Core::ProcessorVersion version);
   //processor internals
   std::array<uint8_t, 0x10000> Memory = {};
   std::array<uint8_t, 0x10000> backupMemory = {};
@@ -78,7 +62,7 @@ public:
   uint16_t *curIndReg = &xReg;
   int curCycle = 1;
   int cycleCount = 0;
-  Interrupt pendingInterrupt = Interrupt::NONE;
+  Core::Interrupt pendingInterrupt = Core::Interrupt::NONE;
   uint64_t operationsSinceStart = 0;
   //runtime settings
   volatile bool running = false;
@@ -86,27 +70,27 @@ public:
   std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> startTime = std::chrono::steady_clock::now();
 
   //methods
-  void switchVersion(ProcessorVersion version);
-  void addAction(const Action &action);
+  void switchVersion(Core::ProcessorVersion version);
+  void addAction(const Core::Action &action);
 
   void queueBookmarkData(QVector<int> data);
   void setMemoryUpdate(QVector<uint16_t> addresses, uint8_t value);
 
   void reset();
   void executeStep();
-  void startExecution(uint32_t nanoSecondDelay, AssemblyMap list, QVector<int> bookmarkedAddresses);
+  void startExecution(uint32_t nanoSecondDelay, Core::AssemblyMap list, QVector<int> bookmarkedAddresses);
   void stopExecution();
 
 private:
   //action handling
-  void handleAction(const Action &action);
+  void handleAction(const Core::Action &action);
   void handleActions(Core::ActionExecutionTiming timing);
 
   //helper funcs
   void checkBreak();
   void pushStateToMemory();
-  void updateFlag(Flag flag, bool value);
-  uint16_t getInterruptLocation(Interrupt interrupt);
+  void updateFlag(Core::Flag flag, bool value);
+  uint16_t getInterruptLocation(Core::Interrupt interrupt);
 
   //instructionExecution
   void setUIUpdateData();

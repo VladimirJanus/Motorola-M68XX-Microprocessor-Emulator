@@ -26,6 +26,9 @@
 #include <string>
 #include <csignal>
 
+using Core::AssemblyResult;
+using Core::Msg;
+
 void printHelp() {
   std::cout << Core::programName.toStdString() << "\n"
             << "Usage: MotorolaEmulator.exe [options]\n\n"
