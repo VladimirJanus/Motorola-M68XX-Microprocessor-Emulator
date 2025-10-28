@@ -19,6 +19,7 @@
 #define MAINWINDOW_H
 
 #include "src/core/Core.h"
+
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QTableWidget>

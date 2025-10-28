@@ -18,7 +18,7 @@
 #define INSTRUCTIONINFODIALOG_H
 
 #include <QDialog>
-#include <qtreewidget.h>
+#include <QTreeWidget>
 
 namespace Ui {
   class InstructionInfoDialog;

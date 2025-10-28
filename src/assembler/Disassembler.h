@@ -19,6 +19,8 @@
 
 #include "src/core/Core.h"
 
+#include <array>
+#include <stdint.h>
 class Disassembler {
 public:
   static Core::DisassemblyResult disassemble(Core::ProcessorVersion ver, uint16_t begLoc, uint16_t endLoc, std::array<uint8_t, 0x10000> &Memory);

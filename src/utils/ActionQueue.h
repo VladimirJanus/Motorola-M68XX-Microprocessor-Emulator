@@ -18,6 +18,7 @@
 #define ACTIONQUEUE_H
 
 #include "src/core/Core.h"
+
 #include <deque>
 #include <mutex>
 

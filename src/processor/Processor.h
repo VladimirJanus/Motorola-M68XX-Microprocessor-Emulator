@@ -18,6 +18,7 @@
 #define PROCESSOR_H
 
 #include "src/core/Core.h"
+
 #include <QFutureWatcher>
 
 class ActionQueue;

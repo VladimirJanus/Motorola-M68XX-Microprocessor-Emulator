@@ -17,21 +17,24 @@
 #ifndef CORE_H
 #define CORE_H
 
-#include <QColor>
 #include <QMap>
+#include <QString>
+
+#include <stdint.h>
+#include <vector>
+
+class QColor;
+
 namespace Core {
-  inline const QString softwareVersion = QStringLiteral("1.11.1");
-  inline const QString programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
+  void initialize();
 
-#ifdef __linux__
-  inline const QString envName = QStringLiteral("Linux");
-#else
-  inline const QString envName = QStringLiteral("Windows 10");
-#endif
+  extern QString softwareVersion;
+  extern QString programName;
+  extern QString envName;
 
-  inline constexpr QColor memoryCellDefaultColor(230, 230, 255);
-  inline constexpr QColor SMMemoryCellColor(150, 150, 150);
-  inline constexpr QColor SMMemoryCellColor2(204, 204, 204);
+  extern QColor memoryCellDefaultColor;
+  extern QColor SMMemoryCellColor;
+  extern QColor SMMemoryCellColor2;
 
   inline constexpr uint16_t interruptLocations = 0xFFFF;
 
@@ -47,7 +50,9 @@ namespace Core {
       QString OP;
     };
 
-    void clear() { instructions.clear(); }
+    void clear() {
+      instructions.clear();
+    }
     bool isEmpty() const {
       return instructions.empty();
     }
@@ -62,7 +67,7 @@ namespace Core {
           return instruction;
         }
       }
-      static MappedInstr defaultInstruction = {address, -1, 0, 0, 0, "", ""};
+      static MappedInstr defaultInstruction = MappedInstr{address, -1, 0, 0, 0, "", ""}; // NOT THREAD SAFE
       return defaultInstruction;
     }
 
@@ -72,25 +77,13 @@ namespace Core {
           return instruction;
         }
       }
-      static MappedInstr defaultInstruction = {-1, lineNumber, 0, 0, 0, "", ""};
+      static MappedInstr defaultInstruction = {-1, lineNumber, 0, 0, 0, "", ""}; // NOT THREAD SAFE
       return defaultInstruction;
     }
 
   private:
     std::vector<MappedInstr> instructions;
   };
-
-  inline QChar numToChar(uint8_t val) {
-    if (val < 32 || val >= 127) {
-      return '\0';
-    } else {
-      return QChar(val);
-    }
-  }
-  inline uint8_t charToVal(QChar c){
-    return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : static_cast<uint8_t>(c.unicode());
-  }
-
   enum class MemoryDisplayMode {
     NONE,
     SIMPLE,
@@ -98,14 +91,60 @@ namespace Core {
   };
 
   enum class ColorType {
+    NONE,
     MARKED,
     CURRENTINSTRUCTION,
     MARKED_CURRENTINSTRUCTION,
     ERROR,
     ERRORCHAR,
-    NONE,
   };
 
+  enum class MsgType {
+    NONE,
+    DEBUG,
+    WARN,
+    ERROR,
+  };
+
+  enum ProcessorVersion : uint8_t {
+    NONE = 0x0,
+    M6800 = 0x1,
+    M6803 = 0x2,
+    ALL = 0xFF,
+  };
+  enum Flag : uint8_t {
+    Carry = 0,
+    Overflow = 1,
+    Zero = 2,
+    Negative = 3,
+    InterruptMask = 4,
+    HalfCarry = 5,
+  };
+  enum class Interrupt : int32_t {
+    NONE = -1,
+    RST = 0,
+    NMI = 1,
+    IRQ = 2,
+    RSTCYCLESERVICE = 3,
+    NMICYCLESERVICE = 4,
+    IRQCYCLESERVICE = 5,
+  };
+  typedef enum class AddressingMode {
+    INVALID,
+    INH,
+    IMM,
+    IMMEXT,
+    DIR,
+    EXT,
+    IND,
+    REL,
+  } AdrMode;
+
+  enum class ActionExecutionTiming {
+    WHEN_READY,
+    BEFORE_INSTRUCTION,
+    WHEN_NOT_RUNNING,
+  };
   enum class ActionType {
     SETBREAKWHEN,
     SETBREAKAT,
@@ -125,99 +164,25 @@ namespace Core {
     SETINCONINVALIDINSTR,
     UPDATEPROCESSORSPEED,
   };
-  enum class ActionExecutionTiming {
-    WHEN_READY,
-    BEFORE_INSTRUCTION,
-    WHEN_NOT_RUNNING,
+
+  struct Msg {
+    MsgType type;
+    QString message;
+
+    static const Msg none() {
+      return Msg{MsgType::NONE, ""};
+    }
   };
+
   struct ActionTypeInfo {
     ActionExecutionTiming timing;
     bool canCoalesce;
   };
-
-  inline const QMap<ActionType, ActionTypeInfo> actionTypeInfo = {
-      {ActionType::SETBREAKWHEN, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETBREAKAT, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETBREAKIS, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETBOOKMARKBREAKPOINTS, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::UPDATEBOOKMARKS, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETRST, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETNMI, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETIRQ, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETKEY, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETMOUSECLICK, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETMOUSEX, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETMOUSEY, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETMEMORY, {ActionExecutionTiming::WHEN_READY, false}},
-      {ActionType::SETMEMORYBULK, {ActionExecutionTiming::WHEN_READY, true}},
-      {ActionType::SETIRQONKEYPRESS, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::SETINCONINVALIDINSTR, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-      {ActionType::UPDATEPROCESSORSPEED, {ActionExecutionTiming::BEFORE_INSTRUCTION, true}},
-  };
-
   struct Action {
     ActionType type;
     uint32_t parameter;
   };
 
-  enum class Interrupt : int32_t {
-    NONE = -1,
-    RST = 0,             // Value used as an offset from FFFF to locate the interrupt vector
-    NMI = 1,             // Value used as an offset from FFFF to locate the interrupt vector
-    IRQ = 2,             // Value used as an offset from FFFF to locate the interrupt vector
-    RSTCYCLESERVICE = 3, // Value not used as a vector offset
-    NMICYCLESERVICE = 4, // Value not used as a vector offset
-    IRQCYCLESERVICE = 5, // Value not used as a vector offset
-                         // SWI is handled as a normal instruction
-  };
-
-  enum Flag : uint8_t {
-    HalfCarry = 5,
-    InterruptMask = 4,
-    Negative = 3,
-    Zero = 2,
-    Overflow = 1,
-    Carry = 0,
-  };
-
-  enum class MsgType {
-    NONE,
-    DEBUG,
-    WARN,
-    ERROR,
-  };
-  struct Msg {
-    MsgType type;
-    QString message;
-
-    static const Msg none() { return Msg{MsgType::NONE, ""}; }
-  };
-
-  enum ProcessorVersion : uint8_t {
-    NONE = 0x0,
-    ALL = 0xFF,
-    M6800 = 0x1,
-    M6803 = 0x2,
-  };
-  // Addressing modes
-  typedef enum class AddressingMode {
-    INVALID,
-    INH,
-    IMM,
-    IMMEXT,
-    DIR,
-    EXT,
-    IND,
-    REL,
-  } AdrMode;
-
-  struct AddressingModeInfo {
-    uint8_t size;
-    int8_t id;
-    QString name;
-  };
-
-  // Assembly results
   struct AssemblyError {
     bool ok;
     QString message;
@@ -238,7 +203,6 @@ namespace Core {
     AssemblyMap assemblyMap;
   };
 
-  // Instruction and mnemonic data
   struct InstructionInfo {
     AddressingMode mode;
     uint8_t cycleCount;
@@ -257,7 +221,27 @@ namespace Core {
     uint8_t supportedVersions;
   };
 
+  struct AddressingModeInfo {
+    uint8_t size;
+    int8_t id;
+    QString name;
+  };
+
   // Methods
+  inline bool bit(const uint32_t variable, const uint8_t bitNum) {
+    return (variable & (1 << bitNum)) != 0;
+  }
+  inline QChar numToChar(uint8_t val) {
+    if (val < 32 || val >= 127) {
+      return '\0';
+    } else {
+      return QChar(val);
+    }
+  }
+  inline uint8_t charToVal(QChar c) {
+    return (c.unicode() >= 127 || c.unicode() < 32) ? 0 : static_cast<uint8_t>(c.unicode());
+  }
+
   uint8_t getInstructionLength(ProcessorVersion version, uint8_t opCode);
   AddressingMode getInstructionMode(ProcessorVersion version, uint8_t opCode);
   uint8_t getInstructionCycleCount(ProcessorVersion version, uint8_t opCode);
@@ -267,21 +251,9 @@ namespace Core {
   MnemonicInfo getInfoByMnemonic(ProcessorVersion version, QString mnemonic);
   MnemonicInfo getInfoByOpCode(ProcessorVersion version, uint8_t opCode);
 
-  inline bool bit(const uint32_t variable, const uint8_t bitNum) {
-    return (variable & (1 << bitNum)) != 0;
-  }
+  extern const QMap<ActionType, ActionTypeInfo> actionTypeInfo;
 
-  // Instruction data
-  inline const QMap<AddressingMode, AddressingModeInfo> addressingModes = {
-      {AdrMode::INVALID, AddressingModeInfo{0, -1, "invalid"}},
-      {AdrMode::INH, AddressingModeInfo{1, 0, "inherited"}},
-      {AdrMode::IMM, AddressingModeInfo{2, 1, "immediate"}},
-      {AdrMode::IMMEXT, AddressingModeInfo{3, 1, "immediate"}},
-      {AdrMode::DIR, AddressingModeInfo{2, 2, "direct"}},
-      {AdrMode::IND, AddressingModeInfo{2, 3, "indexed"}},
-      {AdrMode::EXT, AddressingModeInfo{3, 4, "extended"}},
-      {AdrMode::REL, AddressingModeInfo{2, 5, "relative"}},
-  };
+  extern const QMap<AddressingMode, AddressingModeInfo> addressingModes;
 
   inline const InstructionInfo M6800InstructionPage[] = {{AdrMode::INVALID, 0},
                                                          {AdrMode::INH, 2},
@@ -825,6 +797,7 @@ namespace Core {
                                                          {AdrMode::EXT, 5},
                                                          {AdrMode::EXT, 5},
                                                          {AdrMode::EXT, 5}};
+
   inline const InstructionInfo *getInstructionPage(ProcessorVersion version) {
     switch (version) {
     case M6800:
