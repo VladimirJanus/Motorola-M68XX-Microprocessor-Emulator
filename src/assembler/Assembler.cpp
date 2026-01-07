@@ -45,7 +45,7 @@ Assembler::NumParseResult Assembler::parseDec(const QString &input) {
   if (!ok) {
     return NumParseResult::failure(Err::invalidDecOrRange(input));
   } else if (number > 0xFFFF || number < 0) {
-    return NumParseResult::failure(Err::Err::numOutOfRange(number, 0xFFFF));
+    return NumParseResult::failure(Err::numOutOfRange(number, 0xFFFF));
   }
 
   return NumParseResult::success(static_cast<uint16_t>(number));
@@ -735,7 +735,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &c
               throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }
 
-            auto result = expressionEvaluator(s_op, labelValMap, true);
+            auto result = expressionEvaluator(curOp, labelValMap, true);
             if (!result.ok) {
               throw AssemblyError::failure(result.message, assemblerLine, -1);
             }
