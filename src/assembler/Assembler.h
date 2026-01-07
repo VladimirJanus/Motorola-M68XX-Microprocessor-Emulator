@@ -75,128 +75,128 @@ private:
   // struct for defining possible assembly errors
   struct Err {
     // Number Conversion Errors
-    inline static const QString invalidHexOrRange(const QString &num) {
+    inline static QString invalidHexOrRange(const QString &num) {
       return "Invalid Hexadecimal number: '" + num + "' or value out of range[0, $FFFF].";
     }
-    inline static const QString invalidBinOrRange(const QString &num) {
+    inline static QString invalidBinOrRange(const QString &num) {
       return "Invalid Binary number: '" + num + "' or value out of range[0, $FFFF].";
     }
-    inline static const QString invalidRelDecOrRange(const QString &num) {
+    inline static QString invalidRelDecOrRange(const QString &num) {
       return "Invalid decimal number: '" + num + "' or value out of range[-128, 127]";
     }
-    inline static const QString invalidDecOrRange(const QString &num) {
+    inline static QString invalidDecOrRange(const QString &num) {
       return "Invalid decimal number: '" + num + "' or value out of range[0, $FFFF]";
     }
 
     // ASCII Conversion Errors
-    inline static const QString invalidAsciiConversionSyntax() {
+    inline static QString invalidAsciiConversionSyntax() {
       return "Invalid ASCII conversion syntax. It should be: 'c', where c is a valid ASCII character";
     }
-    inline static const QString invalidAsciiCharacter(const QString &input) {
+    inline static QString invalidAsciiCharacter(const QString &input) {
       return "Invalid ASCII character: '" + input + "'";
     }
 
     // Range Check Errors
-    inline static const QString numOutOfRange(int32_t value, int32_t range) {
+    inline static QString numOutOfRange(int32_t value, int32_t range) {
       return "Value out of range for instruction[0, $" + QString::number(range, 16).toUpper() + "]: $" + QString::number(value, 16);
     }
-    inline static const QString numOutOfRelRange(int32_t value) {
+    inline static QString numOutOfRelRange(int32_t value) {
       return "Relative address out of range[-128, 127]: " + QString::number(value);
     }
 
     // Expression Parsing Errors
-    inline static const QString exprOverFlow() {
+    inline static QString exprOverFlow() {
       return "Expression result out of range[0, $FFFF]";
     }
-    inline static const QString exprMissingOperation() {
+    inline static QString exprMissingOperation() {
       return "Missing operation(+/-) in expression";
     }
-    inline static const QString exprMissingValue() {
+    inline static QString exprMissingValue() {
       return "Missing value after operation (+/-) in expression";
     }
-    inline static const QString exprOutOfRange(int32_t value) {
+    inline static QString exprOutOfRange(int32_t value) {
       return "Expression result out of range[0, $FFFF]: $" + QString::number(value, 16);
     }
-    inline static const QString exprUnexpectedCharacter(const QChar &character) {
+    inline static QString exprUnexpectedCharacter(const QChar &character) {
       return "Unexpected character in expression: " + QString(character);
     }
 
     // Label Errors
-    inline static const QString labelUndefined(const QString &label) {
+    inline static QString labelUndefined(const QString &label) {
       return "Label '" + label + "' is not defined";
     }
-    inline static const QString labelDefinedTwice(const QString &label) {
+    inline static QString labelDefinedTwice(const QString &label) {
       return "Label already declared: '" + label + "'";
     }
-    inline static const QString labelReserved(const QString &label) {
+    inline static QString labelReserved(const QString &label) {
       return "'" + label +
              "' is a reserved instruction name and cannot be used as a label. "
              "If you meant to use the instruction, it must be indented with a space or tab:\n"
              "'\tNOP'";
     }
-    inline static const QString labelStartsWithIllegalDigit(const QChar &character) {
+    inline static QString labelStartsWithIllegalDigit(const QChar &character) {
       return "Label may not start with a digit: '" + QString(character) + "'";
     }
-    inline static const QString labelStartsWithIllegalCharacter(const QChar &character) {
+    inline static QString labelStartsWithIllegalCharacter(const QChar &character) {
       return "Label may not start with character: '" + QString(character) + "'";
     }
-    inline static const QString labelContainsIllegalCharacter(const QChar &character) {
+    inline static QString labelContainsIllegalCharacter(const QChar &character) {
       return "Label may not contain character: '" + QString(character) + "'";
     }
-    inline static const QString instructionDoesNotSupportLabelForwardDeclaration(const QString &label) {
+    inline static QString instructionDoesNotSupportLabelForwardDeclaration(const QString &label) {
       return "Instruction may not reference a label that is forward declared:" + label;
     }
 
     // Parsing Errors
-    inline static const QString parsingEmptyNumber() {
+    inline static QString parsingEmptyNumber() {
       return "Missing number.";
     }
-    inline static const QString unexpectedChar(const QChar &character) {
+    inline static QString unexpectedChar(const QChar &character) {
       return "Unexpected character: '" + QString(character) + "'";
     }
-    inline static const QString missingInstruction() {
+    inline static QString missingInstruction() {
       return "Missing instruction.";
     }
-    inline static const QString missingValue() {
+    inline static QString missingValue() {
       return "Missing value";
     }
 
     // Operand and Instruction Errors
-    inline static const QString missingOperand() {
+    inline static QString missingOperand() {
       return "Missing operand. (Instruction requires operand)";
     }
-    inline static const QString missingLabel() {
+    inline static QString missingLabel() {
       return "Missing label. (Instruction requires label)";
     }
-    inline static const QString unexpectedOperand() {
+    inline static QString unexpectedOperand() {
       return "Unexpected operand.";
     }
-    inline static const QString instructionUnknown(const QString &s_in) {
+    inline static QString instructionUnknown(const QString &s_in) {
       return "Unknown instruction: '" + s_in + "'";
     }
-    inline static const QString instructionDoesNotSupportProcessor(const QString &s_in) {
+    inline static QString instructionDoesNotSupportProcessor(const QString &s_in) {
       return "Instruction '" + s_in + "' is not supported on this processor.";
     }
 
     // Syntax-Specific Errors
-    inline static const QString invalidSETSyntaxMissingComma(const QString &instruction) {
+    inline static QString invalidSETSyntaxMissingComma(const QString &instruction) {
       return "Invalid " + instruction + " format. Missing comma for address,value separation. Format: ." + instruction + " $FFFF,$FF";
     }
-    inline static const QString invalidSETSyntaxExtraComma(const QString &instruction) {
+    inline static QString invalidSETSyntaxExtraComma(const QString &instruction) {
       return "Invalid " + instruction + " format. Too many commas for address,value separation. Format: ." + instruction + " $FFFF,$FF";
     }
-    inline static const QString invalidSTRSyntax() {
+    inline static QString invalidSTRSyntax() {
       return "Invalid string syntax. Format: .STR \"string\"";
     }
-    inline static const QString invalidINDSyntax() {
+    inline static QString invalidINDSyntax() {
       return "Invalid indexed addressing syntax. Format: LDAA $FF,X";
     }
-    inline static const QString invalidINDReg(const QString &reg) {
+    inline static QString invalidINDReg(const QString &reg) {
       return "Invalid index register: '" + reg + "'";
     }
 
     // Addressing Mode Errors
-    inline static const QString mnemonicDoesNotSupportAddressingMode(const QString &s_in, Core::AddressingMode mode) {
+    inline static QString mnemonicDoesNotSupportAddressingMode(const QString &s_in, Core::AddressingMode mode) {
       QString msg = "Instruction '" + s_in + "' does not support ";
       switch (mode) {
       case Core::AddressingMode::INH:
@@ -222,7 +222,7 @@ private:
       msg.append(" addressing.");
       return msg;
     }
-    inline static const QString mixedIMMandIND() {
+    inline static QString mixedIMMandIND() {
       return "Immediate and indexed data may not be mixed";
     }
   };
