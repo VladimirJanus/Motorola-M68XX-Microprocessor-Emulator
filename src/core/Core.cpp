@@ -20,32 +20,16 @@
 #include <QString>
 
 namespace Core {
-  QString softwareVersion;
-  QString programName;
-  QString envName;
-
-  QColor memoryCellDefaultColor;
-  QColor SMMemoryCellColor;
-  QColor SMMemoryCellColor2;
-  void initialize() {
-    static bool initialized = false;
-    if (initialized) {
-      throw std::logic_error("Core already initialized");
-    }
-    initialized = true;
-
+  const QString softwareVersion{"1.11.1"};
+  const QString programName{"Motorola M68XX Microprocessor Emulator-" + softwareVersion};
 #ifdef __linux__
-    envName = QStringLiteral("Linux");
+  const QString envName{"Linux"};
 #else
-    envName = "Windows 10";
+  const QString envName{"Windows 10"};
 #endif
-    softwareVersion = "1.11.1";
-    programName = "Motorola M68XX Microprocessor Emulator-" + softwareVersion;
-
-    memoryCellDefaultColor = QColor(230, 230, 255);
-    SMMemoryCellColor = QColor(150, 150, 150);
-    SMMemoryCellColor2 = QColor(204, 204, 204);
-  }
+  const QColor memoryCellDefaultColor{230, 230, 255};
+  const QColor SMMemoryCellColor{150, 150, 150};
+  const QColor SMMemoryCellColor2{204, 204, 204};
 
   uint8_t getInstructionLength(ProcessorVersion version, uint8_t opCode) {
     if (version == M6800) {

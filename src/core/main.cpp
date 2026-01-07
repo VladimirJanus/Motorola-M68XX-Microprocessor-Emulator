@@ -211,7 +211,6 @@ int main(int argc, char* argv[]) {
 #elif defined(_WIN32)
   SetUnhandledExceptionFilter(exceptionHandler);
 #endif
-  Core::initialize();
   try {
     // CLI argument handling
     if (argc > 1) {

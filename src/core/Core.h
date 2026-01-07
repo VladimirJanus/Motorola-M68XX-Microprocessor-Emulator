@@ -26,15 +26,14 @@
 class QColor;
 
 namespace Core {
-  void initialize();
 
-  extern QString softwareVersion;
-  extern QString programName;
-  extern QString envName;
+  extern const QString softwareVersion;
+  extern const QString programName;
+  extern const QString envName;
 
-  extern QColor memoryCellDefaultColor;
-  extern QColor SMMemoryCellColor;
-  extern QColor SMMemoryCellColor2;
+  extern const QColor memoryCellDefaultColor;
+  extern const QColor SMMemoryCellColor;
+  extern const QColor SMMemoryCellColor2;
 
   inline constexpr uint16_t interruptLocations = 0xFFFF;
 
