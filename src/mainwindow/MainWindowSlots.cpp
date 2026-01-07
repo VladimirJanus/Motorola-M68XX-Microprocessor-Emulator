@@ -465,7 +465,8 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item) {
   InstructionInfoDialog dialog(*item, this);
   dialog.exec();
 }
-#define CODE_MAX_LINE_COUNT 100000
+
+constexpr qsizetype CODE_MAX_LINE_COUNT = 100000;
 void MainWindow::on_plainTextCode_textChanged() {
   static QTimer backupTimer;
 
