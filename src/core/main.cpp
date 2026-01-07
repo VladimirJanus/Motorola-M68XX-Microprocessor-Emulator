@@ -158,8 +158,11 @@ int handleAssembly(int argc, char* argv[]) {
 void writeCrashReport(const std::string& message) {
   std::ofstream crashFile("crashreport.txt", std::ios::app);
   if (crashFile) {
-    std::time_t now = std::time(nullptr);
-    crashFile << "[" << std::ctime(&now) << "] " << message << "\n";
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    crashFile << "[" << ms << "] " << message << "\n";
 
 // Add stack trace if available
 #ifdef __linux__
