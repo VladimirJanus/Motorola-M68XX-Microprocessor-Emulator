@@ -47,6 +47,11 @@ namespace Core {
       uint8_t byte3;
       QString IN;
       QString OP;
+
+      MappedInstr() = default;
+      MappedInstr(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, const QString &IN, const QString &OP)
+          : address(address), lineNumber(lineNumber), byte1(byte1), byte2(byte2), byte3(byte3), IN(IN), OP(OP) {
+      }
     };
 
     void clear() {
@@ -57,7 +62,7 @@ namespace Core {
     }
 
     void addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, QString IN, QString OP) {
-      instructions.push_back(MappedInstr{address, lineNumber, byte1, byte2, byte3, IN, OP});
+      instructions.emplace_back(address, lineNumber, byte1, byte2, byte3, IN, OP);
     }
 
     MappedInstr &getObjectByAddress(int address) {
@@ -66,7 +71,7 @@ namespace Core {
           return instruction;
         }
       }
-      static MappedInstr defaultInstruction = MappedInstr{address, -1, 0, 0, 0, "", ""}; // NOT THREAD SAFE
+      static MappedInstr defaultInstruction = MappedInstr{address, -1, 0, 0, 0, "", ""}; // FIXME NOT THREAD SAFE
       return defaultInstruction;
     }
 
@@ -76,7 +81,7 @@ namespace Core {
           return instruction;
         }
       }
-      static MappedInstr defaultInstruction = {-1, lineNumber, 0, 0, 0, "", ""}; // NOT THREAD SAFE
+      static MappedInstr defaultInstruction = {-1, lineNumber, 0, 0, 0, "", ""}; // FIXME NOT THREAD SAFE
       return defaultInstruction;
     }
 
