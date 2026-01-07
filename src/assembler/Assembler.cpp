@@ -360,7 +360,7 @@ void Assembler::assignLabelValue(const QString &label, int value, std::map<QStri
 *                  - If the mnemonic is unrecognized (invalid).
 *                  - If the mnemonic is not supported by the specified processor version.
 */
-MnemonicInfo Assembler::getMnemonicInfo(QString &s_in, ProcessorVersion processorVersion, int assemblerLine) {
+MnemonicInfo Assembler::getMnemonicInfo(const QString &s_in, ProcessorVersion processorVersion, int assemblerLine) {
   MnemonicInfo info = getInfoByMnemonic(processorVersion, s_in);
   if (info.mnemonic == "INVALID") {
     throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
@@ -620,7 +620,7 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
  *
  * @note The function throws AssemblyError for various syntax and semantic errors in the input code.
  */
-AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &Memory) {
+AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QString &code, std::array<uint8_t, 0x10000> &Memory) {
   int assemblerLine = 0;
   uint16_t assemblerAddress = 0;
 

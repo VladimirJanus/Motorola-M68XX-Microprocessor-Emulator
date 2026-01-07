@@ -26,7 +26,7 @@
 
 class Assembler {
 public:
-  static Core::AssemblyResult assemble(Core::ProcessorVersion processorVersion, QString &code, std::array<uint8_t, 0x10000> &memory);
+  static Core::AssemblyResult assemble(Core::ProcessorVersion processorVersion, const QString &code, std::array<uint8_t, 0x10000> &memory);
 
 private:
   enum ExprOperation {
@@ -243,7 +243,7 @@ private:
 
   static void assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine);
 
-  static Core::MnemonicInfo getMnemonicInfo(QString &s_in, Core::ProcessorVersion processorVersion, int assemblerLine);
+  static Core::MnemonicInfo getMnemonicInfo(const QString &s_in, Core::ProcessorVersion processorVersion, int assemblerLine);
 
   static void validateInstructionSupport(QString s_in, uint8_t opCode, Core::ProcessorVersion processorVersion, int assemblerLine);
   static void validateMnemonicSupportForAddressingMode(Core::MnemonicInfo &info, Core::AddressingMode mode, int assemblerLine);
