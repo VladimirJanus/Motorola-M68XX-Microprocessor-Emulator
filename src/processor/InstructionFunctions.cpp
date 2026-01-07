@@ -57,7 +57,7 @@ void Processor::INHLSRD() {
   uInt16 = (uInt16 >> 1);
   aReg = (uInt16 >> 8);
   bReg = (uInt16 & 0xFF);
-  updateFlag(Negative, 0);
+  updateFlag(Negative, false);
   updateFlag(Zero, uInt16 == 0);
   updateFlag(Overflow, uInt8);
   updateFlag(Carry, uInt8);
@@ -99,27 +99,27 @@ void Processor::INHDEX() {
   PC++;
 }
 void Processor::INHCLV() {
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC++;
 }
 void Processor::INHSEV() {
-  updateFlag(Overflow, 1);
+  updateFlag(Overflow, true);
   PC++;
 }
 void Processor::INHCLC() {
-  updateFlag(Carry, 0);
+  updateFlag(Carry, false);
   PC++;
 }
 void Processor::INHSEC() {
-  updateFlag(Carry, 1);
+  updateFlag(Carry, true);
   PC++;
 }
 void Processor::INHCLI() {
-  updateFlag(InterruptMask, 0);
+  updateFlag(InterruptMask, false);
   PC++;
 }
 void Processor::INHSEI() {
-  updateFlag(InterruptMask, 1);
+  updateFlag(InterruptMask, true);
   PC++;
 }
 void Processor::INHSBA() {
@@ -143,14 +143,14 @@ void Processor::INHTAB() {
   bReg = aReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC++;
 }
 void Processor::INHTBA() {
   aReg = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC++;
 }
 void Processor::INHDAA() {
@@ -160,31 +160,31 @@ void Processor::INHDAA() {
   uint16_t uInt162 = aReg & 0xF;
   if (uInt8 != 1 && uInt16 <= 9 && uInt82 != 1 && uInt162 <= 9) {
     aReg += 0x0;
-    updateFlag(Carry, 0);
+    updateFlag(Carry, false);
   } else if (uInt8 != 1 && uInt16 <= 8 && uInt82 != 1 && uInt162 >= 0xA && uInt162 <= 0xF) {
     aReg += 0x6;
-    updateFlag(Carry, 0);
+    updateFlag(Carry, false);
   } else if (uInt8 != 1 && uInt16 <= 9 && uInt82 && uInt162 <= 3) {
     aReg += 0x6;
-    updateFlag(Carry, 0);
+    updateFlag(Carry, false);
   } else if (uInt8 != 1 && uInt16 >= 0xA && uInt16 <= 0xF && uInt82 != 1 && uInt162 <= 9) {
     aReg += 0x60;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   } else if (uInt8 != 1 && uInt16 >= 9 && uInt16 <= 0xF && uInt82 != 1 && uInt162 >= 0xA && uInt162 <= 0xF) {
     aReg += 0x66;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   } else if (uInt8 != 1 && uInt16 >= 0xA && uInt16 <= 0xF && uInt82 && uInt162 <= 3) {
     aReg += 0x66;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   } else if (uInt8 && uInt16 <= 2 && uInt82 != 1 && uInt162 <= 9) {
     aReg += 0x60;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   } else if (uInt8 && uInt16 <= 2 && uInt82 != 1 && uInt162 >= 0xA && uInt162 <= 0xF) {
     aReg += 0x66;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   } else if (uInt8 && uInt16 <= 3 && uInt82 && uInt162 <= 3) {
     aReg += 0x66;
-    updateFlag(Carry, 1);
+    updateFlag(Carry, true);
   }
 
   updateFlag(Negative, bit(aReg, 7));
@@ -396,7 +396,7 @@ void Processor::INHSWI() {
   Memory[SP--] = aReg;
   Memory[SP--] = bReg;
   Memory[SP--] = flags;
-  updateFlag(InterruptMask, 1);
+  updateFlag(InterruptMask, true);
   PC = (Memory[(interruptLocations - 5)] << 8) + Memory[(interruptLocations - 4)];
 }
 void Processor::INHNEGA() {
@@ -411,14 +411,14 @@ void Processor::INHCOMA() {
   aReg = 0xFF - aReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 1);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, true);
   PC++;
 }
 void Processor::INHLSRA() {
   uint8_t uInt8 = (aReg & 0x1);
   aReg = (aReg >> 1);
-  updateFlag(Negative, 0);
+  updateFlag(Negative, false);
   updateFlag(Zero, aReg == 0);
   updateFlag(Overflow, uInt8);
   updateFlag(Carry, uInt8);
@@ -478,16 +478,16 @@ void Processor::INHINCA() {
 void Processor::INHTSTA() {
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC++;
 }
 void Processor::INHCLRA() {
   aReg = 0;
-  updateFlag(Negative, 0);
-  updateFlag(Zero, 1);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Negative, false);
+  updateFlag(Zero, true);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC++;
 }
 void Processor::INHNEGB() {
@@ -502,14 +502,14 @@ void Processor::INHCOMB() {
   bReg = 0xFF - bReg;
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 1);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, true);
   PC++;
 }
 void Processor::INHLSRB() {
   uint8_t uInt8 = (bReg & 0x1);
   bReg = (bReg >> 1);
-  updateFlag(Negative, 0);
+  updateFlag(Negative, false);
   updateFlag(Zero, bReg == 0);
   updateFlag(Overflow, uInt8);
   updateFlag(Carry, uInt8);
@@ -569,16 +569,16 @@ void Processor::INHINCB() {
 void Processor::INHTSTB() {
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC++;
 }
 void Processor::INHCLRB() {
   bReg = 0;
-  updateFlag(Negative, 0);
-  updateFlag(Zero, 1);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Negative, false);
+  updateFlag(Zero, true);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC++;
 }
 void Processor::INDNEG() {
@@ -596,8 +596,8 @@ void Processor::INDCOM() {
   Memory[adr] = 0xFF - Memory[adr];
   updateFlag(Negative, bit(Memory[adr], 7));
   updateFlag(Zero, Memory[adr] == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 1);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, true);
 
   PC += 2;
 }
@@ -605,7 +605,7 @@ void Processor::INDLSR() {
   uint16_t adr = getByteOperand() + *curIndReg;
   uint8_t uInt8 = (Memory[adr] & 0x1);
   Memory[adr] = (Memory[adr] >> 1);
-  updateFlag(Negative, 0);
+  updateFlag(Negative, false);
   updateFlag(Zero, Memory[adr] == 0);
   updateFlag(Overflow, uInt8);
   updateFlag(Carry, uInt8);
@@ -679,8 +679,8 @@ void Processor::INDTST() {
   uint16_t adr = getByteOperand() + *curIndReg;
   updateFlag(Negative, bit(Memory[adr], 7));
   updateFlag(Zero, Memory[adr] == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC += 2;
 }
 void Processor::INDJMP() {
@@ -689,10 +689,10 @@ void Processor::INDJMP() {
 void Processor::INDCLR() {
   uint16_t adr = getByteOperand() + *curIndReg;
   Memory[adr] = 0;
-  updateFlag(Negative, 0);
-  updateFlag(Zero, 1);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Negative, false);
+  updateFlag(Zero, true);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
 
   PC += 2;
 }
@@ -710,15 +710,15 @@ void Processor::EXTCOM() {
   Memory[adr] = 0xFF - Memory[adr];
   updateFlag(Negative, bit(Memory[adr], 7));
   updateFlag(Zero, Memory[adr] == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 1);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, true);
   PC += 3;
 }
 void Processor::EXTLSR() {
   uint16_t adr = getWordOperand();
   uint8_t uInt8 = (Memory[adr] & 0x1);
   Memory[adr] = (Memory[adr] >> 1);
-  updateFlag(Negative, 0);
+  updateFlag(Negative, false);
   updateFlag(Zero, Memory[adr] == 0);
   updateFlag(Overflow, uInt8);
   updateFlag(Carry, uInt8);
@@ -785,8 +785,8 @@ void Processor::EXTTST() {
   uint16_t adr = getWordOperand();
   updateFlag(Negative, bit(Memory[adr], 7));
   updateFlag(Zero, Memory[adr] == 0);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC += 3;
 }
 void Processor::EXTJMP() {
@@ -795,10 +795,10 @@ void Processor::EXTJMP() {
 void Processor::EXTCLR() {
   uint16_t adr = getWordOperand();
   Memory[adr] = 0;
-  updateFlag(Negative, 0);
-  updateFlag(Zero, 1);
-  updateFlag(Overflow, 0);
-  updateFlag(Carry, 0);
+  updateFlag(Negative, false);
+  updateFlag(Zero, true);
+  updateFlag(Overflow, false);
+  updateFlag(Carry, false);
   PC += 3;
 }
 void Processor::IMMSUBA() {
@@ -847,7 +847,7 @@ void Processor::IMMANDA() {
   aReg = (aReg & getByteOperand());
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -855,14 +855,14 @@ void Processor::IMMBITA() {
   uint8_t uInt8 = (aReg & getByteOperand());
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::IMMLDAA() {
   aReg = getByteOperand();
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -870,7 +870,7 @@ void Processor::IMMEORA() {
   aReg = aReg ^ getByteOperand();
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -890,7 +890,7 @@ void Processor::IMMORAA() {
   aReg = aReg | getByteOperand();
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -927,7 +927,7 @@ void Processor::IMMLDS() {
   SP = getWordOperand();
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::DIRSUBA() {
@@ -976,21 +976,21 @@ void Processor::DIRANDA() {
   aReg = (aReg & Memory[getByteOperand()]);
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRBITA() {
   uint8_t uInt8 = (aReg & Memory[getByteOperand()]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRLDAA() {
   aReg = Memory[getByteOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRSTAA() {
@@ -998,7 +998,7 @@ void Processor::DIRSTAA() {
   Memory[adr] = aReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1006,7 +1006,7 @@ void Processor::DIREORA() {
   aReg = aReg ^ Memory[getByteOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1026,7 +1026,7 @@ void Processor::DIRORAA() {
   aReg = aReg | Memory[getByteOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1067,7 +1067,7 @@ void Processor::DIRLDS() {
   SP = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRSTS() {
@@ -1076,7 +1076,7 @@ void Processor::DIRSTS() {
   Memory[(adr + 1) & 0xFFFF] = (SP & 0xFF);
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::INDSUBA() {
@@ -1126,7 +1126,7 @@ void Processor::INDANDA() {
   aReg = (aReg & Memory[(getByteOperand() + *curIndReg) & 0xFFFF]);
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1134,14 +1134,14 @@ void Processor::INDBITA() {
   uint8_t uInt8 = (aReg & Memory[(getByteOperand() + *curIndReg) & 0xFFFF]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::INDLDAA() {
   aReg = Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1150,7 +1150,7 @@ void Processor::INDSTAA() {
   Memory[adr] = aReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1158,7 +1158,7 @@ void Processor::INDEORA() {
   aReg = aReg ^ Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1178,7 +1178,7 @@ void Processor::INDORAA() {
   aReg = aReg | Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1218,7 +1218,7 @@ void Processor::INDLDS() {
   SP = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::INDSTS() {
@@ -1227,7 +1227,7 @@ void Processor::INDSTS() {
   Memory[(adr + 1) & 0xFFFF] = (SP & 0xFF);
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1278,7 +1278,7 @@ void Processor::EXTANDA() {
   aReg = (aReg & Memory[getWordOperand()]);
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1286,14 +1286,14 @@ void Processor::EXTBITA() {
   uint8_t uInt8 = (aReg & Memory[getWordOperand()]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::EXTLDAA() {
   aReg = Memory[getWordOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1302,7 +1302,7 @@ void Processor::EXTSTAA() {
   Memory[adr] = aReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1310,7 +1310,7 @@ void Processor::EXTEORA() {
   aReg = aReg ^ Memory[getWordOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1330,7 +1330,7 @@ void Processor::EXTORAA() {
   aReg = aReg | Memory[getWordOperand()];
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1370,7 +1370,7 @@ void Processor::EXTLDS() {
   SP = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::EXTSTS() {
@@ -1379,7 +1379,7 @@ void Processor::EXTSTS() {
   Memory[(adr + 1) & 0xFFFF] = (SP & 0xFF);
   updateFlag(Negative, bit(SP, 15));
   updateFlag(Zero, SP == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1429,7 +1429,7 @@ void Processor::IMMANDB() {
   bReg = (bReg & getByteOperand());
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1437,14 +1437,14 @@ void Processor::IMMBITB() {
   uint8_t uInt8 = (bReg & getByteOperand());
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::IMMLDAB() {
   bReg = getByteOperand();
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1452,7 +1452,7 @@ void Processor::IMMEORB() {
   bReg = bReg ^ getByteOperand();
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1472,7 +1472,7 @@ void Processor::IMMORAB() {
   bReg = bReg | getByteOperand();
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1492,7 +1492,7 @@ void Processor::IMMLDD() {
   uint16_t uInt16 = getWordOperand();
   updateFlag(Negative, bit(uInt16, 15));
   updateFlag(Zero, uInt16 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   aReg = (uInt16 >> 8);
   bReg = (uInt16 & 0xFF);
 
@@ -1502,7 +1502,7 @@ void Processor::IMMLDX() {
   (*curIndReg) = getWordOperand();
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::DIRSUBB() {
@@ -1552,7 +1552,7 @@ void Processor::DIRANDB() {
   bReg = (bReg & Memory[getByteOperand()]);
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1560,14 +1560,14 @@ void Processor::DIRBITB() {
   uint8_t uInt8 = (bReg & Memory[getByteOperand()]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRLDAB() {
   bReg = Memory[getByteOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1576,7 +1576,7 @@ void Processor::DIRSTAB() {
   Memory[adr] = bReg;
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1584,7 +1584,7 @@ void Processor::DIREORB() {
   bReg = bReg ^ Memory[getByteOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1604,7 +1604,7 @@ void Processor::DIRORAB() {
   bReg = bReg | Memory[getByteOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1625,7 +1625,7 @@ void Processor::DIRLDD() {
   uint16_t uInt16 = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(uInt16, 15));
   updateFlag(Zero, uInt16 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   aReg = (uInt16 >> 8);
   bReg = (uInt16 & 0xFF);
 
@@ -1637,7 +1637,7 @@ void Processor::DIRSTD() {
   Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1646,7 +1646,7 @@ void Processor::DIRLDX() {
   (*curIndReg) = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::DIRSTX() {
@@ -1655,7 +1655,7 @@ void Processor::DIRSTX() {
   Memory[(adr + 1) & 0xFFFF] = ((*curIndReg) & 0xFF);
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1706,7 +1706,7 @@ void Processor::INDANDB() {
   bReg = (bReg & Memory[(getByteOperand() + *curIndReg) & 0xFFFF]);
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1714,14 +1714,14 @@ void Processor::INDBITB() {
   uint8_t uInt8 = (bReg & Memory[(getByteOperand() + *curIndReg) & 0xFFFF]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::INDLDAB() {
   bReg = Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1730,7 +1730,7 @@ void Processor::INDSTAB() {
   Memory[adr] = bReg;
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1738,7 +1738,7 @@ void Processor::INDEORB() {
   bReg = bReg ^ Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1758,7 +1758,7 @@ void Processor::INDORAB() {
   bReg = bReg | Memory[(getByteOperand() + *curIndReg) & 0xFFFF];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1779,7 +1779,7 @@ void Processor::INDLDD() {
   uint16_t uInt16 = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(uInt16, 15));
   updateFlag(Zero, uInt16 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   aReg = (uInt16 >> 8);
   bReg = (uInt16 & 0xFF);
 
@@ -1791,7 +1791,7 @@ void Processor::INDSTD() {
   Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1800,7 +1800,7 @@ void Processor::INDLDX() {
   (*curIndReg) = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 2;
 }
 void Processor::INDSTX() {
@@ -1809,7 +1809,7 @@ void Processor::INDSTX() {
   Memory[(adr + 1) & 0xFFFF] = ((*curIndReg) & 0xFF);
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 2;
 }
@@ -1860,7 +1860,7 @@ void Processor::EXTANDB() {
   bReg = (bReg & Memory[getWordOperand()]);
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1868,14 +1868,14 @@ void Processor::EXTBITB() {
   uint8_t uInt8 = (bReg & Memory[getWordOperand()]);
   updateFlag(Negative, bit(uInt8, 7));
   updateFlag(Zero, uInt8 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::EXTLDAB() {
   bReg = Memory[getWordOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1884,7 +1884,7 @@ void Processor::EXTSTAB() {
   Memory[adr] = bReg;
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1892,7 +1892,7 @@ void Processor::EXTEORB() {
   bReg = bReg ^ Memory[getWordOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1912,7 +1912,7 @@ void Processor::EXTORAB() {
   bReg = bReg | Memory[getWordOperand()];
   updateFlag(Negative, bit(bReg, 7));
   updateFlag(Zero, bReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1933,7 +1933,7 @@ void Processor::EXTLDD() {
   uint16_t uInt16 = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit(uInt16, 15));
   updateFlag(Zero, uInt16 == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   aReg = (uInt16 >> 8);
   bReg = (uInt16 & 0xFF);
 
@@ -1945,7 +1945,7 @@ void Processor::EXTSTD() {
   Memory[(adr + 1) & 0xFFFF] = bReg;
   updateFlag(Negative, bit(aReg, 7));
   updateFlag(Zero, bReg + aReg == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
@@ -1954,7 +1954,7 @@ void Processor::EXTLDX() {
   (*curIndReg) = (Memory[adr] << 8) + Memory[(adr + 1) & 0xFFFF];
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
   PC += 3;
 }
 void Processor::EXTSTX() {
@@ -1963,7 +1963,7 @@ void Processor::EXTSTX() {
   Memory[(adr + 1) & 0xFFFF] = ((*curIndReg) & 0xFF);
   updateFlag(Negative, bit((*curIndReg), 15));
   updateFlag(Zero, (*curIndReg) == 0);
-  updateFlag(Overflow, 0);
+  updateFlag(Overflow, false);
 
   PC += 3;
 }
