@@ -49,8 +49,8 @@ namespace Core {
       QString OP;
 
       MappedInstr() = default;
-      MappedInstr(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, const QString &IN, const QString &OP)
-          : address(address), lineNumber(lineNumber), byte1(byte1), byte2(byte2), byte3(byte3), IN(IN), OP(OP) {
+      MappedInstr(int addr, int line, uint8_t b1, uint8_t b2, uint8_t b3, const QString &in, const QString &op)
+          : address(addr), lineNumber(line), byte1(b1), byte2(b2), byte3(b3), IN(in), OP(op) {
       }
     };
 
