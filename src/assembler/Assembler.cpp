@@ -1077,7 +1077,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
         instruction.byte2 = value;
       }
     }
-  } catch (AssemblyError e) {
+  } catch (AssemblyError &e) {
     assemblyError = e;
   }
   if (assemblyError.ok && HCFwarn) {
