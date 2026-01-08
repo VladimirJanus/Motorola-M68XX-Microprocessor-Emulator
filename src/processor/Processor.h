@@ -50,7 +50,7 @@ private:
   int batchSize = 0;
 
 public:
-  Processor(Core::ProcessorVersion version);
+  explicit Processor(Core::ProcessorVersion version);
   //processor internals
   std::array<uint8_t, 0x10000> Memory = {};
   std::array<uint8_t, 0x10000> backupMemory = {};
