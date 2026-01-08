@@ -739,7 +739,8 @@ Assembler::LineParts Assembler::disectLine(QString line, int assemblerLine) {
   if (line.sliced(charNum).isEmpty()) {
     throw AssemblyError::failure(Err::missingInstruction(), assemblerLine, -1);
   }
-  for (int start = charNum - 1; charNum < line.size(); ++charNum) {
+  int start = charNum - 1;
+  for (; charNum < line.size(); ++charNum) {
     if (line[charNum].isLetter()) {
       if (charNum == line.size() - 1) {
         parts.s_in = line.sliced(start).toUpper();
@@ -1179,9 +1180,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
       }
     }
     // second pass/passes to resolve undefined expr or labels
-    for (const auto &entry : callLabelMap) {
-      uint16_t location = entry.first;
-      QString expr = entry.second;
+    for (const auto &[location, expr] : callLabelMap) {
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
       auto result = expressionEvaluator(expr, labelValMap, true);
@@ -1194,9 +1193,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
       Memory[location] = result.value;
       instruction.byte2 = result.value;
     }
-    for (const auto &entry : callLabelExtMap) {
-      uint16_t location = entry.first;
-      QString expr = entry.second;
+    for (const auto &[location, expr] : callLabelExtMap) {
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
       auto result = expressionEvaluator(expr, labelValMap, true);
@@ -1209,9 +1206,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
       instruction.byte2 = Memory[location];
       instruction.byte3 = Memory[(location + 1) & 0xFFFF];
     }
-    for (const auto &entry : callLabelRelMap) {
-      uint16_t location = entry.first;
-      QString label = entry.second;
+    for (const auto &[location, label] : callLabelRelMap) {
       auto &instruction = assemblyMap.getObjectByAddress(location - 1);
       assemblerLine = instruction.lineNumber;
       if (labelValMap.count(label) == 0) {
