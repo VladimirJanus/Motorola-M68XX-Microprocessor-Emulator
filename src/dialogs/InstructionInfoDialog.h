@@ -29,7 +29,7 @@ class InstructionInfoDialog final : public QDialog {
 
 public:
   explicit InstructionInfoDialog(QTreeWidgetItem item, QWidget *parent = nullptr);
-  ~InstructionInfoDialog() final;
+  ~InstructionInfoDialog() override;
 
 private:
   Ui::InstructionInfoDialog *ui;

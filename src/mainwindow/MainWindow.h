@@ -39,7 +39,7 @@ class MainWindow final : public QMainWindow {
 
 public:
   explicit MainWindow(QWidget *parent = nullptr);
-  ~MainWindow() final;
+  ~MainWindow() override;
 
 protected:
   void resizeEvent(QResizeEvent *event) override;

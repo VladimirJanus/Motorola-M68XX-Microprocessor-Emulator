@@ -28,7 +28,7 @@ class ExternalDisplay final : public QDialog {
 
 public:
   explicit ExternalDisplay(QWidget *parent = nullptr);
-  ~ExternalDisplay() final;
+  ~ExternalDisplay() override;
   QPlainTextEdit *getPlainTextEdit();
 
 private:
