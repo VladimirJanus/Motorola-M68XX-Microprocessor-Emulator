@@ -24,12 +24,12 @@ namespace Ui {
   class InstructionInfoDialog;
 }
 
-class InstructionInfoDialog : public QDialog {
+class InstructionInfoDialog final : public QDialog {
   Q_OBJECT
 
 public:
   explicit InstructionInfoDialog(QTreeWidgetItem item, QWidget *parent = nullptr);
-  ~InstructionInfoDialog();
+  ~InstructionInfoDialog() final;
 
 private:
   Ui::InstructionInfoDialog *ui;

@@ -23,12 +23,12 @@
 namespace Ui {
   class ExternalDisplay;
 }
-class ExternalDisplay : public QDialog {
+class ExternalDisplay final : public QDialog {
   Q_OBJECT
 
 public:
   explicit ExternalDisplay(QWidget *parent = nullptr);
-  ~ExternalDisplay();
+  ~ExternalDisplay() final;
   QPlainTextEdit *getPlainTextEdit();
 
 private:
