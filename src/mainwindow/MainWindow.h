@@ -139,9 +139,33 @@ private:
   QString fileSavePath = "";
 
   // Style definitions
-  QString redButton = "QPushButton{\n" "    color: rgb(0,0,0);\n" "    background-color: rgb(225,225,225);\n" "    border: 2px solid rgb(255,30,30);\n" "}\n" "QPushButton:hover{\n" "    background-color: rgb(229, 241, 251);\n" "    border: 2px solid rgb(255, 0, 50);\n" "}\n" "QPushButton:pressed{\n" "    background-color: rgb(204, 228, 247);\n" "    border: 2px solid rgb(255, 0, 50);\n" "}";
+  QString redButton = "QPushButton{\n"
+                      "    color: rgb(0,0,0);\n"
+                      "    background-color: rgb(225,225,225);\n"
+                      "    border: 2px solid rgb(255,30,30);\n"
+                      "}\n"
+                      "QPushButton:hover{\n"
+                      "    background-color: rgb(229, 241, 251);\n"
+                      "    border: 2px solid rgb(255, 0, 50);\n"
+                      "}\n"
+                      "QPushButton:pressed{\n"
+                      "    background-color: rgb(204, 228, 247);\n"
+                      "    border: 2px solid rgb(255, 0, 50);\n"
+                      "}";
 
-  QString greenButton = "QPushButton{\n" "    color: rgb(0,0,0);\n" "    background-color: rgb(225,225,225);\n" "    border: 2px solid rgb(0,180,0);\n" "}\n" "QPushButton:hover{\n" "    background-color: rgb(229, 241, 251);\n" "    border: 2px solid rgb(0, 180, 20);\n" "}\n" "QPushButton:pressed{\n" "    background-color: rgb(204, 228, 247);\n" "    border: 2px solid rgb(0, 180, 20);\n" "}";
+  QString greenButton = "QPushButton{\n"
+                        "    color: rgb(0,0,0);\n"
+                        "    background-color: rgb(225,225,225);\n"
+                        "    border: 2px solid rgb(0,180,0);\n"
+                        "}\n"
+                        "QPushButton:hover{\n"
+                        "    background-color: rgb(229, 241, 251);\n"
+                        "    border: 2px solid rgb(0, 180, 20);\n"
+                        "}\n"
+                        "QPushButton:pressed{\n"
+                        "    background-color: rgb(204, 228, 247);\n"
+                        "    border: 2px solid rgb(0, 180, 20);\n"
+                        "}";
 
   // Menu Actions
   QAction *loadMemoryAction;
