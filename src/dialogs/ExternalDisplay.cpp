@@ -20,8 +20,8 @@
 #include <QScrollBar>
 #include "ui_ExternalDisplay.h"
 
-int defaultW = 498;
-int defaultH = 350;
+constexpr int defaultW = 498;
+constexpr int defaultH = 350;
 
 ExternalDisplay::ExternalDisplay(
   QWidget *parent)

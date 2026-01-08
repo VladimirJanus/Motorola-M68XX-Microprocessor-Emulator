@@ -28,14 +28,14 @@ using Core::MemoryDisplayMode;
 int runtimeMarkerAddress = 0;
 QVector<int> markedLineList;
 
-QBrush brushMarked(Qt::GlobalColor::green);
-QBrush brushRuntime(Qt::GlobalColor::yellow);
-QBrush brushMarkedRuntime(Qt::GlobalColor::cyan);
-QBrush brushError(Qt::GlobalColor::darkYellow);
-QBrush brushErrorChar(Qt::GlobalColor::darkGreen);
-QBrush brushNone(QColor(230, 230, 255));
+const QBrush brushMarked{Qt::GlobalColor::green};
+const QBrush brushRuntime(Qt::GlobalColor::yellow);
+const QBrush brushMarkedRuntime(Qt::GlobalColor::cyan);
+const QBrush brushError(Qt::GlobalColor::darkYellow);
+const QBrush brushErrorChar(Qt::GlobalColor::darkGreen);
+const QBrush brushNone(QColor(230, 230, 255));
 
-QBrush &getBrushForType(ColorType colorType) {
+const QBrush &getBrushForType(ColorType colorType) {
   switch (colorType) {
   case ColorType::MARKED:
     return brushMarked;
