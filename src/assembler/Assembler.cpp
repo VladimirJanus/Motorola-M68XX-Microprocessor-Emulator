@@ -152,24 +152,25 @@ namespace Err {
   inline static QString mnemonicDoesNotSupportAddressingMode(const QString &s_in, Core::AddressingMode mode) {
     QString msg = "Instruction '" + s_in + "' does not support ";
     switch (mode) {
-    case Core::AddressingMode::INH:
+      using Core::AddressingMode;
+    case AddressingMode::INH:
       msg.append("inherited");
       break;
-    case Core::AddressingMode::IMM:
-    case Core::AddressingMode::IMMEXT:
+    case AddressingMode::IMM:
+    case AddressingMode::IMMEXT:
       msg.append("immediate");
       break;
-    case Core::AddressingMode::IND:
+    case AddressingMode::IND:
       msg.append("indexed");
       break;
-    case Core::AddressingMode::DIR:
-    case Core::AddressingMode::EXT:
+    case AddressingMode::DIR:
+    case AddressingMode::EXT:
       msg.append("direct or extended");
       break;
-    case Core::AddressingMode::REL:
+    case AddressingMode::REL:
       msg.append("relative");
       break;
-    case Core::AddressingMode::INVALID:
+    case AddressingMode::INVALID:
       throw std::invalid_argument("INVALID PASSED FOR CHECKING MNEMONIC SUPPORT");
     }
     msg.append(" addressing.");

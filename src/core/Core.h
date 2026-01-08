@@ -232,9 +232,10 @@ namespace Core {
   };
 
   // Methods
-  inline bool bit(const uint32_t variable, const uint8_t bitNum) {
-    return (variable & (1 << bitNum)) != 0;
+  inline uint8_t bit(const uint32_t variable, const uint8_t bitNum) {
+    return (variable >> bitNum) & 1;
   }
+
   inline QChar numToChar(uint8_t val) {
     if (val < 32 || val >= 127) {
       return '\0';
