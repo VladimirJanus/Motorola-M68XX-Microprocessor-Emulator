@@ -63,8 +63,8 @@ private:
     QString message;
 
     static ExpressionEvaluationResult success(const uint16_t value) { return {true, false, value, ""}; }
-    static ExpressionEvaluationResult setUndefined(const QString msg, bool ok) { return {ok, true, 0, msg}; }
-    static ExpressionEvaluationResult failure(const QString msg) { return {false, false, 0, msg}; }
+    static ExpressionEvaluationResult setUndefined(const QString &msg, bool ok) { return {ok, true, 0, msg}; }
+    static ExpressionEvaluationResult failure(const QString &msg) { return {false, false, 0, msg}; }
   };
 
   struct LineParts {
@@ -84,22 +84,22 @@ private:
 
   static ExpressionEvaluationResult expressionEvaluator(QString expr, std::map<QString, int> &labelValMap, bool errOnUndefined);
 
-  static inline bool isLabelOrExpression(QString s_op);
+  static inline bool isLabelOrExpression(const QString &s_op);
   static bool trimLineAndCheckEmpty(QString &line);
 
   static void assignLabelValue(const QString &label, int value, std::map<QString, int> &labelValMap, int assemblerLine);
 
   static Core::MnemonicInfo getMnemonicInfo(const QString &s_in, Core::ProcessorVersion processorVersion, int assemblerLine);
 
-  static void validateInstructionSupport(QString s_in, uint8_t opCode, Core::ProcessorVersion processorVersion, int assemblerLine);
-  static void validateMnemonicSupportForAddressingMode(Core::MnemonicInfo &info, Core::AddressingMode mode, int assemblerLine);
+  static void validateInstructionSupport(const QString &s_in, uint8_t opCode, Core::ProcessorVersion processorVersion, int assemblerLine);
+  static void validateMnemonicSupportForAddressingMode(const Core::MnemonicInfo &info, Core::AddressingMode mode, int assemblerLine);
 
-  static void errorCheckUnexpectedOperand(QString s_op, int assemblerLine);
-  static void errorCheckMissingOperand(QString s_op, int assemblerLine);
-  static void errorCheckMissingLabel(QString label, int assemblerLine);
-  static void errorCheckOperandContainsIND(QString s_in, QString s_op, int assemblerLine);
-  static void errorCheckOperandContainsIMM(QString s_in, QString s_op, int assemblerLine);
-  static void errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine);
+  static void errorCheckUnexpectedOperand(const QString &s_op, int assemblerLine);
+  static void errorCheckMissingOperand(const QString &s_op, int assemblerLine);
+  static void errorCheckMissingLabel(const QString &label, int assemblerLine);
+  static void errorCheckOperandContainsIND(const QString &s_in, const QString &s_op, int assemblerLine);
+  static void errorCheckOperandContainsIMM(const QString &s_in, const QString &s_op, int assemblerLine);
+  static void errorCheckOperandIMMINDMixed(const QString &s_op, int assemblerLine);
 
   static void validateValueRange(int32_t value, int32_t max, int assemblerLine);
 

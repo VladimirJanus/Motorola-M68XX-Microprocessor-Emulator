@@ -32,47 +32,24 @@ namespace Core {
   const QColor SMMemoryCellColor2{204, 204, 204};
 
   uint8_t getInstructionLength(ProcessorVersion version, uint8_t opCode) {
-    if (version == M6800) {
-      return addressingModes[M6800InstructionPage[opCode].mode].size;
-    } else if (version == M6803) {
-      return addressingModes[M6803InstructionPage[opCode].mode].size;
-    }
-    return 0;
+    const auto *page = getInstructionPage(version);
+    return addressingModes[page[opCode].mode].size;
   }
 
   AddressingMode getInstructionMode(ProcessorVersion version, uint8_t opCode) {
-    if (version == M6800) {
-      return M6800InstructionPage[opCode].mode;
-    } else if (version == M6803) {
-      return M6803InstructionPage[opCode].mode;
-    }
-    return AddressingMode::INVALID;
+    return getInstructionPage(version)[opCode].mode;
   }
 
   uint8_t getInstructionCycleCount(ProcessorVersion version, uint8_t opCode) {
-    if (version == M6800) {
-      return M6800InstructionPage[opCode].cycleCount;
-    } else if (version == M6803) {
-      return M6803InstructionPage[opCode].cycleCount;
-    }
-    return 0;
+    return getInstructionPage(version)[opCode].cycleCount;
   }
 
   bool getInstructionSupported(ProcessorVersion version, uint8_t opCode) {
-    if (version == M6800) {
-      if (M6800InstructionPage[opCode].mode == AddressingMode::INVALID) {
-        return false;
-      }
-    } else if (version == M6803) {
-      if (M6803InstructionPage[opCode].mode == AddressingMode::INVALID) {
-        return false;
-      }
-    }
-    return true;
+    return getInstructionPage(version)[opCode].mode != AddressingMode::INVALID;
   }
 
-  MnemonicInfo getInfoByMnemonic(ProcessorVersion version, QString mnemonic) {
-    for (MnemonicInfo info : mnemonics) {
+  MnemonicInfo getInfoByMnemonic(ProcessorVersion version, const QString &mnemonic) {
+    for (const auto &info : mnemonics) {
       if (info.mnemonic == mnemonic && (version & info.supportedVersions)) {
         return info;
       }
@@ -81,7 +58,7 @@ namespace Core {
   }
 
   MnemonicInfo getInfoByOpCode(ProcessorVersion version, uint8_t opCode) {
-    for (MnemonicInfo info : mnemonics) {
+    for (const auto &info : mnemonics) {
       if (info.opCodes.contains(opCode) && (version & info.supportedVersions)) {
         return info;
       }
@@ -89,7 +66,7 @@ namespace Core {
     return invalidMnemonic;
   }
 
-  bool isMnemonic(QString s) {
+  bool isMnemonic(const QString &s) {
     return (getInfoByMnemonic(ALL, s).mnemonic != "INVALID") || alliasMap.contains(s);
   }
 

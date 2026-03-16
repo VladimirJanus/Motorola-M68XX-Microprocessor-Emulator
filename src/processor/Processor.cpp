@@ -50,7 +50,6 @@ void Processor::switchVersion(ProcessorVersion version) {
   case Core::NONE:
   case Core::ALL:
     throw std::invalid_argument("");
-    break;
   }
 }
 
@@ -159,7 +158,7 @@ void Processor::handleAction(const Action &action) {
     Memory[action.parameter & 0xFFFF] = (action.parameter >> 16) & 0xFF;
     break;
   case ActionType::SETMEMORYBULK:
-    for (MemUpdateData data : memUpdateList) {
+    for (const MemUpdateData &data : memUpdateList) {
       for (uint16_t adr : data.addresses) {
         Memory[adr] = data.value;
       }
@@ -479,7 +478,7 @@ void Processor::interruptCheckIPS() {
       PC = getInterruptLocation(Interrupt::IRQ);
       WAIStatus = false;
     } else {
-      if (WAIStatus == false) {
+      if (!WAIStatus) {
         (this->*executeInstruction)();
       }
     }
@@ -489,7 +488,6 @@ void Processor::interruptCheckIPS() {
   case Core::Interrupt::NMICYCLESERVICE:
   case Core::Interrupt::IRQCYCLESERVICE:
     throw std::invalid_argument("CYCLESERVICE interrupt state passed into interruptCheckIPS.");
-    break;
   }
 }
 

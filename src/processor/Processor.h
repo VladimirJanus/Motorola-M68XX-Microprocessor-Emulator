@@ -74,8 +74,8 @@ public:
   void switchVersion(Core::ProcessorVersion version);
   void addAction(const Core::Action &action);
 
-  void queueBookmarkData(QVector<int> data);
-  void setMemoryUpdate(QVector<uint16_t> addresses, uint8_t value);
+  void queueBookmarkData(const QVector<int> &data);
+  void setMemoryUpdate(const QVector<uint16_t> &addresses, uint8_t value);
 
   void reset();
   void executeStep();

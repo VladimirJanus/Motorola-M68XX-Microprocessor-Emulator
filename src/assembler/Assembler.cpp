@@ -384,7 +384,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString exp
   int32_t value = 0;
   ExprOperation op = PLUS;
 
-  for (QString symbol : symbols) {
+  for (const QString &symbol : symbols) {
     symbol = symbol.trimmed();
 
     if (symbol == "+") {
@@ -448,7 +448,7 @@ Assembler::ExpressionEvaluationResult Assembler::expressionEvaluator(QString exp
  * @param s_op Input string.
  * @return True if the string represents a label or an expression, false otherwise.
  */
-inline bool Assembler::isLabelOrExpression(QString s_op) {
+inline bool Assembler::isLabelOrExpression(const QString &s_op) {
   return (s_op[0].isLetter() || s_op.contains('+') || s_op.contains('-'));
 }
 /**
@@ -496,7 +496,6 @@ void Assembler::assignLabelValue(const QString &label, int value, std::map<QStri
     throw AssemblyError::failure(Err::labelDefinedTwice(label), assemblerLine, -1);
   }
   labelValMap[label] = value;
-  return;
 }
 
 /**
@@ -535,11 +534,10 @@ MnemonicInfo Assembler::getMnemonicInfo(const QString &s_in, ProcessorVersion pr
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the instruction is not supported by the processor.
  */
-void Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine) {
+void Assembler::validateInstructionSupport(const QString &s_in, uint8_t opCode, ProcessorVersion processorVersion, int assemblerLine) {
   if (!getInstructionSupported(processorVersion, opCode)) {
     throw AssemblyError::failure(Err::instructionDoesNotSupportProcessor(s_in), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Validates mnemonic support for the specified addressing mode.
@@ -551,11 +549,10 @@ void Assembler::validateInstructionSupport(QString s_in, uint8_t opCode, Process
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the mnemonic does not support the addressing mode.
  */
-void Assembler::validateMnemonicSupportForAddressingMode(MnemonicInfo &info, AddressingMode mode, int assemblerLine) {
+void Assembler::validateMnemonicSupportForAddressingMode(const MnemonicInfo &info, AddressingMode mode, int assemblerLine) {
   if (info.opCodes[Core::addressingModes[mode].id] == 0) {
     throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(info.mnemonic, mode), assemblerLine, -1);
   }
-  return;
 }
 
 /**
@@ -567,11 +564,10 @@ void Assembler::validateMnemonicSupportForAddressingMode(MnemonicInfo &info, Add
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the operand is not empty.
  */
-void Assembler::errorCheckUnexpectedOperand(QString s_op, int assemblerLine) {
+void Assembler::errorCheckUnexpectedOperand(const QString &s_op, int assemblerLine) {
   if (!s_op.isEmpty()) {
     throw AssemblyError::failure(Err::unexpectedOperand(), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Checks for missing operand.
@@ -582,11 +578,10 @@ void Assembler::errorCheckUnexpectedOperand(QString s_op, int assemblerLine) {
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the operand is empty.
  */
-void Assembler::errorCheckMissingOperand(QString s_op, int assemblerLine) {
+void Assembler::errorCheckMissingOperand(const QString &s_op, int assemblerLine) {
   if (s_op.isEmpty()) {
     throw AssemblyError::failure(Err::missingOperand(), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Checks for missing label.
@@ -597,11 +592,10 @@ void Assembler::errorCheckMissingOperand(QString s_op, int assemblerLine) {
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the label is empty.
  */
-void Assembler::errorCheckMissingLabel(QString label, int assemblerLine) {
+void Assembler::errorCheckMissingLabel(const QString &label, int assemblerLine) {
   if (label.isEmpty()) {
     throw AssemblyError::failure(Err::missingLabel(), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Checks if operand contains indirect addressing mode.
@@ -613,11 +607,10 @@ void Assembler::errorCheckMissingLabel(QString label, int assemblerLine) {
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the operand contains a comma.
  */
-void Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op, int assemblerLine) {
+void Assembler::errorCheckOperandContainsIND(const QString &s_in, const QString &s_op, int assemblerLine) {
   if (s_op.contains(',')) {
     throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IND), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Checks if operand contains immediate addressing mode.
@@ -629,11 +622,10 @@ void Assembler::errorCheckOperandContainsIND(QString s_in, QString s_op, int ass
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the operand contains a hash symbol.
  */
-void Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op, int assemblerLine) {
+void Assembler::errorCheckOperandContainsIMM(const QString &s_in, const QString &s_op, int assemblerLine) {
   if (s_op.contains('#')) {
     throw AssemblyError::failure(Err::mnemonicDoesNotSupportAddressingMode(s_in, AddressingMode::IMM), assemblerLine, -1);
   }
-  return;
 }
 /**
  * @brief Checks if operand contains mixed immediate and indirect addressing modes.
@@ -644,11 +636,10 @@ void Assembler::errorCheckOperandContainsIMM(QString s_in, QString s_op, int ass
  * @param assemblerLine Current line number.
  * @throws AssemblyError if the operand contains both a hash symbol and a comma.
  */
-void Assembler::errorCheckOperandIMMINDMixed(QString s_op, int assemblerLine) {
+void Assembler::errorCheckOperandIMMINDMixed(const QString &s_op, int assemblerLine) {
   if (s_op.contains('#') && s_op.contains(',')) {
     throw AssemblyError::failure(Err::mixedIMMandIND(), assemblerLine, -1);
   }
-  return;
 }
 
 /**
@@ -665,7 +656,6 @@ void Assembler::validateValueRange(int32_t value, int32_t max, int assemblerLine
   if (value > 0xFF) {
     throw AssemblyError::failure(Err::numOutOfRange(value, max), assemblerLine, -1);
   }
-  return;
 }
 
 /**
@@ -841,7 +831,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
           assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           QStringList opList = s_op.split(",");
-          foreach (QString curOp, opList) {
+          for (const QString &curOp : opList) {
             if (curOp.isEmpty()) {
               throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }
@@ -887,7 +877,7 @@ AssemblyResult Assembler::assemble(ProcessorVersion processorVersion, const QStr
           assignLabelValue(label, assemblerAddress, labelValMap, assemblerLine);
 
           QStringList opList = s_op.split(",");
-          foreach (QString curOp, opList) {
+          for (const QString &curOp : opList) {
             if (curOp.isEmpty()) {
               throw AssemblyError::failure(Err::missingValue(), assemblerLine, -1);
             }

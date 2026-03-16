@@ -61,7 +61,7 @@ namespace Core {
       return instructions.empty();
     }
 
-    void addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, QString IN, QString OP) {
+    void addInstruction(int address, int lineNumber, uint8_t byte1, uint8_t byte2, uint8_t byte3, const QString &IN, const QString &OP) {
       instructions.emplace_back(address, lineNumber, byte1, byte2, byte3, IN, OP);
     }
 
@@ -173,7 +173,7 @@ namespace Core {
     MsgType type;
     QString message;
 
-    static const Msg none() {
+    static Msg none() {
       return Msg{MsgType::NONE, ""};
     }
   };
@@ -193,8 +193,8 @@ namespace Core {
     int errorLineNum;
     int errorCharNum;
 
-    static const AssemblyError failure(QString message, int errorLineNum, int errorCharNum) { return {false, message, errorLineNum, errorCharNum}; }
-    static const AssemblyError none() { return AssemblyError{true, "", -1, -1}; }
+    static AssemblyError failure(const QString &message, int errorLineNum, int errorCharNum) { return {false, message, errorLineNum, errorCharNum}; }
+    static AssemblyError none() { return AssemblyError{true, "", -1, -1}; }
   };
   struct AssemblyResult {
     QList<Msg> messages;
@@ -251,9 +251,9 @@ namespace Core {
   AddressingMode getInstructionMode(ProcessorVersion version, uint8_t opCode);
   uint8_t getInstructionCycleCount(ProcessorVersion version, uint8_t opCode);
   bool getInstructionSupported(ProcessorVersion version, uint8_t opCode);
-  bool isMnemonic(QString s);
+  bool isMnemonic(const QString &s);
 
-  MnemonicInfo getInfoByMnemonic(ProcessorVersion version, QString mnemonic);
+  MnemonicInfo getInfoByMnemonic(ProcessorVersion version, const QString &mnemonic);
   MnemonicInfo getInfoByOpCode(ProcessorVersion version, uint8_t opCode);
 
   extern const QMap<ActionType, ActionTypeInfo> actionTypeInfo;

@@ -375,7 +375,7 @@ void Processor::INHMUL() {
   PC++;
 }
 void Processor::INHWAI() {
-  if (WAIStatus == false) {
+  if (!WAIStatus) {
     uint16_t uInt16 = PC + 1;
     Memory[SP--] = uInt16 & 0xFF;
     Memory[SP--] = uInt16 >> 8;
